@@ -16,7 +16,7 @@ pkg_search_module(PLAYER REQUIRED playerc++)
 pkg_search_module(GSL REQUIRED gsl)
 pkg_search_module(OPENCV REQUIRED opencv)
 
-include_directories(${PLAYER_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
+include_directories(${PLAYER_INCLUDE_DIRS} ${GSL_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/boost.process)
 link_directories(${PLAYER_LIBRARY_DIRS} ${GSL_LIBRARY_DIRS} ${OPENCV_LIBRARY_DIRS})
 target_link_libraries(main gslwrap ${PLAYER_LIBRARIES} ${PLAYER_LDFLAGS} ${GSL_LIBRARIES} ${GSL_LDFLAGS} ${OPENCV_LIBRARIES} ${OPENCV_LDFLAGS} -lboost_system)
 
