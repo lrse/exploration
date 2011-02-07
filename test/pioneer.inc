@@ -1,0 +1,1 @@
+/usr/share/stage/worlds/pioneer.inc

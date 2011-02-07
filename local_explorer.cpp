@@ -1,0 +1,185 @@
+#include "local_explorer.h"
+using namespace HybNav;
+using namespace std;
+
+const double wall_safety_radius = 0.4;
+
+LocalPathfinder::LocalPathfinder(double v) : frontier_value_condition(v) {
+}
+
+list<gsl::vector_int> LocalPathfinder::neighbors(const gsl::vector_int& v) {
+  Place& place = MetricMap::instance()->current_node->place;
+  list<gsl::vector_int> neighbors;
+  gsl::vector_int n(2);
+  if ((uint)v(1) < Place::CELLS - 1 && place(v[0],v[1]+1) < frontier_value_condition) { n = v; n(1) += 1; neighbors.push_back(n); } // up
+  if ((uint)v(0) > 0                && place(v[0]-1,v[1]) < frontier_value_condition) { n = v; n(0) -= 1; neighbors.push_back(n); } // right
+  if ((uint)v(0) < Place::CELLS - 1 && place(v[0]+1,v[1]) < frontier_value_condition) { n = v; n(0) += 1; neighbors.push_back(n); } // left
+  if ((uint)v(1) > 0                && place(v[0],v[1]-1) < frontier_value_condition) { n = v; n(1) -= 1; neighbors.push_back(n); } // down
+  //cout << "neighbors of: " << v(0) << "," << v(1);
+  //LocalExplorer::instance()->print_path(neighbors);
+  //cout << endl;
+  return neighbors;
+}
+
+unsigned long LocalPathfinder::movement_cost(const gsl::vector_int& from, const gsl::vector_int& to, const gsl::vector_int& previous) {
+  Place& place = MetricMap::instance()->current_node->place;
+  unsigned long cost = 1;
+
+  int safety_radius_cells = ceil(wall_safety_radius / Place::CELL_SIZE);
+
+  for (int i = -safety_radius_cells; i <= safety_radius_cells; i++) {
+    for (int j = -safety_radius_cells; j <= safety_radius_cells; j++) {
+      if ((i == 0) && (j == 0)) continue;
+      int x = to(0) + i;
+      int y = to(1) + j;
+      if (Place::valid_coordinates(x, y)) {
+        double occupancy = place(x, y);
+        if (occupancy > 0) cost += (unsigned long)(occupancy * 50.0);
+        else if ((uint)x == 0 || (uint)y == 0 || (uint)x == (Place::CELLS - 1) || (uint)y == (Place::CELLS - 1)) cost += 25;
+      }
+    }
+  }
+
+  // if there's a previous node in the path
+  if (previous != from) {
+    gsl::vector_int old2a(from);
+    old2a -= previous;
+    gsl::vector_int a2b(to);
+    a2b -= from;
+    if (a2b != old2a) cost += 10; // jaggy paths cost more
+  }
+  
+  return cost;
+}
+
+ConnectivityPathfinder::ConnectivityPathfinder(void) : LocalPathfinder(0), x_range(2), y_range(2) { }
+
+bool ConnectivityPathfinder::is_goal(const gsl::vector_int& pos) {
+  bool result = (pos(0) >= x_range(0) && pos(0) <= x_range(1) && pos(1) >= y_range(0) && pos(1) <= y_range(1));
+  //cout << "is goal? " << pos(0) << "," << pos(1) << "gw [" << x_range(0) << "," << x_range(1) << "] [" << y_range(0) << "," << y_range(1) << " -> " << boolalpha << result << endl;
+  return result;
+}
+
+FrontierPathfinder::FrontierPathfinder(void) : LocalPathfinder(Place::Locc * 0.2) { }
+
+bool FrontierPathfinder::is_goal(const gsl::vector_int& v) {
+  MetricMap::Node::FrontierList& frontiers = MetricMap::instance()->current_node->frontiers;
+  MetricMap::Node::FrontierList::iterator it = find(frontiers.begin(), frontiers.end(), v);
+  bool result = (it != frontiers.end());
+  //cout << "is frontier? " << v(0) << "," << v(1) << ": " << boolalpha << result << endl;
+  return result;
+}
+
+LocalExplorer::LocalExplorer(void) : Singleton<LocalExplorer>(this), last_target(2) {
+  clear_paths();
+  last_target_valid = false;
+}
+
+bool LocalExplorer::target_is_frontier(void) {
+  return (follow_path.size() > 0 && frontier_pathfinder.is_goal(follow_path.back()));
+}
+
+struct DistanceCost : public binary_function<list<gsl::vector_int>,list<gsl::vector_int>,bool> {
+  const gsl::vector_int& last_target;
+  DistanceCost(const gsl::vector_int& _last_target) : last_target(_last_target) { }
+
+  bool operator()(const list<gsl::vector_int>& a, const list<gsl::vector_int>& b) {
+    gsl::vector_int last_a = a.back();
+    last_a -= last_target;
+
+    gsl::vector_int last_b = b.back();
+    last_b -= last_target;
+
+    return (last_a.norm2() < last_b.norm2());
+  }
+};
+
+void LocalExplorer::sort_paths(void) {
+  if (last_target_valid) all_paths.sort(DistanceCost(last_target));
+}
+
+void LocalExplorer::clear_paths(void) {
+  all_paths.clear();
+  follow_path.clear();
+  found = false;
+}
+
+bool LocalExplorer::found_path(void) {
+  return found;
+}
+
+bool LocalExplorer::other_paths_left(void) {
+  return !all_paths.empty();
+}
+
+// Given the array of paths, it follows the first path in it and removes it from the given array
+void LocalExplorer::follow_next_path(void) {
+  follow_path = all_paths.front();
+  all_paths.pop_front();
+  follow_path.pop_front();
+  last_target = follow_path.back();
+  last_target_valid = true;
+  
+  print_path(follow_path); cout << endl;
+  print_all_paths();
+}
+
+void LocalExplorer::print_all_paths(void) {
+  cout << "all paths (" << all_paths.size() << "): " << endl;
+  for (list< list<gsl::vector_int> >::iterator it = all_paths.begin(); it != all_paths.end(); ++it) {
+    print_path(*it);
+    cout << endl;
+  }
+}
+
+void LocalExplorer::print_path(const list<gsl::vector_int>& path) {
+  cout << "size: " << path.size();
+  for (list<gsl::vector_int>::const_iterator it = path.begin(); it != path.end(); ++it) {
+    cout << " [" << (*it)(0) << "," << (*it)(1) << "]";
+  }
+}
+
+// Computes all possible paths to the detected frontiers. If at least one path is found, it is "followed"
+void LocalExplorer::compute_frontier_paths(void) {
+  MetricMap::instance()->current_node->update_frontiers();
+  if (MetricMap::instance()->current_node->frontiers.empty()) { clear_paths(); found = false; }
+  else {
+    gsl::vector_int grid_position = MetricMap::instance()->grid_position();
+    all_paths = frontier_pathfinder.findpath(grid_position, false);
+    if (!all_paths.empty()) { found = true; sort_paths(); follow_next_path(); }
+    else found = false;
+  }
+}
+
+void LocalExplorer::compute_gateway_path(TopoMap::GatewayNode* gateway, bool follow) {
+  cout << "Looking for paths to gateway" << endl;
+  gsl::vector_int start = MetricMap::instance()->grid_position();
+
+  gateway->get_ranges(connectivity_pathfinder.x_range, connectivity_pathfinder.y_range);
+  all_paths = connectivity_pathfinder.findpath(start, true);
+
+  if (all_paths.empty()) {
+    cout << "Movement is impossible" << endl;
+    // TODO: break edge?
+    found = false;
+  }
+  else {
+    gsl::vector_int extra_node(2);
+    switch(gateway->edge) {
+      case North: extra_node(0) = 0; extra_node(1) = Place::CELLS; break;
+      case South: extra_node(0) = 0; extra_node(1) = -Place::CELLS; break;
+      case East: extra_node(0) = Place::CELLS; extra_node(1) = 0; break;
+      case West: extra_node(0) = -Place::CELLS; extra_node(1) = 0; break;
+    }
+
+    // add a ficticious far node at the end of each path, to ensure crossing places
+    for (list< list<gsl::vector_int> >::iterator it = all_paths.begin(); it != all_paths.end(); ++it) {
+      gsl::vector_int last = it->back();
+      last += extra_node;
+      it->push_back(last);
+    }
+
+    found = true;
+    if (follow) follow_next_path();
+  }
+}
