@@ -122,11 +122,13 @@ void Explorer::update(void) {
   list<gsl::vector_int>& follow_path = LocalExplorer::instance()->follow_path;
   if (!follow_path.empty()) {
     // invalid path or unnecessary path
-    // last = follow_path.last
     bool valid = true;
     for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end(); ++it) {
       if (Place::valid_coordinates((*it)(0),(*it)(1)) && current_node->place((*it)(0), (*it)(1)) >= Place::Locc) { valid = false; break; }
     }
+
+    const gsl::vector_int& last = follow_path.back();
+    if (state == ExploringLocally && current_node->place(last(0), last(1)) < 0) { valid = false; }
 
     if (!valid) {
       LocalExplorer::instance()->clear_paths();

@@ -35,7 +35,7 @@ unsigned long LocalPathfinder::movement_cost(const gsl::vector_int& from, const 
       if (Place::valid_coordinates(x, y)) {
         double occupancy = place(x, y);
         if (occupancy > 0) cost += (unsigned long)(occupancy * 50.0);
-        else if ((uint)x == 0 || (uint)y == 0 || (uint)x == (Place::CELLS - 1) || (uint)y == (Place::CELLS - 1)) cost += 25;
+        else if ((uint)x == 0 || (uint)y == 0 || (uint)x == (Place::CELLS - 1) || (uint)y == (Place::CELLS - 1)) cost += 5;
       }
     }
   }
