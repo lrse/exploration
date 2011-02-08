@@ -80,7 +80,7 @@ void TopoMap::save(void) {
   //graph.to_png("csv/topo_map.png");
 }
 
-std::ostream& operator<<(std::ostream& out, const std::list<HybNav::TopoMap::Node*> l) {
+std::ostream& operator<<(std::ostream& out, const std::list<HybNav::TopoMap::Node*>& l) {
   for (list<HybNav::TopoMap::Node*>::const_iterator it = l.begin(); it != l.end(); ++it) {
     if (it != l.begin()) out << ", ";
     out << *it;

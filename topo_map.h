@@ -130,7 +130,7 @@ namespace HybNav {
   };
 }
 
-std::ostream& operator<<(std::ostream& out, const std::list<HybNav::TopoMap::Node*> node);
+std::ostream& operator<<(std::ostream& out, const std::list<HybNav::TopoMap::Node*>& node);
 std::ostream& operator<<(std::ostream& out, const HybNav::TopoMap::Node* node);
 std::ostream& operator<<(std::ostream& out, const HybNav::TopoMap::AreaNode* node);
 std::ostream& operator<<(std::ostream& out, const HybNav::TopoMap::GatewayNode* node);
