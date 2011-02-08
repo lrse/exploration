@@ -266,7 +266,7 @@ void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& pla
   const gsl::vector& own_position = MetricMap::instance()->position;
 
   // remove all path nodes already considered as "reached"
-  double target_distance_threshold = 0.3;
+  double target_distance_threshold = 0.5;
   for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end();) {
     gsl::vector target_distance = (gsl::vector)(*it) * Place::CELL_SIZE - own_position;
     cout << "this target: " << *it << " own position: " << own_position << " in cell coords: " << (*it) * Place::CELL_SIZE << endl;
@@ -288,8 +288,10 @@ void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& pla
     double x = position_proxy.GetXPos() + target_distance(0);
     double y = position_proxy.GetYPos() + target_distance(1);
     double theta = gsl_sf_angle_restrict_symm(target_angle);
-    planner.SetGoalPose(x, y, theta);
-    cout << "setting pose to: " << x << " " << y << " " << theta << " current: " << position_proxy.GetXPos() << " " << position_proxy.GetYPos() << " " << position_proxy.GetYaw() << endl;
+    if (planner.GetGoal().px != x || planner.GetGoal().py != y || planner.GetGoal().pa != theta) {
+      planner.SetGoalPose(x, y, theta);
+      cout << "setting pose to: " << x << " " << y << " " << theta << " current: " << position_proxy.GetXPos() << " " << position_proxy.GetYPos() << " " << position_proxy.GetYaw() << endl;
+    }
 
     cout << "current waypoint: " << planner.GetGoal().px << " " << " " << planner.GetGoal().py << " " << planner.GetGoal().pa << endl;
     // threshold given by robot size
@@ -299,7 +301,7 @@ void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& pla
       cout << "reached point " << target(0) << " " << target(1) << " in path (distance " << target_distance_norm << ")" << endl;
       follow_path.pop_front();
     }
-    else if (!planner.GetPathValid() || target_distance_norm > 0.5) {
+    else if (!planner.GetPathValid()) {
       /*if (!Place::valid_coordinates(target(0),target(1))) target_distance_norm = remainder(target_distance_norm, Place::SIZE);
       if (abs(gsl_sf_angle_restrict_symm(position_proxy.GetYaw() - target_angle)) > (135.0 * M_PI / 180.0) ||
         target_distance_norm > (target_distance_threshold + sqrt(2) * Place::CELL_SIZE))*/

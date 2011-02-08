@@ -252,34 +252,41 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
 
 void MetricMap::update_window(Position2dProxy& position_proxy, LaserProxy& laser_proxy)
 {
+  double max_range = 8;
+
   // create a cv::Mat out of the window
-  cv::Mat_<double> cv_window(window.size1(), window.size2());
+  cv::Mat_<double> cv_window(WINDOW_CELLS, WINDOW_CELLS);
   cv_window = 0;
 
   // create a free circular area around robot
-  cv::circle(cv_window, cv::Point(WINDOW_HALF_CELLS, WINDOW_HALF_CELLS), (int)floor(ROBOT_RADIUS / Place::CELL_SIZE), Place::Lfree, -1);
+  cv::circle(cv_window, cv::Point(WINDOW_HALF_CELLS, WINDOW_HALF_CELLS), (int)floor(5 * ROBOT_RADIUS / Place::CELL_SIZE), Place::Lfree, -1);
 
   // create a free polygonal area between robot and each sensed point
   size_t laser_samples = laser_proxy.GetCount();
   cout << "laser samples: " << laser_samples << endl;
-  vector<cv::Point> pts(laser_samples), pts2(laser_samples);
+  list<cv::Point> pts(laser_samples);
+  vector<cv::Point> pts2(laser_samples);
+
   for (size_t i = 0; i < laser_samples; i++) {
     double angle = laser_proxy.GetBearing(i) + position_proxy.GetYaw();
     double dist = laser_proxy.GetRange(i);
-    double x = dist * cos(angle); 
+    double x = dist * cos(angle);
     double y = dist * sin(angle);
-    pts[i].x = pts2[i].x = (int)floor(x / Place::CELL_SIZE) + WINDOW_HALF_CELLS;
-    pts[i].y  = (int)round(y / Place::CELL_SIZE) + WINDOW_HALF_CELLS;
+    pts2[i].x = (int)floor(x / Place::CELL_SIZE) + WINDOW_HALF_CELLS;
     pts2[i].y = (int)round(-y / Place::CELL_SIZE) + WINDOW_HALF_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
+    cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << WINDOW_HALF_CELLS << endl;
+    if (dist < max_range) {
+      cv::Point p;
+      p.x = pts2[i].x;
+      p.y  = (int)round(y / Place::CELL_SIZE) + WINDOW_HALF_CELLS;
+      if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_CELLS && (uint)p.y < WINDOW_CELLS) pts.push_back(p);
+    }
   }
   fillConvexPoly(cv_window, &pts2[0], laser_samples, Place::Lfree, 4);
 
   // mark individual cells as occupied for each sensed point
-  for (size_t i = 0; i < laser_samples; i++) {
-    //cout << "pxpy: " << pts[i].x << "," << pts[i].y << endl;
-    if (pts[i].x >= 0 && pts[i].y >= 0 && (uint)pts[i].x < WINDOW_CELLS && (uint)pts[i].y < WINDOW_CELLS)
-      cv_window(WINDOW_CELLS - pts[i].y - 1, pts[i].x) = Place::Locc * 0.8;
-  }
+  for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it)
+    cv_window(WINDOW_CELLS - it->y - 1, it->x) = Place::Locc * 0.8;
 
   // add the results into the window
   for (uint i = 0; i < window.size1(); i++) {
