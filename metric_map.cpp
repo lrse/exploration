@@ -14,7 +14,7 @@ using PlayerCc::Position2dProxy;
 
 uint MetricMap::WINDOW_CELLS = 39;
 uint MetricMap::WINDOW_HALF_CELLS = ((WINDOW_CELLS - 1)/2);
-double MetricMap::ROBOT_RADIUS = 0.16;
+double MetricMap::ROBOT_RADIUS = 0.25;
 
 /**************************
  * Constructor/Destructor *
@@ -259,7 +259,7 @@ void MetricMap::update_window(Position2dProxy& position_proxy, LaserProxy& laser
   cv_window = 0;
 
   // create a free circular area around robot
-  cv::circle(cv_window, cv::Point(WINDOW_HALF_CELLS, WINDOW_HALF_CELLS), (int)floor(5 * ROBOT_RADIUS / Place::CELL_SIZE), Place::Lfree, -1);
+  cv::circle(cv_window, cv::Point(WINDOW_HALF_CELLS, WINDOW_HALF_CELLS), (int)floor(ROBOT_RADIUS / Place::CELL_SIZE), Place::Lfree, -1);
 
   // create a free polygonal area between robot and each sensed point
   size_t laser_samples = laser_proxy.GetCount();
