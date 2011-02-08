@@ -2,6 +2,7 @@
 #include <gslwrap/vector_int.h>
 #include "metric_map.h"
 #include "local_explorer.h"
+#include "global_explorer.h"
 #include "util.h"
 using namespace HybNav;
 using namespace std;
@@ -42,7 +43,7 @@ void MetricMap::Node::update_gateways(bool and_connectivity) {
     list< pair<uint,uint> >::iterator match_it = edge_coordinates.end();
     // find a gw coordinate covered by the gw node
     for (list< pair<uint,uint> >::iterator it2 = edge_coordinates.begin(); it2 != edge_coordinates.end(); ++it2) {
-      if (it2->first <= (*it)->x0 || (*it)->xf <= it2->second) { match_it = it2; break; } // TODO: this can leave duplicated gateways, they should be merged
+      if (it2->first <= (*it)->x0 || (*it)->xf <= it2->second) { match_it = it2; break; } // TODO: this can leave duplicated gateways, they should be merged (notice the ||)
     }
     // a coordinate was found, so update the gw node's dimensions (in case it changed) and consider it
     // covered by deleting it from the coord list
@@ -54,8 +55,14 @@ void MetricMap::Node::update_gateways(bool and_connectivity) {
     // else, this gw node is not valid anymore, so delete it from the topo map and from the list of topo nodes associated
     // with this metric node
     else {
+      list<TopoMap::Node*>& follow_path = GlobalExplorer::instance()->follow_path;
+      if (find(follow_path.begin(), follow_path.end(), *it) != follow_path.end()) {
+        cout << "deleted gateway node " << *it << " which is present in follow path, so clearing that" << endl;
+        GlobalExplorer::instance()->clear_paths();
+      }
       TopoMap::instance()->del_node(*it);
       it = gateway_nodes.erase(it);
+
     }
   }
 

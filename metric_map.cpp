@@ -12,9 +12,9 @@ using namespace std;
 using PlayerCc::LaserProxy;
 using PlayerCc::Position2dProxy;
 
-uint MetricMap::WINDOW_CELLS = 39;
+uint MetricMap::WINDOW_CELLS = 51;
 uint MetricMap::WINDOW_HALF_CELLS = ((WINDOW_CELLS - 1)/2);
-double MetricMap::ROBOT_RADIUS = 0.25;
+double MetricMap::ROBOT_RADIUS = 0.4;
 
 /**************************
  * Constructor/Destructor *
@@ -274,7 +274,7 @@ void MetricMap::update_window(Position2dProxy& position_proxy, LaserProxy& laser
     double y = dist * sin(angle);
     pts2[i].x = (int)floor(x / Place::CELL_SIZE) + WINDOW_HALF_CELLS;
     pts2[i].y = (int)round(-y / Place::CELL_SIZE) + WINDOW_HALF_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
-    cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << WINDOW_HALF_CELLS << endl;
+    cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << x << "," << y << "," << angle << endl;
     if (dist < max_range) {
       cv::Point p;
       p.x = pts2[i].x;
@@ -282,7 +282,9 @@ void MetricMap::update_window(Position2dProxy& position_proxy, LaserProxy& laser
       if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_CELLS && (uint)p.y < WINDOW_CELLS) pts.push_back(p);
     }
   }
-  fillConvexPoly(cv_window, &pts2[0], laser_samples, Place::Lfree, 4);
+  const cv::Point* ptr = &pts2[0];
+  int contours = laser_samples;
+  fillPoly(cv_window, &ptr, &contours, 1, Place::Lfree, 4);
 
   // mark individual cells as occupied for each sensed point
   for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it)

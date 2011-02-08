@@ -4,7 +4,7 @@ using namespace HybNav;
 using namespace std;
 
 double Place::CELL_SIZE = 0.07;
-uint Place::CELLS = 39;
+uint Place::CELLS = 51;
 double Place::SIZE = Place::CELL_SIZE * Place::CELLS;
 double Place::Locc = 1.5;
 double Place::Lfree = -1.5;

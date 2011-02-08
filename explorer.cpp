@@ -32,8 +32,6 @@ void Explorer::update(void) {
     LocalExplorer::instance()->clear_paths(); // When changing places, the last path is not valid anymore
     LocalExplorer::instance()->last_target_valid = false;
 
-    cout << "Follow path: " << GlobalExplorer::instance()->follow_path << endl;
-
     gsl::vector_int exit_vector = MetricMap::instance()->current_node->position;
     exit_vector -= current_node->position;
     Direction exit_direction = MetricMap::vector2direction(exit_vector);
@@ -45,7 +43,9 @@ void Explorer::update(void) {
       case West: entrance_direction = East; break;
     }
 
+    cout << "Follow path: " << GlobalExplorer::instance()->follow_path << " current node: " << TopoMap::instance()->current_node << endl;
     current_node->update_gateways(); // try to re-detect gateways of previous place
+    cout << "Follow path: " << GlobalExplorer::instance()->follow_path << " current node: " << TopoMap::instance()->current_node << endl;
 
     gsl::vector_int grid_position = MetricMap::instance()->grid_position();
 
@@ -266,12 +266,16 @@ void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& pla
   const gsl::vector& own_position = MetricMap::instance()->position;
 
   // remove all path nodes already considered as "reached"
-  double target_distance_threshold = 0.5;
+  double reached_distance_threshold = 0.5;
+  double far_distance_threshold = 0.9;
   for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end();) {
     gsl::vector target_distance = (gsl::vector)(*it) * Place::CELL_SIZE - own_position;
     cout << "this target: " << *it << " own position: " << own_position << " in cell coords: " << (*it) * Place::CELL_SIZE << endl;
     cout << "target distance: " << target_distance.norm2() << endl;
-    if (target_distance.norm2() < target_distance_threshold) { cout << "removing " << *it << " from follow path" << endl; it = follow_path.erase(it); }
+
+    list<gsl::vector_int>::iterator it2(it); ++it2;
+    if (it2 == follow_path.end()) break; // leave at least one target
+    if (target_distance.norm2() < reached_distance_threshold) { cout << "removing " << *it << " from follow path" << endl; it = follow_path.erase(it); }
     else break;
   }
 
@@ -297,11 +301,11 @@ void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& pla
     // threshold given by robot size
     //double target_distance_threshold = (state == ExploringLocally && follow_path.size() == 1 ? 0.4 : 0.2);
     
-    if (target_distance_norm < target_distance_threshold || planner.GetPathDone()) {
+    if (target_distance_norm < reached_distance_threshold || planner.GetPathDone()) {
       cout << "reached point " << target(0) << " " << target(1) << " in path (distance " << target_distance_norm << ")" << endl;
       follow_path.pop_front();
     }
-    else if (!planner.GetPathValid()) {
+    else if (!planner.GetPathValid() || target_distance_norm > far_distance_threshold) {
       /*if (!Place::valid_coordinates(target(0),target(1))) target_distance_norm = remainder(target_distance_norm, Place::SIZE);
       if (abs(gsl_sf_angle_restrict_symm(position_proxy.GetYaw() - target_angle)) > (135.0 * M_PI / 180.0) ||
         target_distance_norm > (target_distance_threshold + sqrt(2) * Place::CELL_SIZE))*/

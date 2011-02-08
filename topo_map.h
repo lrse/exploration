@@ -63,7 +63,8 @@ namespace HybNav {
           void set_dimensions(uint new_x0, uint new_xf) {
             x0 = new_x0;
             xf = new_xf;
-            MAX_REACH_ATTEMPTS = MAX(2, (xf - x0) / 2);
+            // the number of attempts equals to the number of robots that can fit into the gateway
+            MAX_REACH_ATTEMPTS = MAX(2, (xf - x0) * (Place::CELL_SIZE / MetricMap::ROBOT_RADIUS));
           }
 
           // if this gateway is not connected to another gateway

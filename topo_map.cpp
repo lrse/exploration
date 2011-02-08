@@ -67,6 +67,7 @@ void TopoMap::merge(TopoMap::AreaNode* area1, TopoMap::AreaNode* area2) {
   for(list< list<TopoMap::Node*> >::iterator p_it = all_paths.begin(); p_it != all_paths.end(); ++p_it) {
     replace(p_it->begin(), p_it->end(), area2, area1);
   }
+  replace(GlobalExplorer::instance()->follow_path.begin(), GlobalExplorer::instance()->follow_path.end(), area2, area1);
   
   if (current_node == area2) current_node = area1;
 }
