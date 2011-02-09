@@ -274,7 +274,7 @@ void MetricMap::update_window(Position2dProxy& position_proxy, LaserProxy& laser
     double y = dist * sin(angle);
     pts2[i].x = (int)floor(x / Place::CELL_SIZE) + WINDOW_HALF_CELLS;
     pts2[i].y = (int)round(-y / Place::CELL_SIZE) + WINDOW_HALF_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
-    cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << x << "," << y << "," << angle << endl;
+    //cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << x << "," << y << "," << angle << endl;
     if (dist < max_range) {
       cv::Point p;
       p.x = pts2[i].x;

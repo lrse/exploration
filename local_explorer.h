@@ -45,7 +45,6 @@ namespace HybNav {
       void compute_gateway_path(TopoMap::GatewayNode* gateway, bool follow = true);
 
       void print_all_paths(void);
-      void print_path(const std::list<gsl::vector_int>& path);
 
       ConnectivityPathfinder connectivity_pathfinder;
       FrontierPathfinder frontier_pathfinder;
@@ -57,6 +56,8 @@ namespace HybNav {
       bool found;
   };
 }
+
+std::ostream& operator<<(std::ostream& out, const std::list<gsl::vector_int>& l);
 
 #endif	/* LOCAL_EXPLORER_H */
 

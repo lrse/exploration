@@ -7,6 +7,8 @@
 using namespace HybNav;
 using namespace std;
 
+double MetricMap::frontier_cell_threshold = 0.25;
+
 struct Position {
   size_t x, y;
   bool operator<(const Position& other) const {
@@ -26,7 +28,7 @@ void MetricMap::Node::update_frontiers(void)
   for (size_t i = 0; i < grid.size1(); i++) {
     for (size_t j = 0; j < grid.size2(); j++) {
       double v = grid(i, j);
-      if (fabs(v) > 0.25) continue;
+      if (fabs(v) > frontier_cell_threshold) continue;
 
       uint free_count = 0, unknown_count = 0;
       for (int ii = -1; ii <= 1; ii++) {

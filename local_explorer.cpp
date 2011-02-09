@@ -120,23 +120,23 @@ void LocalExplorer::follow_next_path(void) {
   last_target = follow_path.back();
   last_target_valid = true;
   
-  print_path(follow_path); cout << endl;
+  cout << follow_path << endl;
   print_all_paths();
 }
 
 void LocalExplorer::print_all_paths(void) {
   cout << "all paths (" << all_paths.size() << "): " << endl;
   for (list< list<gsl::vector_int> >::iterator it = all_paths.begin(); it != all_paths.end(); ++it) {
-    print_path(*it);
-    cout << endl;
+    cout << *it << endl;
   }
 }
 
-void LocalExplorer::print_path(const list<gsl::vector_int>& path) {
-  cout << "size: " << path.size();
-  for (list<gsl::vector_int>::const_iterator it = path.begin(); it != path.end(); ++it) {
-    cout << " [" << (*it)(0) << "," << (*it)(1) << "]";
+std::ostream& operator<<(std::ostream& out, const std::list<gsl::vector_int>& l) {
+  for (list<gsl::vector_int>::const_iterator it = l.begin(); it != l.end(); ++it) {
+    if (it != l.begin()) cout << ", ";
+    cout << *it;
   }
+  return out;
 }
 
 // Computes all possible paths to the detected frontiers. If at least one path is found, it is "followed"

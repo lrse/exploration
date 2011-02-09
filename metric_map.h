@@ -39,6 +39,7 @@ namespace HybNav {
       static uint WINDOW_CELLS;
       static uint WINDOW_HALF_CELLS;
       static double ROBOT_RADIUS;
+      static double frontier_cell_threshold;
 
       Node* current_node;
 

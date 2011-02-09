@@ -124,11 +124,17 @@ void Explorer::update(void) {
     // invalid path or unnecessary path
     bool valid = true;
     for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end(); ++it) {
-      if (Place::valid_coordinates((*it)(0),(*it)(1)) && current_node->place((*it)(0), (*it)(1)) >= Place::Locc) { valid = false; break; }
+      if (Place::valid_coordinates((*it)(0),(*it)(1)) && current_node->place((*it)(0), (*it)(1)) >= Place::Locc) {
+        cout << "path crosses obstacle" << endl;
+        valid = false; break;
+      }
     }
 
     const gsl::vector_int& last = follow_path.back();
-    if (state == ExploringLocally && current_node->place(last(0), last(1)) < 0) { valid = false; }
+    if (state == ExploringLocally && fabs(current_node->place(last(0), last(1))) > MetricMap::frontier_cell_threshold) {
+      cout << "target is no longer frontier cell" << endl;
+      valid = false;
+    }
 
     if (!valid) {
       LocalExplorer::instance()->clear_paths();
@@ -147,9 +153,7 @@ void Explorer::while_exploring_locally(void) {
       start(ExploringGlobally);
     }
     else {
-      cout << "Found frontier path: ";
-      LocalExplorer::instance()->print_path(LocalExplorer::instance()->follow_path);
-      cout << endl;
+      cout << "Found frontier path: " << LocalExplorer::instance()->follow_path << endl;
     }
   }
 }
@@ -218,7 +222,7 @@ bool Explorer::recompute_local_path(void) {
 
   cout << "Recomputed paths..." << endl;
   if (!LocalExplorer::instance()->found_path()) { cout << "No path found" << endl; return false; }
-  else { /*cout << "Computed Local path: " << LocalExplorer::instance()->follow_path << endl; */return true; }
+  else { cout << "Computed Local path: " << LocalExplorer::instance()->follow_path << endl; return true; }
 }
 
 void Explorer::recompute_path(void) {
@@ -242,7 +246,7 @@ void Explorer::recompute_path(void) {
   cout << "Recomputing Global paths..." << endl;
   GlobalExplorer::instance()->recompute_paths();
   if (!GlobalExplorer::instance()->found_path()) { cout << "EXPLORATION IS OVER!" << endl; throw false; }
-  cout << "done" << endl;
+  cout << "done: " << GlobalExplorer::instance()->follow_path << endl;
 
   while(true) {
     bool paths_found = recompute_local_path();
