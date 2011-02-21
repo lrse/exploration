@@ -18,27 +18,25 @@ struct Position {
 
 struct centroid { size_t x, y; size_t n; };
 
-void MetricMap::Node::update_frontiers(void)
+void OccupancyGrid::update_frontiers(void)
 {
-  gsl::matrix& grid = place.occupancy_matrix;
-
   /* compute frontier cell positions and add to list */
   std::map<Position, uint> frontier_cells_set;
 
-  for (size_t i = 0; i < grid.size1(); i++) {
-    for (size_t j = 0; j < grid.size2(); j++) {
-      double v = grid(i, j);
-      if (fabs(v) > frontier_cell_threshold) continue;
+  for (size_t i = 0; i < m.size1(); i++) {
+    for (size_t j = 0; j < m.size2(); j++) {
+      double v = m(i, j);
+      if (fabs(v) > MetricMap::frontier_cell_threshold) continue;
 
       uint free_count = 0, unknown_count = 0;
       for (int ii = -1; ii <= 1; ii++) {
         for (int jj = -1; jj <= 1; jj++) {
           if (ii == 0 && jj == 0) continue;
-          if ((ssize_t)i + ii < 0 || i + ii >= grid.size1() || (ssize_t)j + jj < 0 || j + jj >= grid.size2()) continue;
+          if ((ssize_t)i + ii < 0 || i + ii >= m.size1() || (ssize_t)j + jj < 0 || j + jj >= m.size2()) continue;
 
-          double v2 = grid(i + ii, j + jj);
-          if (v2 < Place::Lfree * 0.2) free_count++;
-          else if (v2 < Place::Locc * 0.2) unknown_count++;
+          double v2 = m(i + ii, j + jj);
+          if (v2 < Lfree * 0.2) free_count++;
+          else if (v2 < Locc * 0.2) unknown_count++;
         }
       }
 
@@ -62,7 +60,7 @@ void MetricMap::Node::update_frontiers(void)
     for (int ii = -1; ii <= 1; ii++) {
       for (int jj = -1; jj <= 1; jj++) {
         if (ii == 0 && jj == 0) continue;
-        if ((ssize_t)i + ii < 0 || i + ii >= grid.size1() || (ssize_t)j + jj < 0 || j + jj >= grid.size2()) continue;
+        if ((ssize_t)i + ii < 0 || i + ii >= m.size1() || (ssize_t)j + jj < 0 || j + jj >= m.size2()) continue;
 
         Position p2 = { i + ii, j + jj };
         map<Position, uint>::const_iterator it2 = frontier_cells_set.find(p2);
@@ -141,7 +139,7 @@ void MetricMap::Node::update_frontiers(void)
   for (set<Position>::const_iterator it = frontier_centers.begin(); it != frontier_centers.end(); ++it, ++i) {
     gsl::vector_int pos(2);
     pos(0) = it->y;
-    pos(1) = Place::CELLS - it->x - 1;
+    pos(1) = CELLS - it->x - 1;
     cout << " [" << pos(0) << "," << pos(1) << "]";
     frontiers.push_back(pos);
   }

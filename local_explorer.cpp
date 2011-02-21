@@ -8,13 +8,13 @@ LocalPathfinder::LocalPathfinder(double v) : frontier_value_condition(v) {
 }
 
 list<gsl::vector_int> LocalPathfinder::neighbors(const gsl::vector_int& v) {
-  Place& place = MetricMap::instance()->current_node->place;
+  OccupancyGrid& grid = *MetricMap::instance()->current_grid;
   list<gsl::vector_int> neighbors;
   gsl::vector_int n(2);
-  if ((uint)v(1) < Place::CELLS - 1 && place(v[0],v[1]+1) < frontier_value_condition) { n = v; n(1) += 1; neighbors.push_back(n); } // up
-  if ((uint)v(0) > 0                && place(v[0]-1,v[1]) < frontier_value_condition) { n = v; n(0) -= 1; neighbors.push_back(n); } // right
-  if ((uint)v(0) < Place::CELLS - 1 && place(v[0]+1,v[1]) < frontier_value_condition) { n = v; n(0) += 1; neighbors.push_back(n); } // left
-  if ((uint)v(1) > 0                && place(v[0],v[1]-1) < frontier_value_condition) { n = v; n(1) -= 1; neighbors.push_back(n); } // down
+  if ((uint)v(1) < OccupancyGrid::CELLS - 1 && grid(v[0],v[1]+1) < frontier_value_condition) { n = v; n(1) += 1; neighbors.push_back(n); } // up
+  if ((uint)v(0) > 0                        && grid(v[0]-1,v[1]) < frontier_value_condition) { n = v; n(0) -= 1; neighbors.push_back(n); } // right
+  if ((uint)v(0) < OccupancyGrid::CELLS - 1 && grid(v[0]+1,v[1]) < frontier_value_condition) { n = v; n(0) += 1; neighbors.push_back(n); } // left
+  if ((uint)v(1) > 0                        && grid(v[0],v[1]-1) < frontier_value_condition) { n = v; n(1) -= 1; neighbors.push_back(n); } // down
   //cout << "neighbors of: " << v(0) << "," << v(1);
   //LocalExplorer::instance()->print_path(neighbors);
   //cout << endl;
@@ -22,20 +22,20 @@ list<gsl::vector_int> LocalPathfinder::neighbors(const gsl::vector_int& v) {
 }
 
 unsigned long LocalPathfinder::movement_cost(const gsl::vector_int& from, const gsl::vector_int& to, const gsl::vector_int& previous) {
-  Place& place = MetricMap::instance()->current_node->place;
+  OccupancyGrid& grid = *MetricMap::instance()->current_grid;
   unsigned long cost = 1;
 
-  int safety_radius_cells = ceil(wall_safety_radius / Place::CELL_SIZE);
+  int safety_radius_cells = ceil(wall_safety_radius / OccupancyGrid::CELL_SIZE);
 
   for (int i = -safety_radius_cells; i <= safety_radius_cells; i++) {
     for (int j = -safety_radius_cells; j <= safety_radius_cells; j++) {
       if ((i == 0) && (j == 0)) continue;
       int x = to(0) + i;
       int y = to(1) + j;
-      if (Place::valid_coordinates(x, y)) {
-        double occupancy = place(x, y);
+      if (OccupancyGrid::valid_coordinates(x, y)) {
+        double occupancy = grid(x, y);
         if (occupancy > 0) cost += (unsigned long)(occupancy * 50.0);
-        else if ((uint)x == 0 || (uint)y == 0 || (uint)x == (Place::CELLS - 1) || (uint)y == (Place::CELLS - 1)) cost += 5;
+        else if ((uint)x == 0 || (uint)y == 0 || (uint)x == (OccupancyGrid::CELLS - 1) || (uint)y == (OccupancyGrid::CELLS - 1)) cost += 5;
       }
     }
   }
@@ -60,11 +60,11 @@ bool ConnectivityPathfinder::is_goal(const gsl::vector_int& pos) {
   return result;
 }
 
-FrontierPathfinder::FrontierPathfinder(void) : LocalPathfinder(Place::Locc * 0.2) { }
+FrontierPathfinder::FrontierPathfinder(void) : LocalPathfinder(OccupancyGrid::Locc * 0.2) { }
 
 bool FrontierPathfinder::is_goal(const gsl::vector_int& v) {
-  MetricMap::Node::FrontierList& frontiers = MetricMap::instance()->current_node->frontiers;
-  MetricMap::Node::FrontierList::iterator it = find(frontiers.begin(), frontiers.end(), v);
+  OccupancyGrid::FrontierList& frontiers = MetricMap::instance()->current_grid->frontiers;
+  OccupancyGrid::FrontierList::iterator it = find(frontiers.begin(), frontiers.end(), v);
   bool result = (it != frontiers.end());
   //cout << "is frontier? " << v(0) << "," << v(1) << ": " << boolalpha << result << endl;
   return result;
@@ -141,8 +141,8 @@ std::ostream& operator<<(std::ostream& out, const std::list<gsl::vector_int>& l)
 
 // Computes all possible paths to the detected frontiers. If at least one path is found, it is "followed"
 void LocalExplorer::compute_frontier_paths(void) {
-  MetricMap::instance()->current_node->update_frontiers();
-  if (MetricMap::instance()->current_node->frontiers.empty()) { clear_paths(); found = false; }
+  MetricMap::instance()->current_grid->update_frontiers();
+  if (MetricMap::instance()->current_grid->frontiers.empty()) { clear_paths(); found = false; }
   else {
     gsl::vector_int grid_position = MetricMap::instance()->grid_position();
     all_paths = frontier_pathfinder.findpath(grid_position, false);
@@ -166,13 +166,13 @@ void LocalExplorer::compute_gateway_path(TopoMap::GatewayNode* gateway, bool fol
   else {
     gsl::vector_int extra_node(2);
     switch(gateway->edge) {
-      case North: extra_node(0) = 0; extra_node(1) = Place::CELLS; break;
-      case South: extra_node(0) = 0; extra_node(1) = -Place::CELLS; break;
-      case East: extra_node(0) = Place::CELLS; extra_node(1) = 0; break;
-      case West: extra_node(0) = -Place::CELLS; extra_node(1) = 0; break;
+      case North: extra_node(0) = 0; extra_node(1) = OccupancyGrid::CELLS; break;
+      case South: extra_node(0) = 0; extra_node(1) = -OccupancyGrid::CELLS; break;
+      case East: extra_node(0) = OccupancyGrid::CELLS; extra_node(1) = 0; break;
+      case West: extra_node(0) = -OccupancyGrid::CELLS; extra_node(1) = 0; break;
     }
 
-    // add a ficticious far node at the end of each path, to ensure crossing places
+    // add a ficticious far node at the end of each path, to ensure crossing OccupancyGrids
     for (list< list<gsl::vector_int> >::iterator it = all_paths.begin(); it != all_paths.end(); ++it) {
       gsl::vector_int last = it->back();
       last += extra_node;

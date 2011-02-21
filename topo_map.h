@@ -15,8 +15,8 @@ namespace HybNav {
 
       TopoMap(void);
 
-      AreaNode* add_area(MetricMap::Node* metric_node);
-      GatewayNode* add_gateway(MetricMap::Node* metric_node, Direction edge, uint x0, uint xf);
+      AreaNode* add_area(OccupancyGrid* grid);
+      GatewayNode* add_gateway(OccupancyGrid* grid, Direction edge, uint x0, uint xf);
       void del_node(TopoMap::Node* node);
       void connect(Node* node1, Node* node2);
       void disconnect(Node* node1, Node* node2);
@@ -48,7 +48,7 @@ namespace HybNav {
 
       class GatewayNode : public Node {
         public:
-          GatewayNode(MetricMap::Node* _metric_node, Direction _edge, uint _x0, uint _xf) : metric_node(_metric_node),
+          GatewayNode(OccupancyGrid* _grid, Direction _edge, uint _x0, uint _xf) : grid(_grid),
             edge(_edge), reach_attempts(0)
           {
             set_dimensions(_x0, _xf);
@@ -60,12 +60,7 @@ namespace HybNav {
           bool is_inaccessible(void) { return reach_attempts >= MAX_REACH_ATTEMPTS; }
           void set_accessible(void) { reach_attempts = 0; }
 
-          void set_dimensions(uint new_x0, uint new_xf) {
-            x0 = new_x0;
-            xf = new_xf;
-            // the number of attempts equals to the number of robots that can fit into the gateway
-            MAX_REACH_ATTEMPTS = MAX(2, (xf - x0) * (Place::CELL_SIZE / MetricMap::ROBOT_RADIUS));
-          }
+          void set_dimensions(uint new_x0, uint new_xf);
 
           // if this gateway is not connected to another gateway
           bool unexplored_gateway(void) {
@@ -76,23 +71,9 @@ namespace HybNav {
             return true;
           }
 
-          gsl::vector_int position(void) const {
-            gsl::vector_int pos(2);
-            if (edge == North || edge == South) { pos(0) = (uint)floor((xf + x0) * 0.5); pos(1) = (edge == North ? Place::CELLS - 1 : 0); }
-            else { pos(1) = floor((xf + x0) * 0.5); pos(0) = (edge == East ? Place::CELLS - 1 : 0); }
-            return pos;
-          }
+          gsl::vector_int position(void) const;
 
-          void get_ranges(gsl::vector_int& x_range, gsl::vector_int& y_range) {
-            if (edge == North || edge == South) {
-              x_range(0) = x0; x_range(1) = xf;
-              y_range(0) = y_range(1) = (edge == North ? Place::CELLS - 1 : 0);
-            }
-            else {
-              y_range(0) = x0; y_range(1) = xf;
-              x_range(0) = x_range(1) = (edge == East ? Place::CELLS - 1 : 0);
-            }
-          }
+          void get_ranges(gsl::vector_int& x_range, gsl::vector_int& y_range);
           
           AreaNode* area_node(void) {
             Graph<TopoMap::Node>::EdgeArray& edges = TopoMap::instance()->graph.edges;
@@ -108,7 +89,7 @@ namespace HybNav {
           }
 
 
-          MetricMap::Node* metric_node;
+          OccupancyGrid* grid;
           Direction edge;
           uint x0, xf;
           uint reach_attempts;
@@ -117,12 +98,12 @@ namespace HybNav {
 
       class AreaNode : public Node {
         public:
-          AreaNode(MetricMap::Node* _metric_node) : Node(), metric_node(_metric_node), completely_explored(false) { }
+          AreaNode(OccupancyGrid* _grid) : Node(), grid(_grid), completely_explored(false) { }
           bool is_area(void) const { return true; }
 
           void to_dot(std::ostream& out); 
 
-          MetricMap::Node* metric_node;
+          OccupancyGrid* grid;
           bool completely_explored;
       };
 

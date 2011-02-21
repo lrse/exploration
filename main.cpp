@@ -23,6 +23,10 @@ int main(void) {
     }
   }
   catch(...) {
+    exabot.stop();
+    cout << "Type ctrl+d to end" << endl;
+    string a;
+    cin >> a;
     exabot.deinitialize();
     throw;
   }

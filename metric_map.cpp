@@ -12,8 +12,9 @@ using namespace std;
 using PlayerCc::LaserProxy;
 using PlayerCc::Position2dProxy;
 
-uint MetricMap::WINDOW_CELLS = 51;
-uint MetricMap::WINDOW_HALF_CELLS = ((WINDOW_CELLS - 1)/2);
+// These numbers account for 4m of sensors range (sick has 8m)
+uint MetricMap::WINDOW_SIZE_CELLS = 115; // must be odd!
+uint MetricMap::WINDOW_RADIUS_CELLS = (MetricMap::WINDOW_SIZE_CELLS - 1) / 2;
 double MetricMap::ROBOT_RADIUS = 0.4;
 
 /**************************
@@ -21,17 +22,14 @@ double MetricMap::ROBOT_RADIUS = 0.4;
  **************************/
 
 MetricMap::MetricMap(void) : Singleton<MetricMap>(this),
-  position(2), window(WINDOW_CELLS, WINDOW_CELLS), debug_window(WINDOW_CELLS, WINDOW_CELLS), temporary_matrix(2 * Place::CELLS, 2 * Place::CELLS)
+  position(2), window(WINDOW_SIZE_CELLS, WINDOW_SIZE_CELLS, true)
 {
-  double center_pos = (Place::SIZE / 2.0);
-  position.set_all(center_pos); // starting at the center of the first place
+  double center_pos = (OccupancyGrid::SIZE / 2.0);
+  position.set_all(center_pos); // starting at the center of the first OccupancyGrid
   rotation = 0.0;
 
-  // add the initial metric node to the metric graph
-  gsl::vector_int zero_pos(2, true);
-  shared_ptr<Node> new_node(new Node(zero_pos));
-  graph.add_node(new_node);
-  current_node = new_node.get();
+  // set the (0,0) grid as current
+  current_grid = &super_matrix.submatrix(0,0);
 }
 
 /**************************
@@ -70,196 +68,34 @@ void MetricMap::update_position(const gsl::vector& delta_pos, double delta_rot) 
   rotation = remainder(rotation, 360.0);
   cout << "in-node position now: " << position << endl;
 
-  if (!in_place(position)) {
+  if (!in_grid(position)) {
     cout << "left current metric node, adding new one" << endl;
     gsl::vector_int delta(2);
     for (uint i = 0; i < 2; i++) {
-      delta(i) = (int)floor(position(i) / Place::SIZE);
-      position(i) = (position(i) < 0 ? position(i) + Place::SIZE : fmod(position(i),Place::SIZE));
+      delta(i) = (int)floor(position(i) / OccupancyGrid::SIZE);
+      position(i) = (position(i) < 0 ? position(i) + OccupancyGrid::SIZE : fmod(position(i),OccupancyGrid::SIZE));
     }
 
     cout << "corrected position: " << position << endl;
 
-    cout << "Place delta: " << delta(0) << "," << delta(1) << endl;
-    Node* new_node = get_node(delta);
-
-    if (delta.norm2() > 1)
-      cout << "Reached node in diagonal, not adding edge";
-    else {
-      if (!graph.is_connected(current_node, new_node)) {
-        graph.connect(current_node, new_node);
-      }
-    }
-    current_node = new_node;
-    cout << "Current node is now: " << new_node->position(0) << "," << new_node->position(1) << endl;
+    gsl::vector_int new_position = current_grid->position + delta;
+    cout << "OccupancyGrid delta: " << delta(0) << "," << delta(1) << endl;
+    current_grid = &super_matrix.submatrix(new_position(0), new_position(1));
+    cout << "Current node is now: " << current_grid->position(0) << "," << current_grid->position(1) << endl;
   }
-}
-
-MetricMap::Node* MetricMap::get_node(const gsl::vector_int& delta) {
-  cout << "get node: (" << delta(0) << "," << delta(1) << ")" << endl;
-  if (delta(0) == 0 && delta(1) == 0) return current_node;
-  else {
-    gsl::vector_int neighbor_position(current_node->position);
-    neighbor_position += delta;
-    
-    Node* neighbor = find_node(neighbor_position);
-    Node* node;
-    if (!neighbor) {
-      cout << "new node at " << neighbor_position << endl;
-      shared_ptr<Node> new_node(new Node(neighbor_position));
-      graph.add_node(new_node);
-      node = new_node.get();
-    }
-    else {
-      node = neighbor;
-    }
-
-    return node;
-  }
-}
-
-MetricMap::Node* MetricMap::find_node(const gsl::vector_int& position) {
-  for (Graph<Node>::NodeIterator it = graph.nodes.begin(); it != graph.nodes.end(); ++it) {
-    if ((*it)->position == position) return it->get();
-  }
-  return NULL;
 }
 
 void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& laser_proxy)
 {
-  /* Applies the window to the corresponding places
-   * The following coordinates of the window are computed, relative to the current robot position inside the current place
-   * -----
-   * | v |
-   * *----
-   * (x0,y0)
-  */
-  gsl::vector_int v = Place::world2grid(position);
-  cout << "v: " << v << " half cells: " << WINDOW_HALF_CELLS << endl;
-  double x0 = v(0) - (int)WINDOW_HALF_CELLS;
-  double y0 = v(1) - (int)WINDOW_HALF_CELLS;
-  double window_x0 = (x0 < 0 ? x0 + Place::CELLS : x0);
-  double window_y0 = (y0 < 0 ? y0 + Place::CELLS : y0);
-
-  double temporary_matrix_size[] = { 1,1 };
-  if (window_x0 + WINDOW_CELLS > Place::CELLS) temporary_matrix_size[0] = 2;
-  if (window_y0 + WINDOW_CELLS > Place::CELLS) temporary_matrix_size[1] = 2;
-
-  /* Determine which places need to be affected by window */
-  map<NodeDirections, Node*> affected_nodes;
-  if (temporary_matrix_size[0] == 1 && temporary_matrix_size[1] == 1)
-    affected_nodes[NorthWest] = get_node(0,0);
-  else if (temporary_matrix_size[0] == 2 && temporary_matrix_size[1] == 1) {
-    if (x0 < 0) {
-      // Nodes: (-1,0)(0,0)
-      affected_nodes[NorthWest] = get_node(-1,0);
-      affected_nodes[NorthEast] = get_node( 0,0);
-    }
-    else {
-      // Nodes: (0,0)(1,0)
-      affected_nodes[NorthWest] = get_node(0,0);
-      affected_nodes[NorthEast] = get_node(1,0);
-    }
-  }
-  else if (temporary_matrix_size[0] == 1 && temporary_matrix_size[1] == 2) {
-    if (y0 < 0) {
-      // Nodes:
-      // (0,0)
-      // (0,-1)
-      affected_nodes[NorthWest] = get_node(0, 0);
-      affected_nodes[SouthWest] = get_node(0,-1);
-    }
-    else {
-      // Nodes:
-      // (0,1)
-      // (0,0)
-      affected_nodes[NorthWest] = get_node(0,1);
-      affected_nodes[SouthWest] = get_node(0,0);
-    }
-  }
-  else {
-    if (x0 < 0) {
-      if (y0 < 0) {
-        // Nodes:
-        // (-1, 0)(0, 0)
-        // (-1,-1)(0,-1)
-        affected_nodes[NorthWest] = get_node(-1, 0);
-        affected_nodes[NorthEast] = get_node( 0, 0);
-        affected_nodes[SouthWest] = get_node(-1,-1);
-        affected_nodes[SouthEast] = get_node( 0,-1);
-      }
-      else {
-        // Nodes:
-        // (-1, 1)(0, 1)
-        // (-1, 0)(0, 0)
-        affected_nodes[NorthWest] = get_node(-1, 1);
-        affected_nodes[NorthEast] = get_node( 0, 1);
-        affected_nodes[SouthWest] = get_node(-1, 0);
-        affected_nodes[SouthEast] = get_node( 0, 0);
-      }
-    }
-    else {
-      if (y0 < 0) {
-        // Nodes:
-        // (0, 0)(1, 0)
-        // (0,-1)(1,-1)
-        affected_nodes[NorthWest] = get_node(0, 0);
-        affected_nodes[NorthEast] = get_node(1, 0);
-        affected_nodes[SouthWest] = get_node(0,-1);
-        affected_nodes[SouthEast] = get_node(1,-1);
-      }
-      else {
-        // Nodes:
-        // ( 0, 1)(1, 1)
-        // ( 0, 0)(1, 0)
-        affected_nodes[NorthWest] = get_node(0,1);
-        affected_nodes[NorthEast] = get_node(1,1);
-        affected_nodes[SouthWest] = get_node(0,0);
-        affected_nodes[SouthEast] = get_node(1,0);
-      }
-    }
-  }
-  
-  // compute views of temporary matrix
-  gsl_matrix_view views[4];
-  views[NorthWest] = gsl_matrix_submatrix(temporary_matrix.gslobj(), 0, 0, Place::CELLS, Place::CELLS);
-  views[NorthEast] = gsl_matrix_submatrix(temporary_matrix.gslobj(), 0, Place::CELLS, Place::CELLS, Place::CELLS);
-  views[SouthWest] = gsl_matrix_submatrix(temporary_matrix.gslobj(), Place::CELLS, 0, Place::CELLS, Place::CELLS);
-  views[SouthEast] = gsl_matrix_submatrix(temporary_matrix.gslobj(), Place::CELLS, Place::CELLS, Place::CELLS, Place::CELLS);
-  
-  // load affected node's values into temporary matrix using the corresponding views
-  for (map<NodeDirections, Node*>::iterator it = affected_nodes.begin(); it != affected_nodes.end(); ++it) {
-    gsl_matrix_memcpy(&views[it->first].matrix, it->second->place.occupancy_matrix.gslobj());
-  }
-
-  // load temporary matrix into window through another view
-  uint view_y = (temporary_matrix_size[1] == 1 ? Place::CELLS - (window_y0 + WINDOW_CELLS) : 2 * Place::CELLS - (window_y0 + WINDOW_CELLS) + 1);
-  cout << "v: " << v(0) << "," << v(1) << " x0,y0: " << x0 << "," << y0 << " win: " << window_x0 << "," << window_y0 << " view: " << view_y << "," << window_x0 << endl;
-  gsl_matrix_view temporary_view = gsl_matrix_submatrix(temporary_matrix.gslobj(), view_y, window_x0, WINDOW_CELLS, WINDOW_CELLS);
-  gsl_matrix_memcpy(window.gslobj(), &temporary_view.matrix);
-
-  // Update window (add/substract values to it)
-  update_window(position_proxy, laser_proxy);
-
-  // Apply window to temporary matrix
-  gsl_matrix_memcpy(&temporary_view.matrix, window.gslobj());
-
-  // Set values from temporary matrix to affected nodes
-  for (map<NodeDirections, Node*>::iterator it = affected_nodes.begin(); it != affected_nodes.end(); ++it) {
-    gsl_matrix_memcpy(it->second->place.occupancy_matrix.gslobj(), &views[it->first].matrix);
-  }
-}
-
-void MetricMap::update_window(Position2dProxy& position_proxy, LaserProxy& laser_proxy)
-{
-  double max_range = 8;
+  // apply sensor readings to window
+  double max_range = 4;
 
   // create a cv::Mat out of the window
-  cv::Mat_<double> cv_window(WINDOW_CELLS, WINDOW_CELLS);
+  cv::Mat_<double> cv_window(WINDOW_SIZE_CELLS, WINDOW_SIZE_CELLS);
   cv_window = 0;
 
   // create a free circular area around robot
-  cv::circle(cv_window, cv::Point(WINDOW_HALF_CELLS, WINDOW_HALF_CELLS), (int)floor(ROBOT_RADIUS / Place::CELL_SIZE), Place::Lfree, -1);
+  cv::circle(cv_window, cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS), (int)floor(ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), OccupancyGrid::Lfree, -1);
 
   // create a free polygonal area between robot and each sensed point
   size_t laser_samples = laser_proxy.GetCount();
@@ -272,65 +108,78 @@ void MetricMap::update_window(Position2dProxy& position_proxy, LaserProxy& laser
     double dist = laser_proxy.GetRange(i);
     double x = dist * cos(angle);
     double y = dist * sin(angle);
-    pts2[i].x = (int)floor(x / Place::CELL_SIZE) + WINDOW_HALF_CELLS;
-    pts2[i].y = (int)round(-y / Place::CELL_SIZE) + WINDOW_HALF_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
+    pts2[i].x = (int)floor(x / OccupancyGrid::CELL_SIZE) + WINDOW_RADIUS_CELLS;
+    pts2[i].y = (int)round(-y / OccupancyGrid::CELL_SIZE) + WINDOW_RADIUS_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
     //cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << x << "," << y << "," << angle << endl;
     if (dist < max_range) {
       cv::Point p;
       p.x = pts2[i].x;
-      p.y  = (int)round(y / Place::CELL_SIZE) + WINDOW_HALF_CELLS;
-      if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_CELLS && (uint)p.y < WINDOW_CELLS) pts.push_back(p);
+      p.y  = (int)round(y / OccupancyGrid::CELL_SIZE) + WINDOW_RADIUS_CELLS;
+      if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_SIZE_CELLS && (uint)p.y < WINDOW_SIZE_CELLS) pts.push_back(p);
     }
   }
   const cv::Point* ptr = &pts2[0];
   int contours = laser_samples;
-  fillPoly(cv_window, &ptr, &contours, 1, Place::Lfree, 4);
+  fillPoly(cv_window, &ptr, &contours, 1, OccupancyGrid::Lfree, 4);
 
   // mark individual cells as occupied for each sensed point
   for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it)
-    cv_window(WINDOW_CELLS - it->y - 1, it->x) = Place::Locc * 0.8;
+    cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * 0.8;
 
-  // add the results into the window
-  for (uint i = 0; i < window.size1(); i++) {
-    for (uint j = 0; j < window.size2(); j++) {
-      window(i,j) += cv_window(i,j);
-      if (window(i,j) >= Place::Locc) window(i,j) = Place::Locc;
-      else if (window(i,j) <= Place::Lfree) window(i,j) = Place::Lfree;
+  // apply window to corresponding grids
+  gsl::vector_int window_offset = current_grid->position * OccupancyGrid::CELLS + grid_position();
+
+  gsl::vector_int xy(2);
+  for (size_t i = 0; i < WINDOW_SIZE_CELLS; i++) {
+    xy(1) = MetricMap::WINDOW_SIZE_CELLS - i - 1;
+    for (size_t j = 0; j < WINDOW_SIZE_CELLS; j++) {
+      xy(0) = j;
+      gsl::vector_int absolute_cell = window_offset + (xy - WINDOW_RADIUS_CELLS);
+      //cout << "abs cell: " << absolute_cell << " " << window_offset << " " << WINDOW_RADIUS_CELLS << " " << xy << endl;
+      
+      double& v = super_matrix.cell(absolute_cell(0), absolute_cell(1));
+      v += cv_window(i, j);
+      if (v >= OccupancyGrid::Locc) v = OccupancyGrid::Locc;
+      else if (v <= OccupancyGrid::Lfree) v = OccupancyGrid::Lfree;
+      window(i, j) = cv_window(i, j); // DEBUG
     }
   }
 }
 
-bool MetricMap::in_place(const gsl::vector& coord) {
+bool MetricMap::in_grid(const gsl::vector& coord) {
   for (uint i = 0; i < 2; i++) {
-    if (coord(i) < 0 || coord(i) >= Place::SIZE) return false;
+    if (coord(i) < 0 || coord(i) >= OccupancyGrid::SIZE) return false;
   }
   return true;
 }
 
 gsl::vector_int MetricMap::grid_position(void) {
-  return Place::world2grid(position);
+  return OccupancyGrid::world2grid(position);
 }
 
 void MetricMap::save(void) {
   Plotter& p = *Plotter::instance();
   p << "set term svg";
-  p << "set xrange [0:" + to_s(Place::CELLS) + "]";
-  p << "set yrange [0:" + to_s(Place::CELLS) + "]";
+  p << "set xrange [0:" + to_s(OccupancyGrid::CELLS) + "]";
+  p << "set yrange [0:" + to_s(OccupancyGrid::CELLS) + "]";
   p << "unset xtics; unset ytics; unset ztics; unset key; unset colorbox";
   p << "set palette gray negative";
-  p << "set cbrange [" + to_s(Place::Lfree) + ":" + to_s(Place::Locc) + "]";
+  p << "set cbrange [" + to_s(OccupancyGrid::Lfree) + ":" + to_s(OccupancyGrid::Locc) + "]";
 
   list<string> map_files(glob("csv/grid.*.svg"));
   for (list<string>::iterator it = map_files.begin(); it != map_files.end(); ++it) unlink(it->c_str());
 
-  for (Graph<Node>::NodeIterator it = graph.nodes.begin(); it != graph.nodes.end(); ++it) {
-    string svg_name = "csv/grid." + to_s((*it)->position(0)) + "." + to_s((*it)->position(1)) + ".svg";
-    p << "set output \"" + svg_name + "\"";
-    cout << "guardando " << svg_name << endl;
-    p.plot(Plot((*it)->place.occupancy_matrix, "image", "flipy origin=(0.5,0.5)"));
+  for (SuperMatrix<OccupancyGrid>::iterator_x itx = super_matrix.matrix_map.begin(); itx != super_matrix.matrix_map.end(); ++itx) {
+    for (SuperMatrix<OccupancyGrid>::iterator_y ity = itx->second.begin(); ity != itx->second.end(); ++ity) {
+      OccupancyGrid& g = ity->second;
+      string svg_name = "csv/grid." + to_s(g.position(0)) + "." + to_s(g.position(1)) + ".svg";
+      p << "set output \"" + svg_name + "\"";
+      cout << "guardando " << svg_name << endl;
+      p.plot(Plot(g.m, "image", "flipy origin=(0.5,0.5)"));
+    }
   }
 
   ofstream dot_file("csv/metric_map.dot", ios_base::trunc | ios_base::out);
-  graph.to_dot(dot_file);
+  super_matrix.to_dot(dot_file);
   dot_file.close();
 }

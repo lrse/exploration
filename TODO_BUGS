@@ -1,0 +1,10 @@
+BUGS/PROBLEMAS:
+==============
+- aparecen cuadraditos negros en lados inesperados, que ademas parecen segui la trayectoria del robot
+- VFH: a veces "titubea" -> pasa todavia?
+
+LIMITACIONES
+============
+- si el robot llega a cruzar dos places en diagonal (puede pasar), el robot se "pierde" porque
+no considere ese caso en terminos del mapa topologico
+- el tema de intentar acercarse a una grilla que tiene una pared que no veo -> tiene que existir una forma mejor de manejarlo

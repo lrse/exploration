@@ -5,6 +5,7 @@
 #include <vector>
 #include <list>
 #include <stdexcept>
+#include <iostream>
 using boost::shared_ptr;
 
 namespace HybNav {

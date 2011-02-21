@@ -1,24 +1,51 @@
 #include <limits>
+#include <iostream>
 #include <gslwrap/vector_int.h>
 #include "metric_map.h"
 #include "local_explorer.h"
 #include "global_explorer.h"
+#include "occupancy_grid.h"
 #include "util.h"
 using namespace HybNav;
 using namespace std;
+
+/* constants */
+double OccupancyGrid::CELL_SIZE = 0.07;
+uint OccupancyGrid::CELLS = 51;
+double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
+double OccupancyGrid::Locc = 1.5;
+double OccupancyGrid::Lfree = -1.5;
 
 /**************************
  * Constructor/Destructor *
  **************************/
 
-MetricMap::Node::Node(const gsl::vector_int& _position) : position(_position)
-{ }
+OccupancyGrid::OccupancyGrid(size_t x, size_t y) : position(2), m(CELLS, CELLS, true)
+{
+  position(0) = x; position(1) = y;
+}
 
 /**************************
  *     Public Methods     *
  **************************/
 
-TopoMap::GatewayNode* MetricMap::Node::find_gateway(gsl::vector_int pos, Direction edge) {
+double& OccupancyGrid::operator()(uint x, uint y) {
+  return m(CELLS - y - 1, x);
+}
+
+bool OccupancyGrid::valid_coordinates(int x, int y) {
+  return (x >= 0 && (uint)x < CELLS && y >= 0 && (uint)y < CELLS);
+}
+
+gsl::vector_int OccupancyGrid::world2grid(const gsl::vector& coord) {
+  gsl::vector_int out(2);
+  for (uint i = 0; i < 2; i++) {
+    out(i) = (uint)floor(coord(i) / CELL_SIZE);
+  }
+  return out;
+}
+
+TopoMap::GatewayNode* OccupancyGrid::find_gateway(gsl::vector_int pos, Direction edge) {
   double distance = numeric_limits<double>::max();
   TopoMap::GatewayNode* closest_node = NULL;
   for (list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin(); it != gateway_nodes.end(); ++it) {
@@ -33,7 +60,7 @@ TopoMap::GatewayNode* MetricMap::Node::find_gateway(gsl::vector_int pos, Directi
   else return closest_node;
 }
 
-void MetricMap::Node::update_gateways(bool and_connectivity) {
+void OccupancyGrid::update_gateways(bool and_connectivity) {
   GatewayCoordinates gateway_coordinates = detect_gateways();
 
   // Find GW nodes (and update coordinates, if necessary) which cover detected gateways
@@ -53,7 +80,7 @@ void MetricMap::Node::update_gateways(bool and_connectivity) {
       ++it;
     }
     // else, this gw node is not valid anymore, so delete it from the topo map and from the list of topo nodes associated
-    // with this metric node
+    // with this occupancy grid
     else {
       list<TopoMap::Node*>& follow_path = GlobalExplorer::instance()->follow_path;
       if (find(follow_path.begin(), follow_path.end(), *it) != follow_path.end()) {
@@ -70,16 +97,16 @@ void MetricMap::Node::update_gateways(bool and_connectivity) {
   for (uint i = 0; i < 4; i++) {
     list< pair<uint,uint> >& edge_coordinates = gateway_coordinates[i];
     for (list< pair<uint,uint> >::iterator it = edge_coordinates.begin(); it != edge_coordinates.end(); ++it) {
-      cout << "adding gateway node for [" << it->first << "," << it->second << "] at node " << position << endl;
+      cout << "adding gateway node for [" << it->first << "," << it->second << "] at grid " << position << endl;
       TopoMap::GatewayNode* new_gateway = TopoMap::instance()->add_gateway(this, (Direction)i, it->first, it->second);
       gateway_nodes.push_back(new_gateway);
     }
   }
-  
-  if (MetricMap::instance()->current_node == this && and_connectivity) update_connectivity();
+
+  if (MetricMap::instance()->current_grid == this && and_connectivity) update_connectivity();
 }
 
-void MetricMap::Node::update_connectivity(void) {
+void OccupancyGrid::update_connectivity(void) {
   cout << "Updating connectivity for " << position << endl;
   TopoMap::Node* current_topo_node = TopoMap::instance()->current_node;
   gsl::vector_int start_position(2);
@@ -126,14 +153,14 @@ void MetricMap::Node::update_connectivity(void) {
   }
 }
 
-Direction MetricMap::Node::direction_to(Node* other) {
+Direction OccupancyGrid::direction_to(OccupancyGrid* other) {
   gsl::vector_int direction_vector = other->position;
   direction_vector -= this->position;
   cout << "direction vector: " << direction_vector << endl;
   return MetricMap::vector2direction(direction_vector);
 }
 
-void MetricMap::Node::to_dot(std::ostream& out) {
+void OccupancyGrid::to_dot(std::ostream& out) {
   gsl::vector_int node_position = position;
   node_position *= 2;
 
@@ -147,22 +174,20 @@ void MetricMap::Node::to_dot(std::ostream& out) {
  *    Private Methods     *
  **************************/
 
-vector< list< pair<uint, uint> > > MetricMap::Node::detect_gateways(void) {
+vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
   cout << "Gateways detected for " << position << ":" << endl;
   GatewayCoordinates gateways(4); // for each edge, a list of x0,xf of each gateway
 
-  gsl::matrix& grid = place.occupancy_matrix;
-
   for (uint d = 0; d < 4; d++) {
     bool in_gateway = false;
-    for (size_t k = 0; k < grid.size1(); k++) {
-      uint i = (d == East || d == West ? k : (d == North ? 0 : Place::CELLS - 1));
-      uint j = (d == South || d == North ? k : (d == East ? Place::CELLS - 1 : 0));
+    for (size_t k = 0; k < m.size1(); k++) {
+      uint i = (d == East || d == West ? k : (d == North ? 0 : OccupancyGrid::CELLS - 1));
+      uint j = (d == South || d == North ? k : (d == East ? OccupancyGrid::CELLS - 1 : 0));
 
-      double v = grid(i, j);
+      double v = m(i, j);
       if (v < 0) {
         if (!in_gateway) { gateways[d].push_back(pair<uint,uint>(k,k)); in_gateway = true; }
-        if (k == grid.size1() - 1 && in_gateway) { gateways[d].back().second = k; in_gateway = false; }
+        if (k == m.size1() - 1 && in_gateway) { gateways[d].back().second = k; in_gateway = false; }
       }
       else {
         if (in_gateway) { gateways[d].back().second = k - 1; in_gateway = false; }
@@ -175,11 +200,11 @@ vector< list< pair<uint, uint> > > MetricMap::Node::detect_gateways(void) {
     cout << "\t" << (Direction)d << ":";
     list< pair<uint,uint> >::iterator it = gateways[d].begin();
     while (it != gateways[d].end()) {
-      if (it->second - it->first < ceil((MetricMap::ROBOT_RADIUS * 2) / Place::CELL_SIZE))
+      if (it->second - it->first < ceil((MetricMap::ROBOT_RADIUS * 2) / OccupancyGrid::CELL_SIZE))
         it = gateways[d].erase(it);
       else {
         uint i, j;
-        if (d == East || d == West) { i = Place::CELLS - 1 - it->second; j = Place::CELLS - 1 - it->first; }
+        if (d == East || d == West) { i = OccupancyGrid::CELLS - 1 - it->second; j = OccupancyGrid::CELLS - 1 - it->first; }
         else { i = it->first; j = it->second; }
         cout << " [" << i << ":" << j << "]";
         it->first = i; it->second = j;
@@ -192,7 +217,9 @@ vector< list< pair<uint, uint> > > MetricMap::Node::detect_gateways(void) {
   return gateways;
 }
 
-std::ostream& operator<<(std::ostream& out, const HybNav::MetricMap::Node* node) {
-  out << node->position;
+std::ostream& operator<<(std::ostream& out, const HybNav::OccupancyGrid* grid) {
+  out << grid->position;
   return out;
 }
+
+

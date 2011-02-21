@@ -41,7 +41,7 @@ bool GlobalExplorer::other_paths_left(void) {
 }
 
 void GlobalExplorer::recompute_paths(void) {
-  MetricMap::instance()->current_node->update_gateways();
+  MetricMap::instance()->current_grid->update_gateways();
 
   all_paths = pathfinder.findpath(TopoMap::instance()->current_node);
   if (!all_paths.empty()) { found = true; follow_next_path(); }

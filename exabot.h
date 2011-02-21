@@ -20,6 +20,7 @@ namespace HybNav {
       ~ExaBot(void);
 
       void update(void);
+      void stop(void);
       void deinitialize(void);
 
     private:
@@ -42,6 +43,7 @@ namespace HybNav {
 
       void get_pose(gsl::vector& abs_pos, double& abs_rot);
       void update_position(void);
+      bool first_plot;
 
       std::time_t graph_timer;
   };

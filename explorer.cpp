@@ -10,7 +10,7 @@ using PlayerCc::PlannerProxy;
 
 Explorer::Explorer(void) : Singleton<Explorer>(this) {
   state = ExploringLocally;
-  current_node = MetricMap::instance()->current_node;
+  current_grid = MetricMap::instance()->current_grid;
 }
 
 void Explorer::start(State _state) {
@@ -24,16 +24,16 @@ void Explorer::fsm_advance(void) {
 }
 
 void Explorer::update(void) {
-  cout << "Current node: " << MetricMap::instance()->current_node->position << endl;
-  if (current_node != MetricMap::instance()->current_node) {
-    gsl::vector_int new_position = MetricMap::instance()->current_node->position;
-    cout << "Changed places " << current_node->position << "->" << new_position << endl;
+  cout << "Current grid: " << MetricMap::instance()->current_grid->position << endl;
+  if (current_grid != MetricMap::instance()->current_grid) {
+    gsl::vector_int new_position = MetricMap::instance()->current_grid->position;
+    cout << "Changed places " << current_grid->position << "->" << new_position << endl;
 
     LocalExplorer::instance()->clear_paths(); // When changing places, the last path is not valid anymore
     LocalExplorer::instance()->last_target_valid = false;
 
-    gsl::vector_int exit_vector = MetricMap::instance()->current_node->position;
-    exit_vector -= current_node->position;
+    gsl::vector_int exit_vector = MetricMap::instance()->current_grid->position;
+    exit_vector -= current_grid->position;
     Direction exit_direction = MetricMap::vector2direction(exit_vector);
     Direction entrance_direction;
     switch(exit_direction) {
@@ -44,7 +44,7 @@ void Explorer::update(void) {
     }
 
     cout << "Follow path: " << GlobalExplorer::instance()->follow_path << " current node: " << TopoMap::instance()->current_node << endl;
-    current_node->update_gateways(); // try to re-detect gateways of previous place
+    current_grid->update_gateways(); // try to re-detect gateways of previous place
     cout << "Follow path: " << GlobalExplorer::instance()->follow_path << " current node: " << TopoMap::instance()->current_node << endl;
 
     gsl::vector_int grid_position = MetricMap::instance()->grid_position();
@@ -52,17 +52,17 @@ void Explorer::update(void) {
     gsl::vector_int exit_position = grid_position;
     exit_position -= MetricMap::direction2vector(exit_direction);
 
-    for (uint i = 0; i < 2; i++) exit_position(i) = exit_position(i) % Place::CELLS;
+    for (uint i = 0; i < 2; i++) exit_position(i) = exit_position(i) % OccupancyGrid::CELLS;
 
-    TopoMap::GatewayNode* exit_gateway = current_node->find_gateway(exit_position, exit_direction);
+    TopoMap::GatewayNode* exit_gateway = current_grid->find_gateway(exit_position, exit_direction);
     cout << "Current position: " << grid_position << " Entrance Direction V: " << exit_vector << endl;
 
-    current_node = MetricMap::instance()->current_node;
+    current_grid = MetricMap::instance()->current_grid;
     cout << "Follow path: " << GlobalExplorer::instance()->follow_path << " current node: " << TopoMap::instance()->current_node << endl;
 
     // determine gateway used for entrance, connect to current gateway
-    MetricMap::instance()->current_node->update_gateways(false);
-    TopoMap::GatewayNode* current_gateway = MetricMap::instance()->current_node->find_gateway(grid_position, entrance_direction);
+    MetricMap::instance()->current_grid->update_gateways(false);
+    TopoMap::GatewayNode* current_gateway = MetricMap::instance()->current_grid->find_gateway(grid_position, entrance_direction);
     cout << "connecting current node to exit gateway" << endl;
     TopoMap::instance()->connect(TopoMap::instance()->current_node, exit_gateway);
     cout << "connecting exit gateway to entrance gateway" << endl;
@@ -71,7 +71,7 @@ void Explorer::update(void) {
     current_gateway->set_accessible();
     TopoMap::instance()->current_node = current_gateway;
     cout << "Follow path: " << GlobalExplorer::instance()->follow_path << " current node: " << TopoMap::instance()->current_node << endl;
-    MetricMap::instance()->current_node->update_connectivity(); // may set current_node to a new area node
+    MetricMap::instance()->current_grid->update_connectivity(); // may set current_node to a new area node
     cout << "Follow path: " << GlobalExplorer::instance()->follow_path << " current node: " << TopoMap::instance()->current_node << endl;
 
     cout << "Exit: " << exit_gateway << " Entrance: " << current_gateway << endl;
@@ -124,14 +124,14 @@ void Explorer::update(void) {
     // invalid path or unnecessary path
     bool valid = true;
     for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end(); ++it) {
-      if (Place::valid_coordinates((*it)(0),(*it)(1)) && current_node->place((*it)(0), (*it)(1)) >= Place::Locc) {
+      if (OccupancyGrid::valid_coordinates((*it)(0),(*it)(1)) && (*current_grid)((*it)(0), (*it)(1)) >= OccupancyGrid::Locc) {
         cout << "path crosses obstacle" << endl;
         valid = false; break;
       }
     }
 
     const gsl::vector_int& last = follow_path.back();
-    if (state == ExploringLocally && fabs(current_node->place(last(0), last(1))) > MetricMap::frontier_cell_threshold) {
+    if (state == ExploringLocally && fabs((*current_grid)(last(0), last(1))) > MetricMap::frontier_cell_threshold) {
       cout << "target is no longer frontier cell" << endl;
       valid = false;
     }
@@ -178,7 +178,7 @@ void Explorer::while_exploring_globally(void) {
 
   cout << "Following global path..." << endl;
   TopoMap::Node* target_node = GlobalExplorer::instance()->follow_path.front();
-  cout << "Global path: " << GlobalExplorer::instance()->follow_path << " Current metric node: " << current_node << " Current topo node: " << TopoMap::instance()->current_node << endl;
+  cout << "Global path: " << GlobalExplorer::instance()->follow_path << " Current metric node: " << current_grid << " Current topo node: " << TopoMap::instance()->current_node << endl;
   if (TopoMap::instance()->current_node == target_node) {
     GlobalExplorer::instance()->follow_path.pop_front();
     cout << "Reached node " << target_node << endl;
@@ -211,7 +211,7 @@ bool Explorer::recompute_local_path(void) {
     TopoMap::Node* target_node = GlobalExplorer::instance()->follow_path.front();
     if (target_node->is_gateway()) {
       TopoMap::GatewayNode* target_gateway = (TopoMap::GatewayNode*)target_node;
-      if (target_gateway->metric_node == MetricMap::instance()->current_node) {
+      if (target_gateway->grid == MetricMap::instance()->current_grid) {
         cout << "computing gateway path" << endl;
         LocalExplorer::instance()->compute_gateway_path(target_gateway);
       }
@@ -273,8 +273,8 @@ void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& pla
   double reached_distance_threshold = 0.5;
   double far_distance_threshold = 0.9;
   for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end();) {
-    gsl::vector target_distance = (gsl::vector)(*it) * Place::CELL_SIZE - own_position;
-    cout << "this target: " << *it << " own position: " << own_position << " in cell coords: " << (*it) * Place::CELL_SIZE << endl;
+    gsl::vector target_distance = (gsl::vector)(*it) * OccupancyGrid::CELL_SIZE - own_position;
+    cout << "this target: " << *it << " own position: " << own_position << " in cell coords: " << (*it) * OccupancyGrid::CELL_SIZE << endl;
     cout << "target distance: " << target_distance.norm2() << endl;
 
     list<gsl::vector_int>::iterator it2(it); ++it2;
@@ -285,7 +285,7 @@ void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& pla
 
   if (!follow_path.empty()) {
     gsl::vector_int& target = follow_path.front();
-    gsl::vector target_distance = (gsl::vector)target * Place::CELL_SIZE - own_position;
+    gsl::vector target_distance = (gsl::vector)target * OccupancyGrid::CELL_SIZE - own_position;
     double target_distance_norm = target_distance.norm2();
     cout << "target: " << target(0) << " " << target(1) << " distance: " << target_distance_norm << endl;
 
@@ -310,9 +310,9 @@ void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& pla
       follow_path.pop_front();
     }
     else if (!planner.GetPathValid() || target_distance_norm > far_distance_threshold) {
-      /*if (!Place::valid_coordinates(target(0),target(1))) target_distance_norm = remainder(target_distance_norm, Place::SIZE);
+      /*if (!OccupancyGrid::valid_coordinates(target(0),target(1))) target_distance_norm = remainder(target_distance_norm, OccupancyGrid::SIZE);
       if (abs(gsl_sf_angle_restrict_symm(position_proxy.GetYaw() - target_angle)) > (135.0 * M_PI / 180.0) ||
-        target_distance_norm > (target_distance_threshold + sqrt(2) * Place::CELL_SIZE))*/
+        target_distance_norm > (target_distance_threshold + sqrt(2) * OccupancyGrid::CELL_SIZE))*/
       {
         cout << "Can't go where expected..." << endl;// delta angle: #{Math.angle_restrict_symm(selected_direction - target_angle).abs} d: #{target_distance} target: #{target}" << endl;
         recompute_path();

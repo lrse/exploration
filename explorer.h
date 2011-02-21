@@ -7,7 +7,7 @@
 namespace HybNav {
   class Explorer : public Singleton<Explorer> {
     public:
-      MetricMap::Node* current_node;
+      OccupancyGrid* current_grid;
 
       Explorer(void);
       void update(void);

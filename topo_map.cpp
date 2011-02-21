@@ -9,7 +9,7 @@ using namespace std;
 
 TopoMap::TopoMap(void) : Singleton<TopoMap>(this)
 {
-  current_node = add_area(MetricMap::instance()->current_node);
+  current_node = add_area(MetricMap::instance()->current_grid);
 }
 
 
@@ -17,14 +17,14 @@ TopoMap::TopoMap(void) : Singleton<TopoMap>(this)
  *     Public Methods     *
  **************************/
 
-TopoMap::AreaNode* TopoMap::add_area(MetricMap::Node* metric_node) {
-  shared_ptr<Node> new_node(new AreaNode(metric_node));
+TopoMap::AreaNode* TopoMap::add_area(OccupancyGrid* grid) {
+  shared_ptr<Node> new_node(new AreaNode(grid));
   graph.add_node(new_node);
   return (AreaNode*)new_node.get();
 }
 
-TopoMap::GatewayNode* TopoMap::add_gateway(MetricMap::Node* metric_node, Direction edge, uint x0, uint xf) {
-  shared_ptr<Node> new_node(new GatewayNode(metric_node, edge, x0, xf));
+TopoMap::GatewayNode* TopoMap::add_gateway(OccupancyGrid* grid, Direction edge, uint x0, uint xf) {
+  shared_ptr<Node> new_node(new GatewayNode(grid, edge, x0, xf));
   graph.add_node(new_node);
   return (GatewayNode*)new_node.get();
 }
@@ -97,12 +97,12 @@ std::ostream& operator<<(std::ostream& out, const HybNav::TopoMap::Node* node) {
 
 
 std::ostream& operator<<(std::ostream& out, const HybNav::TopoMap::AreaNode* node) {
-  out << "area of " << node->metric_node->position;
+  out << "area of " << node->grid->position;
   return out;
 }
 
 std::ostream& operator<<(std::ostream& out, const HybNav::TopoMap::GatewayNode* node) {
-  out << "gw of " << node->metric_node << " at " << node->edge << " " << node->position();
+  out << "gw of " << node->grid << " at " << node->edge << " " << node->position();
   return out;
 }
 
@@ -117,5 +117,32 @@ std::ostream& operator<<(std::ostream& out, HybNav::Direction dir) {
 }
 
 void TopoMap::AreaNode::to_dot(std::ostream& out) {
-  out << "label=\"" << metric_node->position << "\"";
+  out << "label=\"" << grid->position << "\"";
 }
+
+void TopoMap::GatewayNode::set_dimensions(uint new_x0, uint new_xf) {
+  x0 = new_x0;
+  xf = new_xf;
+  // the number of attempts equals to the number of robots that can fit into the gateway
+  MAX_REACH_ATTEMPTS = MAX(2, (xf - x0) * (OccupancyGrid::CELL_SIZE / MetricMap::ROBOT_RADIUS));
+}
+
+gsl::vector_int TopoMap::GatewayNode::position(void) const {
+  gsl::vector_int pos(2);
+  if (edge == North || edge == South) { pos(0) = (uint)floor((xf + x0) * 0.5); pos(1) = (edge == North ? OccupancyGrid::CELLS - 1 : 0); }
+  else { pos(1) = floor((xf + x0) * 0.5); pos(0) = (edge == East ? OccupancyGrid::CELLS - 1 : 0); }
+  return pos;
+}
+
+void TopoMap::GatewayNode::get_ranges(gsl::vector_int& x_range, gsl::vector_int& y_range) {
+  if (edge == North || edge == South) {
+    x_range(0) = x0; x_range(1) = xf;
+    y_range(0) = y_range(1) = (edge == North ? OccupancyGrid::CELLS - 1 : 0);
+  }
+  else {
+    y_range(0) = x0; y_range(1) = xf;
+    x_range(0) = x_range(1) = (edge == East ? OccupancyGrid::CELLS - 1 : 0);
+  }
+}
+
+
