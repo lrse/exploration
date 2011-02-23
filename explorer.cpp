@@ -3,15 +3,25 @@
 #include "global_explorer.h"
 #include "local_explorer.h"
 #include "util.h"
+#include "motion_planner.h"
 using namespace HybNav;
 using namespace std;
 using PlayerCc::Position2dProxy;
 using PlayerCc::PlannerProxy;
 
+/**************************
+ * Constructor/Destructor *
+ **************************/
+
 Explorer::Explorer(void) : Singleton<Explorer>(this) {
   state = ExploringLocally;
   current_grid = MetricMap::instance()->current_grid;
 }
+
+
+/**************************
+ *     Public Methods     *
+ **************************/
 
 void Explorer::start(State _state) {
   state = _state;
@@ -264,13 +274,13 @@ void Explorer::recompute_path(void) {
   }
 }
 
-void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& planner) {
+MotionPlanner::Motion Explorer::compute_motion(Position2dProxy& position_proxy) {
   // if the robot is trying to reach a target or not
   list<gsl::vector_int>& follow_path = LocalExplorer::instance()->follow_path;
   const gsl::vector& own_position = MetricMap::instance()->position;
 
   // remove all path nodes already considered as "reached"
-  double reached_distance_threshold = 0.5;
+  double reached_distance_threshold = 0.4;
   double far_distance_threshold = 0.9;
   for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end();) {
     gsl::vector target_distance = (gsl::vector)(*it) * OccupancyGrid::CELL_SIZE - own_position;
@@ -293,41 +303,28 @@ void Explorer::compute_motion(Position2dProxy& position_proxy, PlannerProxy& pla
     target_angle = gsl_sf_angle_restrict_pos(target_angle);
 
     // follow waypoint
-    double x = position_proxy.GetXPos() + target_distance(0);
-    double y = position_proxy.GetYPos() + target_distance(1);
-    double theta = gsl_sf_angle_restrict_symm(target_angle);
-    if (planner.GetGoal().px != x || planner.GetGoal().py != y || planner.GetGoal().pa != theta) {
-      planner.SetGoalPose(x, y, theta);
-      cout << "setting pose to: " << x << " " << y << " " << theta << " current: " << position_proxy.GetXPos() << " " << position_proxy.GetYPos() << " " << position_proxy.GetYaw() << endl;
-    }
+    double safe_angle = MotionPlanner::instance()->compute_motion_direction(target_angle);
 
-    cout << "current waypoint: " << planner.GetGoal().px << " " << " " << planner.GetGoal().py << " " << planner.GetGoal().pa << endl;
     // threshold given by robot size
     //double target_distance_threshold = (state == ExploringLocally && follow_path.size() == 1 ? 0.4 : 0.2);
     
-    if (target_distance_norm < reached_distance_threshold || planner.GetPathDone()) {
+    if (target_distance_norm < reached_distance_threshold) {
       cout << "reached point " << target(0) << " " << target(1) << " in path (distance " << target_distance_norm << ")" << endl;
       follow_path.pop_front();
     }
-    else if (!planner.GetPathValid() || target_distance_norm > far_distance_threshold) {
-      /*if (!OccupancyGrid::valid_coordinates(target(0),target(1))) target_distance_norm = remainder(target_distance_norm, OccupancyGrid::SIZE);
-      if (abs(gsl_sf_angle_restrict_symm(position_proxy.GetYaw() - target_angle)) > (135.0 * M_PI / 180.0) ||
-        target_distance_norm > (target_distance_threshold + sqrt(2) * OccupancyGrid::CELL_SIZE))*/
+    else {
+      if (!OccupancyGrid::valid_coordinates(target(0),target(1))) target_distance_norm = remainder(target_distance_norm, OccupancyGrid::SIZE);
+      if (abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) > (135.0 * M_PI / 180.0) ||
+        target_distance_norm > far_distance_threshold)
       {
         cout << "Can't go where expected..." << endl;// delta angle: #{Math.angle_restrict_symm(selected_direction - target_angle).abs} d: #{target_distance} target: #{target}" << endl;
         recompute_path();
       }
     }
+
+    return MotionPlanner::instance()->compute_motion_from_target(safe_angle);
   }
   else {
-    if (planner.GetWaypointCount() == 0 || !planner.GetPathValid()) {
-      // go forward
-      double x = position_proxy.GetXPos() + cos(position_proxy.GetYaw()) * 2;
-      double y = position_proxy.GetYPos() + sin(position_proxy.GetYaw()) * 2;
-      double theta = gsl_sf_angle_restrict_symm(position_proxy.GetYaw());
-      cout << "setting pose to: " << x << " " << y << " " << theta << " current: " << position_proxy.GetXPos() << " " << position_proxy.GetYPos() << " " << position_proxy.GetYaw() << endl;
-      planner.SetGoalPose(x, y, theta);
-      planner.SetEnable(true);
-    }
+    return MotionPlanner::instance()->compute_motion_from_target(MotionPlanner::instance()->winner_direction_angle());
   }
 }

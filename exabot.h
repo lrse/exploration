@@ -10,6 +10,7 @@
 #include "explorer.h"
 #include "local_explorer.h"
 #include "global_explorer.h"
+#include "motion_planner.h"
 
 using namespace boost::numeric;
 
@@ -28,7 +29,6 @@ namespace HybNav {
       PlayerCc::LaserProxy laser_proxy;
       PlayerCc::Position2dProxy position_proxy;
       PlayerCc::Position2dProxy target_position_proxy;
-      PlayerCc::PlannerProxy planner_proxy;
       PlayerCc::SimulationProxy simulator_proxy;
 
       MetricMap metric_map;
@@ -36,6 +36,7 @@ namespace HybNav {
       LocalExplorer local_explorer;
       GlobalExplorer global_explorer;
       TopoMap topo_map;
+      MotionPlanner motion_planner;
 
       gsl::vector initial_position, last_position;
       double initial_rotation, last_rotation;

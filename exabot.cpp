@@ -13,7 +13,8 @@ using namespace std;
  **************************/
 
 ExaBot::ExaBot(void) : player_client("localhost"), laser_proxy(&player_client),
-  position_proxy(&player_client), target_position_proxy(&player_client, 1), planner_proxy(&player_client), simulator_proxy(&player_client)
+  position_proxy(&player_client), target_position_proxy(&player_client, 1), simulator_proxy(&player_client),
+  motion_planner(position_proxy)
 {
   laser_proxy.RequestGeom();
   position_proxy.RequestGeom();
@@ -58,6 +59,7 @@ void ExaBot::update(void) {
     update_position();
 
     MetricMap::instance()->process_distances(position_proxy, laser_proxy);
+    MotionPlanner::instance()->process_distances(laser_proxy);
     Explorer::instance()->update();
 
     // Graphics
@@ -113,9 +115,54 @@ void ExaBot::update(void) {
       /*if (@delta_position != Vector.zero(2))
         @positions_log << absolute_position.to_a
       end*/
+#if 0
+      /* motion planner plots */
+      {
+        cout << "cells: " << MotionPlanner::instance()->window.size1() << " " << MotionPlanner::instance()->window.size2() << endl;
+        p << "set term x11 1";
+        p << "set xrange [0:" + to_s(MotionPlanner::instance()->WINDOW_CELLS) + "]";
+        p << "set yrange [0:" + to_s(MotionPlanner::instance()->WINDOW_CELLS) + "]";
+        p << "set cbrange [0:1]";
+        p.plot(Plot(MotionPlanner::instance()->window, "image", "flipy origin=(0.5,0.5)"));
+
+        list<Plot> more_plots;
+        p << "set term x11 2";
+        p << "set polar";
+        p << "set xrange [-1:1]; set yrange [-1:1]; unset key; set pointsize 2.0";
+        gsl::matrix m(MotionPlanner::instance()->POLAR_SAMPLES, 2);
+        for (uint i = 0; i < MotionPlanner::instance()->POLAR_SAMPLES; i++) {
+          m(i,0) = MotionPlanner::instance()->POLAR_SAMPLE_ANGLE * i;
+          m(i,1) = MotionPlanner::instance()->binary_histogram(i);
+        }
+        more_plots.push_back(Plot(m, "lines"));
+
+        gsl::matrix m2;
+        if (!MotionPlanner::instance()->candidates.empty()) {
+          m2.set_dimensions(MotionPlanner::instance()->candidates.size(), 2);
+          list<uint>& candidates = MotionPlanner::instance()->candidates;
+          uint i = 0;
+          for (list<uint>::iterator it = candidates.begin(); it != candidates.end(); ++it, ++i) {
+            m2(i,0) = *it * MotionPlanner::instance()->POLAR_SAMPLE_ANGLE;
+            m2(i,1) = 1;
+          }
+          more_plots.push_back(Plot(m2, "points"));
+        }
+        p.plot(more_plots);
+        p << "unset polar";
+      }
+#endif
     }
 
-    Explorer::instance()->compute_motion(position_proxy, planner_proxy);
+    MotionPlanner::Motion motion = Explorer::instance()->compute_motion(position_proxy);
+    if (motion == MotionPlanner::ForwardMotion) {
+      position_proxy.SetSpeed(0.5, 0);
+    }
+    else if (motion == MotionPlanner::LeftTurn) {
+      position_proxy.SetSpeed(0, 0.5);
+    }
+    else {
+      position_proxy.SetSpeed(0, -0.5);
+    }
   }
   catch(const PlayerCc::PlayerError& err) {
     cout << "player error!" << endl;
@@ -161,7 +208,8 @@ void ExaBot::update_position(void) {
 
   double delta_rotation = gsl_sf_angle_restrict_symm(absolute_rotation - last_rotation);
 
-  MetricMap::instance()->update_position(delta_position, delta_rotation);
+  MetricMap::instance()->update_position(delta_position, delta_rotation); // TODO: no need for this
+  MotionPlanner::instance()->update_position();
   last_position = absolute_position;
   last_rotation = absolute_rotation;
 

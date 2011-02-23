@@ -77,7 +77,7 @@ Plotter& Plotter::plot(const Plot& p) {
 void Plotter::operator<<(const gsl::matrix& matrix_data)
 {
   size_t bytes = matrix_data.size1() * matrix_data.size2() * sizeof(double);
-  //cout << "bytes: " << bytes << " size1: " << matrix_data.size1() << " size2: " << matrix_data.size2() << endl;
+  cout << "bytes: " << bytes << " size1: " << matrix_data.size1() << " size2: " << matrix_data.size2() << endl;
   gnuplot_process.get_stdin().write((const char*)(matrix_data.gslobj()->data), bytes);
 }
 

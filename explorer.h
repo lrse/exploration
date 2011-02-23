@@ -3,6 +3,7 @@
 
 #include "singleton.h"
 #include "metric_map.h"
+#include "motion_planner.h"
 
 namespace HybNav {
   class Explorer : public Singleton<Explorer> {
@@ -11,7 +12,7 @@ namespace HybNav {
 
       Explorer(void);
       void update(void);
-      void compute_motion(PlayerCc::Position2dProxy& position_proxy, PlayerCc::PlannerProxy& planner);
+      MotionPlanner::Motion compute_motion(PlayerCc::Position2dProxy& position_proxy);
 
       /* finite state machine */
       enum State { ExploringLocally, ExploringGlobally };
