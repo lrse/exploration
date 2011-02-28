@@ -297,7 +297,7 @@ MotionPlanner::Motion Explorer::compute_motion(Position2dProxy& position_proxy) 
     gsl::vector_int& target = follow_path.front();
     gsl::vector target_distance = (gsl::vector)target * OccupancyGrid::CELL_SIZE - own_position;
     double target_distance_norm = target_distance.norm2();
-    cout << "target: " << target(0) << " " << target(1) << " distance: " << target_distance_norm << endl;
+    cout << "target: " << target << " distance: " << target_distance_norm << endl;
 
     double target_angle = (target_distance_norm == 0 ? 0 : atan2(target_distance(1), target_distance(0))); // cartesian to polar
     target_angle = gsl_sf_angle_restrict_pos(target_angle);
@@ -317,7 +317,8 @@ MotionPlanner::Motion Explorer::compute_motion(Position2dProxy& position_proxy) 
       if (abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) > (135.0 * M_PI / 180.0) ||
         target_distance_norm > far_distance_threshold)
       {
-        cout << "Can't go where expected..." << endl;// delta angle: #{Math.angle_restrict_symm(selected_direction - target_angle).abs} d: #{target_distance} target: #{target}" << endl;
+        cout << "Can't go where expected..." << "delta angle: " << abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) << " d: " << target_distance << " target: "
+          << target << endl;
         recompute_path();
       }
     }
@@ -325,6 +326,6 @@ MotionPlanner::Motion Explorer::compute_motion(Position2dProxy& position_proxy) 
     return MotionPlanner::instance()->compute_motion_from_target(safe_angle);
   }
   else {
-    return MotionPlanner::instance()->compute_motion_from_target(MotionPlanner::instance()->winner_direction_angle());
+    return MotionPlanner::instance()->compute_motion(MotionPlanner::instance()->winner_direction_angle());
   }
 }

@@ -14,14 +14,14 @@ namespace HybNav {
       void process_distances(PlayerCc::LaserProxy& laser_proxy);
 
       double winner_direction_angle(void);
-      double cost_function(uint c, uint target);
-      uint delta_function(int c1, int c2);
+      int cost_function(uint c, uint target);
+      int delta_function(int c1, int c2);
 
       void update_position(void);
       void slide_window(const gsl::vector_int& delta);
 
       enum Motion { ForwardMotion, LeftTurn, RightTurn };
-      void compute_motion(double target_angle);
+      Motion compute_motion(double target_angle);
       double compute_motion_direction(double target_angle);
       Motion compute_motion_from_target(double target_angle);
 

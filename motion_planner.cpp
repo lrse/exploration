@@ -23,10 +23,10 @@ MotionPlanner::MotionPlanner(PlayerCc::Position2dProxy& _position_proxy) : Singl
   CENTER_POS = (WINDOW_SIZE * 0.5);
   POLAR_SAMPLES = 72; // Must be even!
   POLAR_SAMPLE_ANGLE = ((2 * M_PI) / POLAR_SAMPLES);
-  MU1 = 6; // MU1 > MU2 + MU3
+  MU1 = 5; // MU1 > MU2 + MU3
   MU2 = 2;
-  MU3 = 3;
-  MINIMUM_DISTANCE = 0.13;
+  MU3 = 2;
+  MINIMUM_DISTANCE = 0.0;
   ENLARGEMENT_RADIUS = MINIMUM_DISTANCE + MetricMap::ROBOT_RADIUS;
   TAU_HIGH = 0.15; // [0,1]. 1 = al lado del robot, 0 = a WINDOW_CELLS/2 de distancia. Valores mayores a TAU_HIGH se interpretan como obstaculo
   //TAU_LOW = 0.5;
@@ -49,16 +49,19 @@ double MotionPlanner::winner_direction_angle(void) {
   return winner_direction * POLAR_SAMPLE_ANGLE;
 }
 
-double MotionPlanner::cost_function(uint c, uint target) {
-  return
-    MU1 * delta_function(c, target) +
-    MU2 * delta_function(c, (uint)(gsl_sf_angle_restrict_pos(position_proxy.GetYaw()) / POLAR_SAMPLE_ANGLE)) +
-    MU3 * delta_function(c, winner_direction);
+int MotionPlanner::cost_function(uint c, uint target) {
+  int c1 = delta_function(c, target);
+  int c2 = delta_function(c, (int)(gsl_sf_angle_restrict_pos(position_proxy.GetYaw()) / POLAR_SAMPLE_ANGLE));
+  int c3 = delta_function(c, winner_direction);
+  int ret = MU1 * c1 + MU2 * c2 + MU3 * c3;
+  //cout << "target slot: " << target << " (" << target * POLAR_SAMPLE_ANGLE << ")" << endl;
+  //cout << "cost for " << c * POLAR_SAMPLE_ANGLE * (180.0 / M_PI) << " " << c1 << " " << c2 << " " << c3 << " | " << MU1 * c1 << " " << MU2 * c2 << " " << MU3 * c3 << " " << ret << endl;
+  return ret;
 }
 
-uint MotionPlanner::delta_function(int c1, int c2) {
-  int a = min<int>(abs(c1 - c2), abs(c1 - c2 - POLAR_SAMPLES));
-  int b = min<int>(a, abs(c1 - c2 + POLAR_SAMPLES));
+int MotionPlanner::delta_function(int c1, int c2) {
+  int a = min<int>(abs<int>(c1 - c2), abs<int>(c1 - c2 - POLAR_SAMPLES));
+  int b = min<int>(a, abs<int>(c1 - c2 + POLAR_SAMPLES));
   return b;
 }
 
@@ -137,7 +140,7 @@ void MotionPlanner::process_distances(PlayerCc::LaserProxy& laser_proxy)
 }
 
 double MotionPlanner::compute_motion_direction(double target_angle) {
-  uint target_slot = (uint)(target_angle / POLAR_SAMPLE_ANGLE);
+  uint target_slot = (uint)(gsl_sf_angle_restrict_pos(target_angle) / POLAR_SAMPLE_ANGLE);
 
   // determine valleys in binary histogram
   list< std::pair<uint,uint> > valleys;
@@ -167,31 +170,35 @@ double MotionPlanner::compute_motion_direction(double target_angle) {
     } while (i != first_peak);
   }
 
-  // print results
-  for (list< pair<uint,uint> >::iterator it = valleys.begin(); it != valleys.end(); ++it)
-    cout << "[" << it->first << "," << it->second << "] ";
-  cout << endl;
-
   // determine candidates
   candidates.clear();
+  cout << "valleys: ";
   for (list< pair<uint,uint> >::iterator it = valleys.begin(); it != valleys.end(); ++it) {
-    uint l = it->first; uint r = it->second;
+    int l = (int)it->first; int r = (int)it->second;
+    cout << "[" << l << "," << r << "] ";
 
     if (l == 0 && r == POLAR_SAMPLES - 1) {
       candidates.push_back(target_slot); // If no obstacle => follow target
       winner_direction = target_slot;
+      cout << "*";
     }
     else {
       uint d;
       if (l <= r) d = r - l;
-      else d = (POLAR_SAMPLES - (r - l));
+      else d = (POLAR_SAMPLES - (l - r));
 
       if (d <= NARROW_LIMIT) {
         candidates.push_back((l + (d / 2)) % POLAR_SAMPLES);
       }
       else {
-        uint cl = (l + NARROW_LIMIT / 2) % POLAR_SAMPLES;
-        uint cr = (r - NARROW_LIMIT / 2) % POLAR_SAMPLES;
+        int cl, cr;
+        cl = (l + NARROW_LIMIT / 2);
+        cr = (r - NARROW_LIMIT / 2);
+        if (cr < 0) cr += POLAR_SAMPLES;
+        cl %= POLAR_SAMPLES;
+        cr %= POLAR_SAMPLES;
+
+        cout << "(cl/cr: " << cl << " " << cr << ")";
         candidates.push_back(cl);
         candidates.push_back(cr);
         if ((cl <= cr && (target_slot >= cl && target_slot <= cr)) ||
@@ -199,18 +206,28 @@ double MotionPlanner::compute_motion_direction(double target_angle) {
       }
     }
   }
+  cout << endl;
 
-  cout << "candidates: ";
-  uint minimum_cost = numeric_limits<uint>::max();
+  // should this go outside the loop?
+  int minimum_cost = numeric_limits<int>::max();
+  uint potential_winner_direction = winner_direction;
   for (list<uint>::iterator it = candidates.begin(); it != candidates.end(); ++it) {
-    cout << *it * POLAR_SAMPLE_ANGLE * (180.0 / M_PI) << " ";
-    winner_direction = *it;
-    uint this_cost = cost_function(*it, target_slot);
-    if (this_cost < minimum_cost) { minimum_cost = this_cost; winner_direction = *it; }
+    int this_cost = cost_function(*it, target_slot);
+    cout << "this cost: " << this_cost << " minimum cost: " << minimum_cost << endl;
+    if (this_cost < minimum_cost) { minimum_cost = this_cost; potential_winner_direction = *it; }
+    cout << "minimum is now: " << minimum_cost << endl;
   }
+
+  cout << "target: " << target_angle * (180.0 / M_PI) << " ";
+  cout << "candidates: ";
+  for (list<uint>::iterator it = candidates.begin(); it != candidates.end(); ++it) {
+    cout << *it * POLAR_SAMPLE_ANGLE * (180.0 / M_PI) << " (" << cost_function(*it, target_slot) << ") ";
+  }
+
+  winner_direction = potential_winner_direction;
   
   double winner_direction_angle = winner_direction * POLAR_SAMPLE_ANGLE;
-  cout << " winner: " << winner_direction_angle << endl;
+  cout << " winner: " << winner_direction_angle * (180.0 / M_PI) << endl;
 
   return winner_direction_angle;
 }
@@ -233,9 +250,9 @@ MotionPlanner::Motion MotionPlanner::compute_motion_from_target(double target_an
   return motion;
 }
 
-void MotionPlanner::compute_motion(double target_angle) {
+MotionPlanner::Motion MotionPlanner::compute_motion(double target_angle) {
   double selected_direction = compute_motion_direction(target_angle);
-  compute_motion_from_target(selected_direction);
+  return compute_motion_from_target(selected_direction);
 }
 
 void MotionPlanner::slide_window(const gsl::vector_int& delta) {
