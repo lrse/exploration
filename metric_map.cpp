@@ -100,7 +100,7 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   // create a free polygonal area between robot and each sensed point
   size_t laser_samples = laser_proxy.GetCount();
   cout << "laser samples: " << laser_samples << endl;
-  list<cv::Point> pts(laser_samples);
+  list<cv::Point> pts;
   vector<cv::Point> pts2(laser_samples);
 
   for (size_t i = 0; i < laser_samples; i++) {
@@ -138,7 +138,10 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
       //cout << "abs cell: " << absolute_cell << " " << window_offset << " " << WINDOW_RADIUS_CELLS << " " << xy << endl;
       
       double& v = super_matrix.cell(absolute_cell(0), absolute_cell(1));
-      v += cv_window(i, j);
+      double new_v = cv_window(i, j);
+      if (v > 0 && new_v < 0) continue;
+      
+      v += new_v;
       if (v >= OccupancyGrid::Locc) v = OccupancyGrid::Locc;
       else if (v <= OccupancyGrid::Lfree) v = OccupancyGrid::Lfree;
       window(i, j) = cv_window(i, j); // DEBUG

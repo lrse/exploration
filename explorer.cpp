@@ -140,8 +140,7 @@ void Explorer::update(void) {
       }
     }
 
-    const gsl::vector_int& last = follow_path.back();
-    if (state == ExploringLocally && fabs((*current_grid)(last(0), last(1))) > MetricMap::frontier_cell_threshold) {
+    if (state == ExploringLocally && !LocalExplorer::instance()->target_is_frontier()) {
       cout << "target is no longer frontier cell" << endl;
       valid = false;
     }
