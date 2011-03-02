@@ -115,7 +115,7 @@ void ExaBot::update(void) {
       /*if (@delta_position != Vector.zero(2))
         @positions_log << absolute_position.to_a
       end*/
-#if 1
+#if 0
       /* motion planner plots */
       {
         cout << "cells: " << MotionPlanner::instance()->window.size1() << " " << MotionPlanner::instance()->window.size2() << endl;
