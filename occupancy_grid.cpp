@@ -5,6 +5,7 @@
 #include "local_explorer.h"
 #include "global_explorer.h"
 #include "occupancy_grid.h"
+#include "motion_planner.h"
 #include "util.h"
 using namespace HybNav;
 using namespace std;
@@ -15,6 +16,7 @@ uint OccupancyGrid::CELLS = 51;
 double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
+uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(1.0 / OccupancyGrid::CELL_SIZE);
 
 /**************************
  * Constructor/Destructor *
@@ -28,6 +30,13 @@ OccupancyGrid::OccupancyGrid(size_t x, size_t y) : position(2), m(CELLS, CELLS, 
 /**************************
  *     Public Methods     *
  **************************/
+
+gsl::vector_int OccupancyGrid::rowcol2xy(gsl::vector_int rowcol) {
+  gsl::vector_int xy(2);
+  xy(0) = rowcol(1);
+  xy(1) = CELLS - rowcol(0) - 1;
+  return xy;
+}
 
 double& OccupancyGrid::operator()(uint x, uint y) {
   return m(CELLS - y - 1, x);
@@ -174,6 +183,32 @@ void OccupancyGrid::to_dot(std::ostream& out) {
  *    Private Methods     *
  **************************/
 
+bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
+  if (m(i,j) >= 0) return false; // this cell needs to be free
+
+  // also, cells in the neighboring grid (up to a certain distance) need also to be free
+  gsl::vector_int dir_vec = position + MetricMap::direction2vector((Direction)d);
+  OccupancyGrid& neighbor = MetricMap::instance()->super_matrix.submatrix(dir_vec(0), dir_vec(1));
+
+  cout << "neighbor: " << neighbor.position << endl;
+  int posneg = (d == North || d == West ? -1 : 1);
+  int dim = (d == North || d == South ? i : j);
+  for (int k = posneg; abs<int>(k) < GATEWAY_LOOKAHEAD_CELLS; k += posneg) {
+    int kk = dim + k;
+    if (kk < 0) kk += CELLS;
+    else if (kk >= CELLS) kk %= CELLS;
+    cout << "kk " <<  kk << " dim " << dim << " k " << k << endl;
+
+    double neighbor_v;
+    if (d == North || d == South) neighbor_v = neighbor.m(kk, j);
+    else neighbor_v = neighbor.m(i, kk);
+    cout << "value: " << neighbor_v << endl;
+    if (neighbor_v > 0) return false;
+  }
+
+  return true;
+}
+
 vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
   cout << "Gateways detected for " << position << ":" << endl;
   GatewayCoordinates gateways(4); // for each edge, a list of x0,xf of each gateway
@@ -184,12 +219,12 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
       uint i = (d == East || d == West ? k : (d == North ? 0 : OccupancyGrid::CELLS - 1));
       uint j = (d == South || d == North ? k : (d == East ? OccupancyGrid::CELLS - 1 : 0));
 
-      double v = m(i, j);
-      if (v < 0) {
+      if (gateway_condition(i, j, d)) {
         if (!in_gateway) { gateways[d].push_back(pair<uint,uint>(k,k)); in_gateway = true; }
         if (k == m.size1() - 1 && in_gateway) { gateways[d].back().second = k; in_gateway = false; }
       }
       else {
+        cout << "not a gateway cell: " << i << "," << j << " d: " << d << endl;
         if (in_gateway) { gateways[d].back().second = k - 1; in_gateway = false; }
       }
     }
@@ -200,7 +235,7 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
     cout << "\t" << (Direction)d << ":";
     list< pair<uint,uint> >::iterator it = gateways[d].begin();
     while (it != gateways[d].end()) {
-      if (it->second - it->first < ceil((MetricMap::ROBOT_RADIUS * 2) / OccupancyGrid::CELL_SIZE))
+      if (it->second - it->first < ceil((MotionPlanner::instance()->MINIMUM_DISTANCE) / OccupancyGrid::CELL_SIZE))
         it = gateways[d].erase(it);
       else {
         uint i, j;

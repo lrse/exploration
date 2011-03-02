@@ -29,12 +29,16 @@ namespace HybNav {
 
       gsl::matrix m;
 
+      static gsl::vector_int rowcol2xy(gsl::vector_int rowcol);
+
     private:
       std::list<TopoMap::GatewayNode*> gateway_nodes;
       OccupancyGrid(void);
 
       typedef std::vector< std::list< std::pair<uint, uint> > > GatewayCoordinates;
       GatewayCoordinates detect_gateways(void);
+
+      bool gateway_condition(uint i, uint j, uint d);
 
     public:
       /* constants */
@@ -43,6 +47,7 @@ namespace HybNav {
       static double SIZE;
       static double Locc;
       static double Lfree;
+      static uint GATEWAY_LOOKAHEAD_CELLS;
   };
 }
 

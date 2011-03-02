@@ -44,12 +44,11 @@ namespace HybNav {
       gsl::vector position;
       gsl::matrix window, debug_window, temporary_matrix;
       double rotation;
+
+      SuperMatrix<OccupancyGrid> super_matrix;
       
     private:
-      SuperMatrix<OccupancyGrid> super_matrix;
       enum NodeDirections { NorthEast, NorthWest, SouthEast, SouthWest };
-
-      OccupancyGrid* find_grid(const gsl::vector_int& coord);
   };
 }
 

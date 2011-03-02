@@ -42,6 +42,11 @@ T& SuperMatrix<T>::submatrix(ssize_t x, ssize_t y) {
 }
 
 template<class T>
+gsl::vector_int SuperMatrix<T>::get_cell_coordinate(gsl::vector_int local_cell_coord, gsl::vector_int grid_position) {
+  return (grid_position * T::CELLS) + local_cell_coord;
+}
+
+template<class T>
 void SuperMatrix<T>::to_dot(ostream& out) {
   out << "graph G {" << std::endl;
   out << "\tnode [shape=\"box\"]" << std::endl;
