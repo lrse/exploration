@@ -44,6 +44,9 @@ void Explorer::update(void) {
 
     gsl::vector_int exit_vector = MetricMap::instance()->current_grid->position;
     exit_vector -= current_grid->position;
+    if (exit_vector.norm2() > 1) {
+      // TODO!!
+    }
     Direction exit_direction = MetricMap::vector2direction(exit_vector);
     Direction entrance_direction;
     switch(exit_direction) {
@@ -140,7 +143,10 @@ void Explorer::update(void) {
       }
     }
 
-    if (state == ExploringLocally && !LocalExplorer::instance()->target_is_frontier()) {
+    // TODO: this does not work correctly. Frontiers should be re-detected periodically and this would use LocalExplorer's target_is_frontier()
+    // to check validity of the current target
+    /*const gsl::vector_int& last = follow_path.back();
+    if (state == ExploringLocally && fabs((*current_grid)(last(0), last(1))) > 2 * MetricMap::frontier_cell_threshold) {
       cout << "target is no longer frontier cell" << endl;
       valid = false;
     }
@@ -148,7 +154,7 @@ void Explorer::update(void) {
     if (!valid) {
       LocalExplorer::instance()->clear_paths();
       cout << "path is invalid" << endl;
-    }
+    }*/
   }
 }
 
