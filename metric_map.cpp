@@ -5,6 +5,7 @@
 #include <cv.h>
 #include <opencv/cxcore.hpp>
 #include <plotter.h>
+#include <sys/stat.h>
 #include "metric_map.h"
 #include "util.h"
 using namespace HybNav;
@@ -169,6 +170,7 @@ void MetricMap::save(void) {
   p << "set palette gray negative";
   p << "set cbrange [" + to_s(OccupancyGrid::Lfree) + ":" + to_s(OccupancyGrid::Locc) + "]";
 
+  mkdir("csv", 0777);
   list<string> map_files(glob("csv/grid.*.svg"));
   for (list<string>::iterator it = map_files.begin(); it != map_files.end(); ++it) unlink(it->c_str());
 

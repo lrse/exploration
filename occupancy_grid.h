@@ -8,7 +8,7 @@
 namespace HybNav {
   class OccupancyGrid {
     public:
-      OccupancyGrid(size_t x, size_t y);
+      OccupancyGrid(ssize_t x, ssize_t y);
 
       double& operator()(uint x, uint y);
       static bool valid_coordinates(int x, int y);

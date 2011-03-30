@@ -8,8 +8,8 @@ using namespace std;
 
 template<class T>
 double& SuperMatrix<T>::cell(ssize_t x, ssize_t y) {
-  ssize_t mx = (x < 0 ? ((x + 1) / T::CELLS) - 1 : x / T::CELLS);
-  ssize_t my = (y < 0 ? ((y + 1) / T::CELLS) - 1 : y / T::CELLS);
+  ssize_t mx = (x < 0 ? ((x + 1) / (ssize_t)T::CELLS) - 1 : x / (ssize_t)T::CELLS);
+  ssize_t my = (y < 0 ? ((y + 1) / (ssize_t)T::CELLS) - 1 : y / (ssize_t)T::CELLS);
   T& m = submatrix(mx, my);
 
   ssize_t cx = (x % T::CELLS);
