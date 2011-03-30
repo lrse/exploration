@@ -5,6 +5,7 @@
 #include <cv.h>
 #include <opencv/cxcore.hpp>
 #include <plotter.h>
+#include <sys/stat.h>
 #include "metric_map.h"
 #include "util.h"
 using namespace HybNav;
@@ -99,7 +100,6 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
 
   // create a free polygonal area between robot and each sensed point
   size_t laser_samples = laser_proxy.GetCount();
-  cout << "laser samples: " << laser_samples << endl;
   list<cv::Point> pts;
   vector<cv::Point> pts2(laser_samples);
 
@@ -108,13 +108,13 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
     double dist = laser_proxy.GetRange(i);
     double x = dist * cos(angle);
     double y = dist * sin(angle);
-    pts2[i].x = (int)floor(x / OccupancyGrid::CELL_SIZE) + WINDOW_RADIUS_CELLS;
-    pts2[i].y = (int)round(-y / OccupancyGrid::CELL_SIZE) + WINDOW_RADIUS_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
+    pts2[i].x = (int)floor(x / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
+    pts2[i].y = (int)floor(-y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
     //cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << x << "," << y << "," << angle << endl;
     if (dist < max_range) {
       cv::Point p;
       p.x = pts2[i].x;
-      p.y  = (int)round(y / OccupancyGrid::CELL_SIZE) + WINDOW_RADIUS_CELLS;
+      p.y  = (int)floor(y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
       if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_SIZE_CELLS && (uint)p.y < WINDOW_SIZE_CELLS) pts.push_back(p);
     }
   }
@@ -169,6 +169,7 @@ void MetricMap::save(void) {
   p << "set palette gray negative";
   p << "set cbrange [" + to_s(OccupancyGrid::Lfree) + ":" + to_s(OccupancyGrid::Locc) + "]";
 
+  mkdir("csv", 0777);
   list<string> map_files(glob("csv/grid.*.svg"));
   for (list<string>::iterator it = map_files.begin(); it != map_files.end(); ++it) unlink(it->c_str());
 

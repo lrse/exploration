@@ -1,2 +1,9 @@
 build
 nbproject
+.dep.inc
+CMakeCache.txt
+CMakeFiles
+Makefile*
+csv
+main
+cmake_install.cmake

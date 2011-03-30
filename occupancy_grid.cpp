@@ -22,9 +22,10 @@ uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(1.0 / OccupancyGrid::CELL_S
  * Constructor/Destructor *
  **************************/
 
-OccupancyGrid::OccupancyGrid(size_t x, size_t y) : position(2), m(CELLS, CELLS, true)
+OccupancyGrid::OccupancyGrid(ssize_t x, ssize_t y) : position(2), m(CELLS, CELLS, true)
 {
   position(0) = x; position(1) = y;
+  cout << "created grid: " << position << endl;
 }
 
 /**************************
@@ -184,13 +185,16 @@ void OccupancyGrid::to_dot(std::ostream& out) {
  **************************/
 
 bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
-  if (m(i,j) >= 0) return false; // this cell needs to be free
+  if (m(i,j) >= 0) {
+    cout << "cell not free: " << m(i,j) << endl;
+    return false; // this cell needs to be free
+  }
 
   // also, cells in the neighboring grid (up to a certain distance) need also to be free
   gsl::vector_int dir_vec = position + MetricMap::direction2vector((Direction)d);
   OccupancyGrid& neighbor = MetricMap::instance()->super_matrix.submatrix(dir_vec(0), dir_vec(1));
 
-  cout << "neighbor: " << neighbor.position << endl;
+  //cout << "neighbor: " << neighbor.position << endl;
   int posneg = (d == North || d == West ? -1 : 1);
   int dim = (d == North || d == South ? i : j);
   for (int k = posneg; abs<int>(k) < GATEWAY_LOOKAHEAD_CELLS; k += posneg) {
