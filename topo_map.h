@@ -84,10 +84,7 @@ namespace HybNav {
             return NULL;
           }
 
-          void to_dot(std::ostream& out) {
-            out << "label=\"" << edge << " [" << x0 << "," << xf << "]\",shape=\"box\"";
-          }
-
+          void to_dot(std::ostream& out);
 
           OccupancyGrid* grid;
           Direction edge;

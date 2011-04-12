@@ -145,4 +145,8 @@ void TopoMap::GatewayNode::get_ranges(gsl::vector_int& x_range, gsl::vector_int&
   }
 }
 
+void TopoMap::GatewayNode::to_dot(std::ostream& out) {
+  out << "label=\"" << edge << " [" << x0 << "," << xf << "] of " << grid->position << "\",shape=\"box\"";
+}
+
 
