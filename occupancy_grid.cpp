@@ -7,6 +7,7 @@
 #include "occupancy_grid.h"
 #include "motion_planner.h"
 #include "util.h"
+#include "topo_map.h"
 using namespace HybNav;
 using namespace std;
 
@@ -186,7 +187,7 @@ void OccupancyGrid::to_dot(std::ostream& out) {
 
 bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
   if (m(i,j) >= 0) {
-    cout << "cell not free: " << m(i,j) << endl;
+    //cout << "cell not free: " << m(i,j) << endl;
     return false; // this cell needs to be free
   }
 
@@ -201,12 +202,12 @@ bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
     int kk = dim + k;
     if (kk < 0) kk += CELLS;
     else if (kk >= CELLS) kk %= CELLS;
-    cout << "kk " <<  kk << " dim " << dim << " k " << k << endl;
+    //cout << "kk " <<  kk << " dim " << dim << " k " << k << endl;
 
     double neighbor_v;
     if (d == North || d == South) neighbor_v = neighbor.m(kk, j);
     else neighbor_v = neighbor.m(i, kk);
-    cout << "value: " << neighbor_v << endl;
+    //cout << "value: " << neighbor_v << endl;
     if (neighbor_v > 0) return false;
   }
 
@@ -228,7 +229,7 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
         if (k == m.size1() - 1 && in_gateway) { gateways[d].back().second = k; in_gateway = false; }
       }
       else {
-        cout << "not a gateway cell: " << i << "," << j << " d: " << d << endl;
+        //cout << "not a gateway cell: " << i << "," << j << " d: " << d << endl;
         if (in_gateway) { gateways[d].back().second = k - 1; in_gateway = false; }
       }
     }

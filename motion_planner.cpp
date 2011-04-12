@@ -26,9 +26,9 @@ MotionPlanner::MotionPlanner(PlayerCc::Position2dProxy& _position_proxy) : Singl
   MU1 = 5; // MU1 > MU2 + MU3
   MU2 = 2;
   MU3 = 2;
-  MINIMUM_DISTANCE = 0.025;
+  MINIMUM_DISTANCE = 0.01;
   ENLARGEMENT_RADIUS = MINIMUM_DISTANCE + MetricMap::ROBOT_RADIUS;
-  TAU_HIGH = 0.7; // [0,1]. 1 = al lado del robot, 0 = a WINDOW_CELLS/2 de distancia. Valores mayores a TAU_HIGH se interpretan como obstaculo
+  TAU_HIGH = 0.55; // [0,1]. 1 = al lado del robot, 0 = a WINDOW_CELLS/2 de distancia. Valores mayores a TAU_HIGH se interpretan como obstaculo
   //TAU_LOW = 0.5;
   NARROW_LIMIT = 16;
 
@@ -124,13 +124,13 @@ void MotionPlanner::process_distances(PlayerCc::LaserProxy& laser_proxy)
         double gamma = abs(asin(min(ENLARGEMENT_RADIUS / d, 1.0)));
         unsigned int l = (unsigned int)floor(gsl_sf_angle_restrict_pos(beta) / POLAR_SAMPLE_ANGLE);
 
-        polar_histogram(l) += e;
+        polar_histogram(l) = e;
         if (polar_histogram(l) > TAU_HIGH) binary_histogram(l) = 1;
 
         for (double a = -gamma; a <= gamma; a += POLAR_SAMPLE_ANGLE) {
           unsigned int m = (unsigned int)((int)floor(gsl_sf_angle_restrict_pos(beta + a) / POLAR_SAMPLE_ANGLE) % POLAR_SAMPLES);
           if (m != l) {
-            polar_histogram(m) += e;
+            polar_histogram(m) = max(polar_histogram(m), e);
             if (polar_histogram(m) > TAU_HIGH) binary_histogram(m) = 1;
           }
         }
