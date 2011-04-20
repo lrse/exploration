@@ -17,7 +17,7 @@ uint OccupancyGrid::CELLS = 49;
 double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
-uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(1.0 / OccupancyGrid::CELL_SIZE);
+uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(0.8 / OccupancyGrid::CELL_SIZE);
 
 /**************************
  * Constructor/Destructor *
@@ -195,7 +195,7 @@ void OccupancyGrid::to_dot(std::ostream& out) {
 
 bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
   if (m(i,j) >= 0) {
-    cout << "cell not free: " << m(i,j) << endl;
+    //cout << "cell not free: " << m(i,j) << endl;
     return false; // this cell needs to be free
   }
 
@@ -210,12 +210,12 @@ bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
     int kk = dim + k;
     if (kk < 0) kk += CELLS;
     else if (kk >= CELLS) kk %= CELLS;
-    cout << "kk " <<  kk << " dim " << dim << " k " << k << endl;
+    //cout << "kk " <<  kk << " dim " << dim << " k " << k << endl;
 
     double neighbor_v;
     if (d == North || d == South) neighbor_v = neighbor.m(kk, j);
     else neighbor_v = neighbor.m(i, kk);
-    cout << "value: " << neighbor_v << endl;
+    //cout << "value: " << neighbor_v << endl;
     if (neighbor_v > 0) return false;
   }
 
@@ -237,7 +237,7 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
         if (k == m.size1() - 1 && in_gateway) { gateways[d].back().second = k; in_gateway = false; }
       }
       else {
-        cout << "not a gateway cell: " << i << "," << j << " d: " << d << endl;
+        //cout << "not a gateway cell: " << i << "," << j << " d: " << d << endl;
         if (in_gateway) { gateways[d].back().second = k - 1; in_gateway = false; }
       }
     }
@@ -248,7 +248,7 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
     cout << "\t" << (Direction)d << ":";
     list< pair<uint,uint> >::iterator it = gateways[d].begin();
     while (it != gateways[d].end()) {
-      if (it->second - it->first < ceil((MotionPlanner::instance()->MINIMUM_DISTANCE) / OccupancyGrid::CELL_SIZE))
+      if (it->second - it->first < ceil((MotionPlanner::instance()->ENLARGEMENT_RADIUS) / OccupancyGrid::CELL_SIZE))
         it = gateways[d].erase(it);
       else {
         uint i, j;

@@ -26,7 +26,7 @@ MotionPlanner::MotionPlanner(PlayerCc::Position2dProxy& _position_proxy) : Singl
   MU1 = 5; // MU1 > MU2 + MU3
   MU2 = 2;
   MU3 = 2;
-  MINIMUM_DISTANCE = 0.05;
+  MINIMUM_DISTANCE = 0.10;
   ENLARGEMENT_RADIUS = MINIMUM_DISTANCE + MetricMap::ROBOT_RADIUS;
   TAU_HIGH = 0.55; // [0,1]. 1 = al lado del robot, 0 = a WINDOW_CELLS/2 de distancia. Valores mayores a TAU_HIGH se interpretan como obstaculo
   //TAU_LOW = 0.5;
