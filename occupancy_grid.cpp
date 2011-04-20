@@ -13,7 +13,7 @@ using namespace std;
 
 /* constants */
 double OccupancyGrid::CELL_SIZE = 0.07;
-uint OccupancyGrid::CELLS = 51;
+uint OccupancyGrid::CELLS = 49;
 double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
@@ -59,12 +59,20 @@ gsl::vector_int OccupancyGrid::world2grid(const gsl::vector& coord) {
 TopoMap::GatewayNode* OccupancyGrid::find_gateway(gsl::vector_int pos, Direction edge) {
   double distance = numeric_limits<double>::max();
   TopoMap::GatewayNode* closest_node = NULL;
+  gsl::vector_int x_range(2), y_range(2);
   for (list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin(); it != gateway_nodes.end(); ++it) {
     if ((*it)->edge == edge) {
-      gsl::vector_int it_position = (*it)->position();
-      it_position -= pos;
-      distance = min(distance, it_position.norm2());
-      closest_node = *it;
+      // try to find an exact match, otherwise get the closest gateway by its center position
+      (*it)->get_ranges(x_range, y_range);
+      if (x_range(0) <= pos(0) && x_range(1) <= pos(0) && y_range(0) <= pos(1) && pos(1) <= y_range(1)) {
+        closest_node = *it; break;
+      }
+      else {
+        gsl::vector_int it_position = (*it)->position();
+        it_position -= pos;
+        distance = min(distance, it_position.norm2());
+        closest_node = *it;
+      }
     }
   }
   if (!closest_node) throw std::runtime_error("No gateway found for that edge");
@@ -187,7 +195,7 @@ void OccupancyGrid::to_dot(std::ostream& out) {
 
 bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
   if (m(i,j) >= 0) {
-    //cout << "cell not free: " << m(i,j) << endl;
+    cout << "cell not free: " << m(i,j) << endl;
     return false; // this cell needs to be free
   }
 
@@ -202,12 +210,12 @@ bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
     int kk = dim + k;
     if (kk < 0) kk += CELLS;
     else if (kk >= CELLS) kk %= CELLS;
-    //cout << "kk " <<  kk << " dim " << dim << " k " << k << endl;
+    cout << "kk " <<  kk << " dim " << dim << " k " << k << endl;
 
     double neighbor_v;
     if (d == North || d == South) neighbor_v = neighbor.m(kk, j);
     else neighbor_v = neighbor.m(i, kk);
-    //cout << "value: " << neighbor_v << endl;
+    cout << "value: " << neighbor_v << endl;
     if (neighbor_v > 0) return false;
   }
 
@@ -229,7 +237,7 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
         if (k == m.size1() - 1 && in_gateway) { gateways[d].back().second = k; in_gateway = false; }
       }
       else {
-        //cout << "not a gateway cell: " << i << "," << j << " d: " << d << endl;
+        cout << "not a gateway cell: " << i << "," << j << " d: " << d << endl;
         if (in_gateway) { gateways[d].back().second = k - 1; in_gateway = false; }
       }
     }
