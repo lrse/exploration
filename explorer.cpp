@@ -65,8 +65,9 @@ void Explorer::update(void) {
     gsl::vector_int exit_position = grid_position;
     exit_position -= MetricMap::direction2vector(exit_direction);
 
-    cout << "exit position: " << exit_position(0) << " " << exit_position(1) << " -> " << exit_position(0) % OccupancyGrid::CELLS << " " << exit_position(1) % OccupancyGrid::CELLS << endl;
-    for (uint i = 0; i < 2; i++) exit_position(i) = exit_position(i) % OccupancyGrid::CELLS;
+    cout << "exit position before: " << exit_position << endl;
+    for (uint i = 0; i < 2; i++) if (exit_position(i) < 0) exit_position(i) += OccupancyGrid::CELLS; else exit_position(i) %= OccupancyGrid::CELLS;
+    cout << "exit position now: " << exit_position << endl;
 
     TopoMap::GatewayNode* exit_gateway = current_grid->find_gateway(exit_position, exit_direction);
     cout << "Current position: " << grid_position << " Entrance Direction V: " << exit_vector << endl;
