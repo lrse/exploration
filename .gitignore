@@ -4,6 +4,8 @@ nbproject
 CMakeCache.txt
 CMakeFiles
 Makefile*
-csv
+csv/*.svg
+csv/*.png
+csv/*.dot
 main
 cmake_install.cmake
