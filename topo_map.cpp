@@ -155,9 +155,9 @@ bool TopoMap::GatewayNode::unexplored_gateway(void) {
     if ((it->first == this && it->second->is_gateway()) || (it->second == this && it->first->is_gateway())) return false;
   }
 
-  gsl::vector_int adjacent_grid_vec = MetricMap::direction2vector(edge);
-  OccupancyGrid& adjacent_grid = MetricMap::instance()->super_matrix.submatrix(adjacent_grid_vec(0), adjacent_grid_vec(1));
-  gsl::vector_int adj_position = position() + adjacent_grid_vec;
+  OccupancyGrid& adjacent_grid = this->grid->get_neighbor(edge);
+
+  gsl::vector_int adj_position = position() + MetricMap::direction2vector(edge);
   for (uint i = 0; i < 2; i++) { if (adj_position(i) < 0) adj_position(i) += OccupancyGrid::CELLS; else adj_position(i) %= OccupancyGrid::CELLS; }
   GatewayNode* adj_gw_node = adjacent_grid.find_gateway(adj_position, MetricMap::opposite_direction(edge), true);
   if (adj_gw_node) {

@@ -91,7 +91,7 @@ void MetricMap::update_position(const gsl::vector& delta_pos, double delta_rot) 
     gsl::vector_int new_position = current_grid->position + delta;
     cout << "OccupancyGrid delta: " << delta(0) << "," << delta(1) << endl;
     current_grid = &super_matrix.submatrix(new_position(0), new_position(1));
-    cout << "Current node is now: " << current_grid->position(0) << "," << current_grid->position(1) << endl;
+    cout << "Current node is now: " << current_grid->position << endl;
   }
 }
 

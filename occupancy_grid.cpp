@@ -131,37 +131,19 @@ void OccupancyGrid::update_gateways(bool and_connectivity) {
 void OccupancyGrid::update_connectivity(void) {
   cout << "Updating connectivity for " << position << endl;
   TopoMap::Node* current_topo_node = TopoMap::instance()->current_node;
+  
+  cout << "current topo node: " << current_topo_node << endl;
+
+  // determine origin of pathfinding
   gsl::vector_int start_position(2);
   if (current_topo_node->is_area())
     start_position = MetricMap::instance()->grid_position();
   else
     start_position = ((TopoMap::GatewayNode*)current_topo_node)->position();
 
-  cout << "current topo node: " << current_topo_node << endl;
-
-  for (list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin(); it != gateway_nodes.end(); ++it) {
-    gsl::vector_int it_position = (*it)->position();
-    cout << "finding connectivity to " << it_position(0) << "," << it_position(1) << endl;
-    if (LocalExplorer::instance()->connectivity_pathfinder.exists_path(start_position, it_position)) {
-      if (current_topo_node->is_area())
-        TopoMap::instance()->connect(TopoMap::instance()->current_node, *it);
-      else {
-        TopoMap::AreaNode* area_node = (*it)->area_node();
-        if (area_node) TopoMap::instance()->connect(TopoMap::instance()->current_node, area_node);
-      }
-      cout << "connected" << endl;
-    }
-    else {
-      if (current_topo_node->is_area())
-        TopoMap::instance()->disconnect(TopoMap::instance()->current_node, *it);
-      else {
-        TopoMap::AreaNode* area_node = (*it)->area_node();
-        if (area_node) TopoMap::instance()->disconnect(TopoMap::instance()->current_node, area_node);
-      }
-      cout << "not connected" << endl;
-    }
-  }
-
+  // create a new area node in case the current one is a gateway with no area node
+  // if an area node already exists for this topological space (and is associated to gw nodes)
+  // it will later be merged transparently
   if (current_topo_node->is_gateway()) {
     TopoMap::AreaNode* area_of_current = ((TopoMap::GatewayNode*)current_topo_node)->area_node();
     if (!area_of_current) {
@@ -172,6 +154,36 @@ void OccupancyGrid::update_connectivity(void) {
     }
     else
       TopoMap::instance()->current_node = area_of_current;
+  }
+
+  cout << "current topo node now: " << current_topo_node << endl;
+
+  for (list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin(); it != gateway_nodes.end(); ++it) {
+    gsl::vector_int it_position = (*it)->position();
+    // connect area nodes to gateways
+    cout << "finding connectivity to " << it_position << endl;
+    if (LocalExplorer::instance()->connectivity_pathfinder.exists_path(start_position, it_position)) {
+      TopoMap::instance()->connect(TopoMap::instance()->current_node, *it);
+      cout << "connected" << endl;
+    }
+    else {
+      TopoMap::instance()->disconnect(TopoMap::instance()->current_node, *it);
+      cout << "not connected" << endl;
+    }
+
+    // connect gateways to adjacent ones
+    OccupancyGrid& neighbor = get_neighbor((*it)->edge);
+    for (list<TopoMap::GatewayNode*>::iterator n_it = neighbor.gateway_nodes.begin(); n_it != neighbor.gateway_nodes.end(); ++n_it) {
+      if ((*n_it)->edge == MetricMap::opposite_direction((*it)->edge)) {
+        cout << "trying to connect " << *it << " to " << *n_it << endl;
+        int x0 = (*it)->x0;
+        int xf = (*it)->xf;
+        int n_x0 = (*n_it)->x0;
+        int n_xf = (*n_it)->xf;
+        if (abs<int>(n_x0 - x0) < 3 && abs<int>(n_xf - xf) < 3) TopoMap::instance()->connect(*it, *n_it);
+        else cout << "difference too big: " << abs<int>(n_x0 - x0) << " " << abs<int>(n_xf - xf) << endl;
+      }
+    }
   }
 }
 
@@ -192,6 +204,11 @@ void OccupancyGrid::to_dot(std::ostream& out) {
     svg_name << "\" shape=\"box\" imagescale=\"true\" width=\"1.7\" height=\"1.7\" fixedsize=\"true\" labelloc=\"b\"";
 }
 
+OccupancyGrid& OccupancyGrid::get_neighbor(Direction edge) {
+  gsl::vector_int v = position + MetricMap::direction2vector(edge);
+  return MetricMap::instance()->super_matrix.submatrix(v(0), v(1));
+}
+
 /**************************
  *    Private Methods     *
  **************************/
@@ -202,13 +219,24 @@ bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
     return false; // this cell needs to be free
   }
 
-  // also, cells in the neighboring grid (up to a certain distance) need also to be free
-  gsl::vector_int dir_vec = position + MetricMap::direction2vector((Direction)d);
-  OccupancyGrid& neighbor = MetricMap::instance()->super_matrix.submatrix(dir_vec(0), dir_vec(1));
-
-  //cout << "neighbor: " << neighbor.position << endl;
-  int posneg = (d == North || d == West ? -1 : 1);
+  // cells in the current grid up to a certain lookahead distance need to be free
+  int posneg = (d == North || d == West ? 1 : -1);
   int dim = (d == North || d == South ? i : j);
+  for (int k = posneg; abs<int>(k) < GATEWAY_LOOKAHEAD_CELLS; k += posneg) {
+    int kk = dim + k;
+
+    double v;
+    if (d == North || d == South) v = this->m(kk, j);
+    else v = this->m(i, kk);
+    //cout << "value: " << neighbor_v << endl;
+    if (v > 0) return false;
+  }
+
+  // also, cells in the neighboring grid need also to be free
+  OccupancyGrid& neighbor = get_neighbor((Direction)d);
+
+  posneg = (d == North || d == West ? -1 : 1);
+  dim = (d == North || d == South ? i : j);
   for (int k = posneg; abs<int>(k) < GATEWAY_LOOKAHEAD_CELLS; k += posneg) {
     int kk = dim + k;
     if (kk < 0) kk += CELLS;

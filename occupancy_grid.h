@@ -18,6 +18,8 @@ namespace HybNav {
       void update_gateways(bool and_connectivity = true);
       void update_connectivity(void);
 
+      OccupancyGrid& get_neighbor(Direction edge);
+
       Direction direction_to(OccupancyGrid* other);
       gsl::vector_int position;
 
