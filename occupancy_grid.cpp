@@ -56,7 +56,7 @@ gsl::vector_int OccupancyGrid::world2grid(const gsl::vector& coord) {
   return out;
 }
 
-TopoMap::GatewayNode* OccupancyGrid::find_gateway(gsl::vector_int pos, Direction edge) {
+TopoMap::GatewayNode* OccupancyGrid::find_gateway(gsl::vector_int pos, Direction edge, bool accept_nonexistant) {
   double distance = numeric_limits<double>::max();
   TopoMap::GatewayNode* closest_node = NULL;
   gsl::vector_int x_range(2), y_range(2);
@@ -64,7 +64,7 @@ TopoMap::GatewayNode* OccupancyGrid::find_gateway(gsl::vector_int pos, Direction
     if ((*it)->edge == edge) {
       // try to find an exact match, otherwise get the closest gateway by its center position
       (*it)->get_ranges(x_range, y_range);
-      if (x_range(0) <= pos(0) && x_range(1) <= pos(0) && y_range(0) <= pos(1) && pos(1) <= y_range(1)) {
+      if (x_range(0) <= pos(0) && pos(0) <= x_range(1) && y_range(0) <= pos(1) && pos(1) <= y_range(1)) {
         closest_node = *it; break;
       }
       else {
@@ -75,7 +75,10 @@ TopoMap::GatewayNode* OccupancyGrid::find_gateway(gsl::vector_int pos, Direction
       }
     }
   }
-  if (!closest_node) throw std::runtime_error("No gateway found for that edge");
+  if (!closest_node) {
+    if (accept_nonexistant) return NULL;
+    else throw std::runtime_error("No gateway found for that edge");
+  }
   else return closest_node;
 }
 

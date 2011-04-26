@@ -61,6 +61,15 @@ gsl::vector_int MetricMap::direction2vector(Direction dir) {
   return out;
 }
 
+Direction MetricMap::opposite_direction(Direction dir) {
+  switch(dir) {
+    case North: return South; break;
+    case South: return North; break;
+    case West: return East; break;
+    case East: return West; break;
+  }
+}
+
 void MetricMap::update_position(const gsl::vector& delta_pos, double delta_rot) {
   cout << "in-node position before: " << position << endl;
   cout << "Delta pos: " << delta_pos << " delta rot: " << delta_rot << endl;

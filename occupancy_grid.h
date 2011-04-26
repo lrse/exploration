@@ -14,7 +14,7 @@ namespace HybNav {
       static bool valid_coordinates(int x, int y);
       static gsl::vector_int world2grid(const gsl::vector& coord);
 
-      TopoMap::GatewayNode* find_gateway(gsl::vector_int pos, Direction edge);
+      TopoMap::GatewayNode* find_gateway(gsl::vector_int pos, Direction edge, bool accept_nonexistant = false);
       void update_gateways(bool and_connectivity = true);
       void update_connectivity(void);
 

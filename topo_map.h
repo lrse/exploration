@@ -63,13 +63,7 @@ namespace HybNav {
           void set_dimensions(uint new_x0, uint new_xf);
 
           // if this gateway is not connected to another gateway
-          bool unexplored_gateway(void) {
-            Graph<TopoMap::Node>::EdgeArray& edges = TopoMap::instance()->graph.edges;
-            for(Graph<TopoMap::Node>::EdgeIterator it = edges.begin(); it != edges.end(); ++it) {
-              if ((it->first == this && it->second->is_gateway()) || (it->second == this && it->first->is_gateway())) return false;
-            }
-            return true;
-          }
+          bool unexplored_gateway(void);
 
           gsl::vector_int position(void) const;
 

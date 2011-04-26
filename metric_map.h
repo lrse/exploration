@@ -29,6 +29,7 @@ namespace HybNav {
 
       static Direction vector2direction(const gsl::vector_int& v);
       static gsl::vector_int direction2vector(Direction dir);
+      static Direction opposite_direction(Direction dir);
 
       // TODO: coord2index
       void save(void);
