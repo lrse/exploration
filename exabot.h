@@ -24,6 +24,8 @@ namespace HybNav {
       void stop(void);
       void deinitialize(void);
 
+      void update_player(void);
+
     private:
       PlayerCc::PlayerClient player_client;
       PlayerCc::LaserProxy laser_proxy;

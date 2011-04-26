@@ -24,6 +24,7 @@ int main(void) {
   }
   catch(...) {
     exabot.stop();
+    exabot.update_player();
     cout << "Type ctrl+d to end" << endl;
     string a;
     cin >> a;

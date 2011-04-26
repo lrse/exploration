@@ -51,9 +51,14 @@ ExaBot::~ExaBot(void) {
  *     Public Methods     *
  **************************/
 
+void ExaBot::update_player(void)
+{
+  player_client.Read();
+}
+
 void ExaBot::update(void) {
   try {
-    player_client.Read();
+    update_player();
     if (position_proxy.GetStall()) throw std::runtime_error("collision detected!");
 
     update_position();
@@ -115,7 +120,7 @@ void ExaBot::update(void) {
       /*if (@delta_position != Vector.zero(2))
         @positions_log << absolute_position.to_a
       end*/
-#if 1
+#if 0
       /* motion planner plots */
       {
         cout << "cells: " << MotionPlanner::instance()->window.size1() << " " << MotionPlanner::instance()->window.size2() << endl;
