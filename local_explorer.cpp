@@ -155,8 +155,9 @@ void LocalExplorer::compute_gateway_path(TopoMap::GatewayNode* gateway, bool fol
   cout << "Looking for paths to gateway" << endl;
   gsl::vector_int start = MetricMap::instance()->grid_position();
 
-  gateway->get_ranges(connectivity_pathfinder.x_range, connectivity_pathfinder.y_range);
-  all_paths = connectivity_pathfinder.findpath(start, true);
+  all_paths = connectivity_pathfinder.findpath(start, gateway->position(), true);
+  //gateway->get_ranges(connectivity_pathfinder.x_range, connectivity_pathfinder.y_range);
+  //all_paths = connectivity_pathfinder.findpath(start, true);
 
   if (all_paths.empty()) {
     cout << "Movement is impossible" << endl;
