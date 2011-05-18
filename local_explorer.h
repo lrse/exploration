@@ -10,7 +10,7 @@ namespace HybNav {
     public:
       LocalPathfinder(double v);
       virtual ~LocalPathfinder(void) {  }
-      std::list<gsl::vector_int> neighbors(const gsl::vector_int& current);
+      std::list<gsl::vector_int> neighbors(const gsl::vector_int& current, const gsl::vector_int& previous);
       ulong movement_cost(const gsl::vector_int& from, const gsl::vector_int& to, const gsl::vector_int& previous) ;
 
     protected:

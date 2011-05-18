@@ -56,12 +56,12 @@ list< list<T> > Pathfinder<T>::findpath(const T& start, const T& goal, bool use_
       else return solutions;
     }
 
-    list<T> neighbor_list = neighbors(current.element);
+    const T& predecessor = (predecessors.find(current.element) == predecessors.end() ? current.element : predecessors[current.element]);
+    list<T> neighbor_list = neighbors(current.element, predecessor);
     for (typename list<T>::iterator it = neighbor_list.begin(); it != neighbor_list.end(); ++it) {
       T neighbor = (*it);
       if (visited.find(neighbor) != visited.end()) continue;
 
-      const T& predecessor = (predecessors.find(current.element) == predecessors.end() ? current.element : predecessors[current.element]);
       unsigned long tentative_cost = g[current.element] + movement_cost(current.element, neighbor, predecessor);
       bool found = false;
       size_t i;

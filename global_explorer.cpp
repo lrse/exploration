@@ -1,11 +1,45 @@
 #include <iostream>
 #include "metric_map.h"
 #include "global_explorer.h"
+#include "local_explorer.h"
 using namespace HybNav;
 using namespace std;
 
-std::list<TopoMap::Node*> GlobalExplorer::GlobalPathfinder::neighbors(TopoMap::Node* const & current) {
-  return current->neighbors();
+struct ExplorationCost : public binary_function<TopoMap::Node*,TopoMap::Node*,bool> {
+  TopoMap::Node* from, * previous;
+  ExplorationCost(TopoMap::Node* _from, TopoMap::Node* _previous) : from(_from), previous(_previous) { }
+
+  bool operator()(TopoMap::Node* const& a, TopoMap::Node* const& b) {
+    bool result;
+    if (((TopoMap::GatewayNode*)a)->unexplored_gateway() && !((TopoMap::GatewayNode*)b)->unexplored_gateway()) {
+      cout << a << " is unexplored, so it is better than " << b << endl; 
+      result = true;
+    }
+    else if (!((TopoMap::GatewayNode*)a)->unexplored_gateway() && ((TopoMap::GatewayNode*)b)->unexplored_gateway()) {
+      cout << a << " is explored, so it is worst than " << b << endl; 
+      result = false;
+    }
+    else {
+      gsl::vector_int start_position = (from == TopoMap::instance()->current_node ? MetricMap::instance()->grid_position() : ((TopoMap::GatewayNode*)previous)->position());
+      list< list<gsl::vector_int> > paths_to_a = LocalExplorer::instance()->connectivity_pathfinder.findpath(start_position, ((TopoMap::GatewayNode*)a)->position(), true);
+      list< list<gsl::vector_int> > paths_to_b = LocalExplorer::instance()->connectivity_pathfinder.findpath(start_position, ((TopoMap::GatewayNode*)b)->position(), true);
+      unsigned long length_a = (paths_to_a.empty() ? 0 : paths_to_a.front().size());
+      unsigned long length_b = (paths_to_b.empty() ? 0 : paths_to_b.front().size());
+      cout << a << " is " << (length_a < length_b ? "closer" : "farther") << " than " << b << endl;
+      result = (length_a < length_b);
+    }
+    return !result; // sorts from worst to best, since the order is reverses in pathfinder when the priorities are equal
+  }
+};
+
+std::list<TopoMap::Node*> GlobalExplorer::GlobalPathfinder::neighbors(TopoMap::Node* const & current, TopoMap::Node* const& previous) {
+  list<TopoMap::Node*> neighbors = current->neighbors();
+  if (current->is_area()) {
+    cout << "sorting neighbors of " << current << endl;
+    neighbors.sort(ExplorationCost(current, previous));
+    cout << "result: " << neighbors << endl;
+  }
+  return neighbors;
 }
 
 bool GlobalExplorer::GlobalPathfinder::is_goal(TopoMap::Node* const & node) {

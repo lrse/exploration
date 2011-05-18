@@ -5,6 +5,7 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <ctime>
 #include <libplayerc++/playerc++.h>
+#include "singleton.h"
 #include "plotter.h"
 #include "metric_map.h"
 #include "explorer.h"
@@ -15,7 +16,7 @@
 using namespace boost::numeric;
 
 namespace HybNav {
-  class ExaBot {
+  class ExaBot : public Singleton<ExaBot>  {
     public:
       ExaBot(void);
       ~ExaBot(void);

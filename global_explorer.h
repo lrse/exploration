@@ -23,7 +23,7 @@ namespace HybNav {
     private:
       class GlobalPathfinder : public Pathfinder<TopoMap::Node*> {
         public:
-          std::list<TopoMap::Node*> neighbors(TopoMap::Node* const & current);
+          std::list<TopoMap::Node*> neighbors(TopoMap::Node* const & current, TopoMap::Node* const& previous);
           bool is_goal(TopoMap::Node* const& current);
       };
 

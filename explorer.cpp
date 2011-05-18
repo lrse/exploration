@@ -4,6 +4,7 @@
 #include "local_explorer.h"
 #include "util.h"
 #include "motion_planner.h"
+#include "exabot.h"
 using namespace HybNav;
 using namespace std;
 using PlayerCc::Position2dProxy;
@@ -36,6 +37,7 @@ void Explorer::fsm_advance(void) {
 void Explorer::update(void) {
   cout << "Current grid: " << MetricMap::instance()->current_grid->position << endl;
   if (current_grid != MetricMap::instance()->current_grid) {
+    ExaBot::instance()->stop(); // stop robot motion during this iteration
     gsl::vector_int new_position = MetricMap::instance()->current_grid->position;
     cout << "Changed places " << current_grid->position << "->" << new_position << endl;
 
@@ -162,6 +164,7 @@ void Explorer::update(void) {
 
 void Explorer::while_exploring_locally(void) {
   if (LocalExplorer::instance()->follow_path.empty()) {
+    ExaBot::instance()->stop(); // stop robot motion during this iteration
     cout << "Looking for new frontiers..." << endl;
     LocalExplorer::instance()->compute_frontier_paths();
     if (!LocalExplorer::instance()->found_path()) {
@@ -182,6 +185,7 @@ void Explorer::start_exploring_globally(void) {
 
 void Explorer::while_exploring_globally(void) {
   if (GlobalExplorer::instance()->follow_path.empty()) {
+    ExaBot::instance()->stop(); // stop robot motion during this iteration
     if (dynamic_cast<TopoMap::AreaNode*>(TopoMap::instance()->current_node)->completely_explored) {
       cout << "Computing global path..." << endl;
       recompute_path();

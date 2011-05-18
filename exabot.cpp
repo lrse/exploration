@@ -12,7 +12,7 @@ using namespace std;
  * Constructor/Destructor *
  **************************/
 
-ExaBot::ExaBot(void) : player_client("localhost"), laser_proxy(&player_client),
+ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), laser_proxy(&player_client),
   position_proxy(&player_client), target_position_proxy(&player_client, 1), simulator_proxy(&player_client),
   motion_planner(position_proxy)
 {
@@ -176,7 +176,7 @@ void ExaBot::update(void) {
 }
 
 void ExaBot::stop(void) {
-  position_proxy.SetMotorEnable(false);
+  position_proxy.SetSpeed(0, 0);
   player_client.Read();
 }
 

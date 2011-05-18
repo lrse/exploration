@@ -7,7 +7,7 @@ const double wall_safety_radius = 0.4;
 LocalPathfinder::LocalPathfinder(double v) : frontier_value_condition(v) {
 }
 
-list<gsl::vector_int> LocalPathfinder::neighbors(const gsl::vector_int& v) {
+list<gsl::vector_int> LocalPathfinder::neighbors(const gsl::vector_int& v, const gsl::vector_int& previous) {
   OccupancyGrid& grid = *MetricMap::instance()->current_grid;
   list<gsl::vector_int> neighbors;
   gsl::vector_int n(2);

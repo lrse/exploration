@@ -8,7 +8,7 @@ namespace HybNav {
   template <class T>
   class Pathfinder {
     public:
-      virtual std::list<T> neighbors(const T& current) = 0;
+      virtual std::list<T> neighbors(const T& current, const T& predecessor) = 0;
       virtual unsigned long movement_cost(const T& from, const T& to, const T& previous) { return 1; }
       virtual unsigned long distance_heuristic(const T& target) { return 0; }
       virtual bool is_goal(const T& current) { return false; }
