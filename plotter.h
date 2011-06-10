@@ -1,6 +1,7 @@
 #ifndef __PLOTTER_H__
 #define __PLOTTER_H__
 
+#define BOOST_FILESYSTEM_VERSION 2
 #include <boost/process.hpp>
 #include <gslwrap/matrix_double.h>
 #include <list>
