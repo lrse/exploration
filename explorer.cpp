@@ -143,7 +143,8 @@ void Explorer::update(void) {
     for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end(); ++it) {
       if (OccupancyGrid::valid_coordinates((*it)(0),(*it)(1)) && (*current_grid)((*it)(0), (*it)(1)) >= OccupancyGrid::Locc) {
         cout << "path crosses obstacle" << endl;
-        valid = false; break;
+        valid = false;
+        break;
       }
     }
 
@@ -153,12 +154,12 @@ void Explorer::update(void) {
     if (state == ExploringLocally && fabs((*current_grid)(last(0), last(1))) > 2 * MetricMap::frontier_cell_threshold) {
       cout << "target is no longer frontier cell" << endl;
       valid = false;
-    }
+    }*/
 
     if (!valid) {
       LocalExplorer::instance()->clear_paths();
       cout << "path is invalid" << endl;
-    }*/
+    }
   }
 }
 
@@ -223,6 +224,8 @@ void Explorer::while_exploring_globally(void) {
 
 
 bool Explorer::recompute_local_path(void) {
+  ExaBot::instance()->stop(); // stop robot motion during this procedure
+  
   if (state == ExploringLocally) {
     cout << "Recomputing local path to frontiers" << endl;
     LocalExplorer::instance()->compute_frontier_paths();
