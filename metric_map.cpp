@@ -189,6 +189,7 @@ void MetricMap::save(void) {
       p << "set output \"" + svg_name + "\"";
       cout << "guardando " << svg_name << endl;
       p.plot(Plot(g.m, "image", "flipy origin=(0.5,0.5)"));
+      usleep(500000); // sleep 0.5s
     }
   }
 
