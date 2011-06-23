@@ -21,10 +21,13 @@ struct ExplorationCost : public binary_function<TopoMap::Node*,TopoMap::Node*,bo
     }
     else {
       gsl::vector_int start_position = (from == TopoMap::instance()->current_node ? MetricMap::instance()->grid_position() : ((TopoMap::GatewayNode*)previous)->position());
-      list< list<gsl::vector_int> > paths_to_a = LocalExplorer::instance()->connectivity_pathfinder.findpath(start_position, ((TopoMap::GatewayNode*)a)->position(), true);
+      // TODO: this is very expensive, although the distance could be cached when testing for connectivity or at least cached
+      /*list< list<gsl::vector_int> > paths_to_a = LocalExplorer::instance()->connectivity_pathfinder.findpath(start_position, ((TopoMap::GatewayNode*)a)->position(), true);
       list< list<gsl::vector_int> > paths_to_b = LocalExplorer::instance()->connectivity_pathfinder.findpath(start_position, ((TopoMap::GatewayNode*)b)->position(), true);
       unsigned long length_a = (paths_to_a.empty() ? 0 : paths_to_a.front().size());
-      unsigned long length_b = (paths_to_b.empty() ? 0 : paths_to_b.front().size());
+      unsigned long length_b = (paths_to_b.empty() ? 0 : paths_to_b.front().size());*/
+      double length_a = (start_position - ((TopoMap::GatewayNode*)a)->position()).norm2();
+      double length_b = (start_position - ((TopoMap::GatewayNode*)b)->position()).norm2();
       cout << a << " is " << (length_a < length_b ? "closer" : "farther") << " than " << b << endl;
       result = (length_a < length_b);
     }
