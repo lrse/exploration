@@ -33,6 +33,9 @@ namespace HybNav {
       PlayerCc::Position2dProxy position_proxy;
       PlayerCc::Position2dProxy target_position_proxy;
       PlayerCc::SimulationProxy simulator_proxy;
+      
+      double trajectory_length;
+      std::list<gsl::vector> trajectory;
 
       MetricMap metric_map;
       Explorer explorer;
@@ -43,7 +46,6 @@ namespace HybNav {
 
       gsl::vector initial_position, last_position;
       double initial_rotation, last_rotation;
-      double trajectory_length;
 
       void get_pose(gsl::vector& abs_pos, double& abs_rot);
       void update_position(void);

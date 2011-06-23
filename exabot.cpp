@@ -14,7 +14,7 @@ using namespace std;
 
 ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), laser_proxy(&player_client),
   position_proxy(&player_client), target_position_proxy(&player_client, 1), simulator_proxy(&player_client),
-  motion_planner(position_proxy)
+  trajectory_length(0), motion_planner(position_proxy)
 {
   laser_proxy.RequestGeom();
   position_proxy.RequestGeom();
@@ -32,6 +32,7 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   double dummy;
   last_position = gsl::vector(2, true);
   get_pose(last_position, dummy);
+  trajectory.push_back(last_position);
   
   initial_position = last_position;
   trajectory_length = 0;
@@ -67,6 +68,7 @@ void ExaBot::update(void) {
     MotionPlanner::instance()->process_distances(laser_proxy);
     Explorer::instance()->update();
 
+#if 1
     // Graphics
     cout << "timer " << (std::time(NULL) - graph_timer) << endl;
     if (!first_plot || (std::time(NULL) - graph_timer) >= 1) {
@@ -157,6 +159,7 @@ void ExaBot::update(void) {
       }
 #endif
     }
+#endif    
 
     MotionPlanner::Motion motion = Explorer::instance()->compute_motion(position_proxy);
     if (motion == MotionPlanner::ForwardMotion) {
@@ -181,8 +184,11 @@ void ExaBot::stop(void) {
 }
 
 void ExaBot::deinitialize(void) {
-  //puts "Trajectory Length: %.2f" % @trajectory_length
-  //@position_proxy.SetSpeed(0, 0)
+  cout << "Trajectory length: " << trajectory_length << endl;
+  ofstream trajectory_csv("csv/trajectory.csv");
+  for (list<gsl::vector>::iterator it = trajectory.begin(); it != trajectory.end(); ++it) trajectory_csv << (*it)[0] << "," << (*it)[1] << endl;
+  trajectory_csv.close();
+  
   cout << "Saving Map..." << endl;
   MetricMap::instance()->save();
   TopoMap::instance()->save();
@@ -218,9 +224,8 @@ void ExaBot::update_position(void) {
   last_position = absolute_position;
   last_rotation = absolute_rotation;
 
-  /*guessed_position = (MetricMap.instance.position - OccupancyGrid::SIZE * 0.5 + MetricMap.instance.current_node.position * OccupancyGrid::SIZE)
-  error = absolute_position - @initial_position - guessed_position
-  puts "ERROR IN POSITION: #{error.norm} : #{absolute_position - @initial_position} #{guessed_position}"
-  error = absolute_rotation - @initial_rotation - MetricMap.instance.rotation * (Math::PI / 180.0)
-  puts "ERROR IN ROTATION: #{Math.angle_restrict_symm(error)}"*/
+  trajectory_length += delta_position.norm2();    
+  if ((trajectory.back() - absolute_position).norm2() > 0.3) {
+    trajectory.push_back(absolute_position);
+  }
 }
