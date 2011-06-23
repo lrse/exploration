@@ -146,26 +146,32 @@ void TopoMap::GatewayNode::get_ranges(gsl::vector_int& x_range, gsl::vector_int&
 }
 
 void TopoMap::GatewayNode::to_dot(std::ostream& out) {
-  out << "label=\"" << edge << " [" << x0 << "," << xf << "] of " << grid->position << "\",shape=\"box\"";
+  out << "label=\"" << edge << " [" << x0 << ":" << xf << "] of " << grid->position << "\",shape=\"box\"";
 }
 
-bool TopoMap::GatewayNode::unexplored_gateway(void) {
+bool TopoMap::GatewayNode::unexplored_gateway(void) {  
+  // try to find the gateway node connected to this one
+  TopoMap::GatewayNode* connected_gateway = NULL;  
   Graph<TopoMap::Node>::EdgeArray& edges = TopoMap::instance()->graph.edges;
   for(Graph<TopoMap::Node>::EdgeIterator it = edges.begin(); it != edges.end(); ++it) {
-    if ((it->first == this && it->second->is_gateway()) || (it->second == this && it->first->is_gateway())) return false;
+    if (it->first == this && it->second->is_gateway()) connected_gateway = (TopoMap::GatewayNode*)it->second;
+    else if (it->second == this && it->first->is_gateway()) connected_gateway = (TopoMap::GatewayNode*)it->first;
   }
-
-  OccupancyGrid& adjacent_grid = this->grid->get_neighbor(edge);
-
-  gsl::vector_int adj_position = position() + MetricMap::direction2vector(edge);
-  for (uint i = 0; i < 2; i++) { if (adj_position(i) < 0) adj_position(i) += OccupancyGrid::CELLS; else adj_position(i) %= OccupancyGrid::CELLS; }
-  GatewayNode* adj_gw_node = adjacent_grid.find_gateway(adj_position, MetricMap::opposite_direction(edge), true);
-  if (adj_gw_node) {
-    AreaNode* area_node = adj_gw_node->area_node();
-    if (!area_node || !area_node->completely_explored) { cout << this << " has no adj area node or this area node is unexplored" << endl; return true; }
-    else { cout << this << " has adj explored area node (" << area_node << ")" << endl; return false; }
+  
+  // there is no gateway connected, so try to see if there's at least a corresponding gateway node (but not connected)
+  if (!connected_gateway) {
+    OccupancyGrid& adjacent_grid = this->grid->get_neighbor(edge);
+    gsl::vector_int adj_position = position() + MetricMap::direction2vector(edge);
+    for (uint i = 0; i < 2; i++) { if (adj_position(i) < 0) adj_position(i) += OccupancyGrid::CELLS; else adj_position(i) %= OccupancyGrid::CELLS; }
+    connected_gateway = adjacent_grid.find_gateway(adj_position, MetricMap::opposite_direction(edge), true);
+    // no gateway node, let's assume that this gateway leads to unexplored area then
+    if (!connected_gateway) { cout << this << " has no adj area node" << endl; return true; }
   }
-  else { cout << this << " has no adj area node" << endl; return true; }
+  
+  // a corresponding gateway node was found (either connected or not)
+  AreaNode* area_node = connected_gateway->area_node();
+  if (!area_node || !area_node->completely_explored) { cout << this << " has no adj area node or this area node is unexplored" << endl; return true; }
+  else { cout << this << " has adj explored area node (" << area_node << ")" << endl; return false; }
 }
 
 
