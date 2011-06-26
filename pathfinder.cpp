@@ -14,12 +14,12 @@ class priority_queue2 : public priority_queue<T> {
 
 template<class T>
 list< list<T> > Pathfinder<T>::findpath(const T& start, const T& goal, bool first_solution) {
-  return findpath(start, goal, false, first_solution);
+  return findpath(start, goal, false, true/*first_solution*/);
 }
 
 template<class T>
 list< list<T> > Pathfinder<T>::findpath(const T& start, bool first_solution) {
-  return findpath(start, start, true, first_solution);
+  return findpath(start, start, true, true/*first_solution*/);
 }
 
 template<class T>
