@@ -7,15 +7,15 @@ graph G {
 	4[label="North [9:48] of [0,1]",shape="box"]
 	5[label="East [19:48] of [0,1]",shape="box"]
 	6[label="South [26:48] of [0,1]",shape="box"]
-	7[label="West [0:14] of [0,1]",shape="box"]
+	7[label="West [0:13] of [0,1]",shape="box"]
 	8[label="[0,1]"]
 	9[label="East [0:13] of [0,1]",shape="box"]
 	10[label="North [0:48] of [-1,1]",shape="box"]
-	11[label="East [0:14] of [-1,1]",shape="box"]
+	11[label="East [0:13] of [-1,1]",shape="box"]
 	12[label="South [0:36] of [-1,1]",shape="box"]
 	13[label="West [19:48] of [-1,1]",shape="box"]
-	14[label="West [0:14] of [-1,1]",shape="box"]
-	15[label="[-1,1]"]
+	14[label="[-1,1]"]
+	15[label="West [0:14] of [-1,1]",shape="box"]
 	16[label="North [18:48] of [-2,1]",shape="box"]
 	17[label="East [19:48] of [-2,1]",shape="box"]
 	18[label="East [0:14] of [-2,1]",shape="box"]
@@ -27,138 +27,140 @@ graph G {
 	24[label="South [0:48] of [-1,2]",shape="box"]
 	25[label="West [0:15] of [-1,2]",shape="box"]
 	26[label="[-1,2]"]
-	27[label="North [0:43] of [1,0]",shape="box"]
-	28[label="East [38:48] of [1,0]",shape="box"]
-	29[label="South [0:43] of [1,0]",shape="box"]
-	30[label="West [0:48] of [1,0]",shape="box"]
-	31[label="[1,0]"]
-	32[label="North [0:48] of [2,0]",shape="box"]
-	33[label="East [35:48] of [2,0]",shape="box"]
-	34[label="West [38:48] of [2,0]",shape="box"]
-	35[label="[2,0]"]
-	36[label="North [0:43] of [1,1]",shape="box"]
-	37[label="South [0:43] of [1,1]",shape="box"]
-	38[label="West [19:48] of [1,1]",shape="box"]
-	39[label="West [0:13] of [1,1]",shape="box"]
-	40[label="[1,1]"]
-	41[label="[1,1]"]
-	42[label="South [0:43] of [1,2]",shape="box"]
-	43[label="West [0:15] of [1,2]",shape="box"]
-	44[label="[1,2]"]
-	45[label="East [0:15] of [0,2]",shape="box"]
-	46[label="South [9:48] of [0,2]",shape="box"]
-	47[label="[0,2]"]
-	48[label="North [0:36] of [-1,0]",shape="box"]
-	49[label="South [0:48] of [-1,0]",shape="box"]
-	50[label="West [0:48] of [-1,0]",shape="box"]
-	51[label="[-1,0]"]
-	52[label="North [18:48] of [-2,0]",shape="box"]
-	53[label="East [0:48] of [-2,0]",shape="box"]
-	54[label="South [18:48] of [-2,0]",shape="box"]
-	55[label="[-2,0]"]
-	56[label="[-2,1]"]
-	57[label="North [18:48] of [-2,-1]",shape="box"]
-	58[label="East [0:48] of [-2,-1]",shape="box"]
-	59[label="South [18:48] of [-2,-1]",shape="box"]
-	60[label="[-2,-1]"]
+	27[label="North [0:43] of [1,1]",shape="box"]
+	28[label="South [0:43] of [1,1]",shape="box"]
+	29[label="West [19:48] of [1,1]",shape="box"]
+	30[label="West [0:13] of [1,1]",shape="box"]
+	31[label="[1,1]"]
+	32[label="North [0:43] of [1,0]",shape="box"]
+	33[label="East [38:48] of [1,0]",shape="box"]
+	34[label="South [0:43] of [1,0]",shape="box"]
+	35[label="West [0:48] of [1,0]",shape="box"]
+	36[label="[1,0]"]
+	37[label="North [0:48] of [2,0]",shape="box"]
+	38[label="East [34:48] of [2,0]",shape="box"]
+	39[label="West [38:48] of [2,0]",shape="box"]
+	40[label="[2,0]"]
+	41[label="North [0:43] of [1,-1]",shape="box"]
+	42[label="East [0:28] of [1,-1]",shape="box"]
+	43[label="South [0:48] of [1,-1]",shape="box"]
+	44[label="West [0:48] of [1,-1]",shape="box"]
+	45[label="[1,-1]"]
+	46[label="North [9:48] of [0,-1]",shape="box"]
+	47[label="East [0:48] of [0,-1]",shape="box"]
+	48[label="South [9:48] of [0,-1]",shape="box"]
+	49[label="[0,-1]"]
+	50[label="North [9:48] of [0,-2]",shape="box"]
+	51[label="East [7:48] of [0,-2]",shape="box"]
+	52[label="[0,-2]"]
+	53[label="West [7:27] of [0,-2]",shape="box"]
+	54[label="North [0:48] of [-1,-2]",shape="box"]
+	55[label="East [7:27] of [-1,-2]",shape="box"]
+	56[label="West [7:48] of [-1,-2]",shape="box"]
+	57[label="[-1,-2]"]
+	58[label="North [18:48] of [-2,-2]",shape="box"]
+	59[label="East [7:48] of [-2,-2]",shape="box"]
+	60[label="[-2,-2]"]
 	61[label="North [0:48] of [-1,-1]",shape="box"]
 	62[label="South [0:48] of [-1,-1]",shape="box"]
 	63[label="West [0:48] of [-1,-1]",shape="box"]
 	64[label="[-1,-1]"]
-	65[label="North [0:48] of [-1,-2]",shape="box"]
-	66[label="East [7:27] of [-1,-2]",shape="box"]
-	67[label="West [8:48] of [-1,-2]",shape="box"]
-	68[label="[-1,-2]"]
-	69[label="East [8:48] of [0,-2]",shape="box"]
-	70[label="West [7:27] of [0,-2]",shape="box"]
-	71[label="[0,-2]"]
-	72[label="North [9:48] of [0,-2]",shape="box"]
-	73[label="North [0:48] of [1,-2]",shape="box"]
-	74[label="East [0:48] of [1,-2]",shape="box"]
-	75[label="West [8:48] of [1,-2]",shape="box"]
-	76[label="[1,-2]"]
-	77[label="North [0:48] of [2,-2]",shape="box"]
-	78[label="East [0:48] of [2,-2]",shape="box"]
-	79[label="South [3:22] of [2,-2]",shape="box"]
-	80[label="West [0:48] of [2,-2]",shape="box"]
-	81[label="[2,-2]"]
-	82[label="North [3:22] of [2,-3]",shape="box"]
-	83[label="South [0:47] of [2,-3]",shape="box"]
-	84[label="[2,-3]"]
-	85[label="North [0:47] of [2,-4]",shape="box"]
-	86[label="[2,-4]"]
-	87[label="North [0:34] of [3,-2]",shape="box"]
-	88[label="East [0:44] of [3,-2]",shape="box"]
-	89[label="West [0:48] of [3,-2]",shape="box"]
-	90[label="[3,-2]"]
-	91[label="South [0:34] of [3,-1]",shape="box"]
-	92[label="West [33:48] of [3,-1]",shape="box"]
-	93[label="East [33:48] of [2,-1]",shape="box"]
-	94[label="South [0:48] of [2,-1]",shape="box"]
-	95[label="West [0:28] of [2,-1]",shape="box"]
-	96[label="[2,-1]"]
-	97[label="North [0:48] of [2,-1]",shape="box"]
-	98[label="East [0:28] of [2,-1]",shape="box"]
-	99[label="East [0:29] of [2,0]",shape="box"]
-	100[label="South [0:48] of [2,0]",shape="box"]
-	101[label="[2,0]"]
-	102[label="North [0:34] of [3,0]",shape="box"]
-	103[label="South [0:34] of [3,0]",shape="box"]
-	104[label="West [35:48] of [3,0]",shape="box"]
-	105[label="West [0:29] of [3,0]",shape="box"]
-	106[label="[3,0]"]
-	107[label="North [0:34] of [3,-1]",shape="box"]
-	108[label="West [0:28] of [3,-1]",shape="box"]
-	109[label="[3,-1]"]
-	110[label="[3,-1]"]
-	111[label="East [0:44] of [4,-2]",shape="box"]
-	112[label="West [0:44] of [4,-2]",shape="box"]
-	113[label="[4,-2]"]
-	114[label="West [0:44] of [5,-2]",shape="box"]
-	115[label="[5,-2]"]
-	116[label="North [0:43] of [1,-1]",shape="box"]
-	117[label="East [0:28] of [1,-1]",shape="box"]
-	118[label="South [0:48] of [1,-1]",shape="box"]
-	119[label="West [0:48] of [1,-1]",shape="box"]
-	120[label="[1,-1]"]
-	121[label="North [9:48] of [0,-1]",shape="box"]
-	122[label="East [0:48] of [0,-1]",shape="box"]
-	123[label="South [9:48] of [0,-1]",shape="box"]
-	124[label="[0,-1]"]
-	125[label="North [18:48] of [-2,-2]",shape="box"]
-	126[label="East [7:48] of [-2,-2]",shape="box"]
-	127[label="[-2,-2]"]
-	128[label="[3,0]"]
-	129[label="North [0:34] of [3,1]",shape="box"]
-	130[label="South [0:34] of [3,1]",shape="box"]
-	131[label="West [0:48] of [3,1]",shape="box"]
-	132[label="[3,1]"]
-	133[label="North [0:48] of [2,1]",shape="box"]
-	134[label="East [0:48] of [2,1]",shape="box"]
-	135[label="South [0:48] of [2,1]",shape="box"]
-	136[label="[2,1]"]
-	137[label="East [0:15] of [2,2]",shape="box"]
-	138[label="South [0:48] of [2,2]",shape="box"]
-	139[label="[2,2]"]
-	140[label="South [0:34] of [3,2]",shape="box"]
-	141[label="West [0:15] of [3,2]",shape="box"]
-	142[label="[3,2]"]
+	65[label="North [18:48] of [-2,-1]",shape="box"]
+	66[label="East [0:48] of [-2,-1]",shape="box"]
+	67[label="South [18:48] of [-2,-1]",shape="box"]
+	68[label="[-2,-1]"]
+	69[label="North [18:48] of [-2,0]",shape="box"]
+	70[label="East [0:48] of [-2,0]",shape="box"]
+	71[label="South [18:48] of [-2,0]",shape="box"]
+	72[label="[-2,0]"]
+	73[label="North [0:36] of [-1,0]",shape="box"]
+	74[label="South [0:48] of [-1,0]",shape="box"]
+	75[label="West [0:48] of [-1,0]",shape="box"]
+	76[label="[-1,0]"]
+	77[label="[-2,1]"]
+	78[label="East [0:15] of [0,2]",shape="box"]
+	79[label="South [9:48] of [0,2]",shape="box"]
+	80[label="[0,2]"]
+	81[label="South [0:43] of [1,2]",shape="box"]
+	82[label="West [0:15] of [1,2]",shape="box"]
+	83[label="[1,2]"]
+	84[label="[1,1]"]
+	85[label="North [0:34] of [3,0]",shape="box"]
+	86[label="West [34:48] of [3,0]",shape="box"]
+	87[label="[3,0]"]
+	88[label="North [0:34] of [3,1]",shape="box"]
+	89[label="South [0:34] of [3,1]",shape="box"]
+	90[label="West [0:48] of [3,1]",shape="box"]
+	91[label="[3,1]"]
+	92[label="North [0:48] of [2,1]",shape="box"]
+	93[label="East [0:48] of [2,1]",shape="box"]
+	94[label="South [0:48] of [2,1]",shape="box"]
+	95[label="[2,1]"]
+	96[label="East [0:15] of [2,2]",shape="box"]
+	97[label="South [0:48] of [2,2]",shape="box"]
+	98[label="[2,2]"]
+	99[label="South [0:34] of [3,2]",shape="box"]
+	100[label="West [0:15] of [3,2]",shape="box"]
+	101[label="[3,2]"]
+	102[label="North [0:48] of [2,-1]",shape="box"]
+	103[label="East [33:48] of [2,-1]",shape="box"]
+	104[label="South [0:48] of [2,-1]",shape="box"]
+	105[label="West [0:28] of [2,-1]",shape="box"]
+	106[label="[2,-1]"]
+	107[label="East [0:28] of [2,-1]",shape="box"]
+	108[label="North [0:34] of [3,-1]",shape="box"]
+	109[label="South [0:34] of [3,-1]",shape="box"]
+	110[label="West [33:48] of [3,-1]",shape="box"]
+	111[label="West [0:28] of [3,-1]",shape="box"]
+	112[label="[3,-1]"]
+	113[label="South [0:34] of [3,0]",shape="box"]
+	114[label="West [0:29] of [3,0]",shape="box"]
+	115[label="[3,0]"]
+	116[label="East [0:29] of [2,0]",shape="box"]
+	117[label="South [0:48] of [2,0]",shape="box"]
+	118[label="[2,0]"]
+	119[label="[3,-1]"]
+	120[label="North [0:34] of [3,-2]",shape="box"]
+	121[label="East [0:44] of [3,-2]",shape="box"]
+	122[label="West [0:48] of [3,-2]",shape="box"]
+	123[label="[3,-2]"]
+	124[label="North [0:48] of [2,-2]",shape="box"]
+	125[label="East [0:48] of [2,-2]",shape="box"]
+	126[label="South [3:22] of [2,-2]",shape="box"]
+	127[label="West [0:48] of [2,-2]",shape="box"]
+	128[label="[2,-2]"]
+	129[label="North [3:22] of [2,-3]",shape="box"]
+	130[label="South [0:47] of [2,-3]",shape="box"]
+	131[label="[2,-3]"]
+	132[label="North [0:47] of [2,-4]",shape="box"]
+	133[label="[2,-4]"]
+	134[label="North [0:48] of [1,-2]",shape="box"]
+	135[label="East [0:48] of [1,-2]",shape="box"]
+	136[label="West [8:48] of [1,-2]",shape="box"]
+	137[label="[1,-2]"]
+	138[label="East [0:44] of [4,-2]",shape="box"]
+	139[label="West [0:44] of [4,-2]",shape="box"]
+	140[label="[4,-2]"]
+	141[label="West [0:44] of [5,-2]",shape="box"]
+	142[label="[5,-2]"]
 	0 -- 1
+	0 -- 2
+	0 -- 3
 	1 -- 6
 	6 -- 8
 	8 -- 4
 	8 -- 5
 	8 -- 7
 	7 -- 11
-	11 -- 15
-	15 -- 10
-	15 -- 12
-	15 -- 13
-	15 -- 14
-	13 -- 17
-	17 -- 20
+	11 -- 14
+	14 -- 10
+	14 -- 12
+	14 -- 13
+	14 -- 15
+	15 -- 18
+	17 -- 13
 	20 -- 16
-	18 -- 14
+	20 -- 17
 	16 -- 22
 	22 -- 23
 	23 -- 21
@@ -167,137 +169,134 @@ graph G {
 	26 -- 24
 	24 -- 10
 	8 -- 9
-	0 -- 2
-	0 -- 3
-	2 -- 30
+	9 -- 30
 	30 -- 31
-	31 -- 27
 	31 -- 28
-	31 -- 29
-	28 -- 34
-	34 -- 35
-	35 -- 32
-	35 -- 33
-	27 -- 37
-	37 -- 40
-	38 -- 5
-	40 -- 39
-	39 -- 9
-	38 -- 41
-	41 -- 36
-	36 -- 42
-	42 -- 44
-	44 -- 43
-	43 -- 45
-	45 -- 47
-	47 -- 46
-	46 -- 4
-	12 -- 48
-	48 -- 51
-	51 -- 49
-	51 -- 50
-	50 -- 53
+	29 -- 5
+	28 -- 32
+	32 -- 36
+	36 -- 33
+	36 -- 34
+	36 -- 35
+	35 -- 2
+	33 -- 39
+	39 -- 40
+	40 -- 37
+	40 -- 38
+	34 -- 41
+	41 -- 45
+	45 -- 42
+	45 -- 43
+	45 -- 44
+	44 -- 47
+	47 -- 49
+	49 -- 46
+	46 -- 3
+	49 -- 48
+	48 -- 50
+	50 -- 52
+	52 -- 51
+	52 -- 53
 	53 -- 55
-	55 -- 52
-	55 -- 54
-	52 -- 19
-	19 -- 56
-	56 -- 18
-	54 -- 57
-	57 -- 60
+	55 -- 57
+	57 -- 54
+	57 -- 56
+	56 -- 59
+	59 -- 60
 	60 -- 58
-	60 -- 59
-	58 -- 63
-	63 -- 64
+	54 -- 62
+	62 -- 64
 	64 -- 61
-	61 -- 49
-	64 -- 62
-	62 -- 65
-	65 -- 68
-	68 -- 66
+	64 -- 63
+	63 -- 66
+	66 -- 68
+	68 -- 65
 	68 -- 67
-	66 -- 70
-	70 -- 71
-	71 -- 69
+	67 -- 58
+	65 -- 71
 	71 -- 72
-	69 -- 75
+	72 -- 69
+	72 -- 70
+	70 -- 75
 	75 -- 76
 	76 -- 73
+	73 -- 12
 	76 -- 74
-	74 -- 80
-	80 -- 81
-	81 -- 77
-	81 -- 78
-	81 -- 79
-	79 -- 82
-	82 -- 84
-	84 -- 83
-	83 -- 85
-	85 -- 86
-	78 -- 89
-	89 -- 90
-	90 -- 87
-	90 -- 88
-	87 -- 91
-	92 -- 93
-	93 -- 96
-	96 -- 94
-	94 -- 77
-	96 -- 95
-	96 -- 97
-	96 -- 98
-	98 -- 92
-	97 -- 100
+	74 -- 61
+	69 -- 19
+	19 -- 77
+	77 -- 18
+	4 -- 79
+	79 -- 80
+	80 -- 78
+	78 -- 82
+	82 -- 83
+	83 -- 81
+	81 -- 27
+	27 -- 84
+	84 -- 29
+	38 -- 86
+	86 -- 87
+	87 -- 85
+	85 -- 89
+	89 -- 91
+	91 -- 88
+	91 -- 90
+	90 -- 93
+	93 -- 95
+	95 -- 92
+	95 -- 94
+	94 -- 37
+	92 -- 97
+	97 -- 98
+	98 -- 96
+	96 -- 100
 	100 -- 101
 	101 -- 99
-	99 -- 105
+	99 -- 88
+	42 -- 105
 	105 -- 106
+	106 -- 102
 	106 -- 103
-	104 -- 33
-	103 -- 107
-	107 -- 109
-	109 -- 92
-	108 -- 98
-	108 -- 110
-	110 -- 91
-	88 -- 112
-	112 -- 113
-	113 -- 111
-	111 -- 114
-	114 -- 115
-	73 -- 118
-	118 -- 120
-	120 -- 116
-	116 -- 29
-	120 -- 117
-	117 -- 95
-	120 -- 119
-	119 -- 122
-	122 -- 124
-	124 -- 121
-	121 -- 3
-	124 -- 123
-	123 -- 72
-	67 -- 126
-	126 -- 127
-	127 -- 125
-	125 -- 59
-	104 -- 128
-	128 -- 102
-	102 -- 130
+	106 -- 104
+	106 -- 107
+	103 -- 110
+	110 -- 112
+	112 -- 108
+	111 -- 107
+	108 -- 113
+	113 -- 115
+	115 -- 114
+	102 -- 117
+	117 -- 118
+	118 -- 116
+	116 -- 114
+	111 -- 119
+	119 -- 109
+	109 -- 120
+	120 -- 123
+	123 -- 121
+	123 -- 122
+	122 -- 125
+	125 -- 128
+	128 -- 124
+	124 -- 104
+	128 -- 126
+	128 -- 127
+	126 -- 129
+	129 -- 131
+	131 -- 130
 	130 -- 132
-	132 -- 129
-	132 -- 131
-	131 -- 134
-	134 -- 136
-	136 -- 133
-	136 -- 135
-	135 -- 32
-	133 -- 138
-	138 -- 139
-	139 -- 137
-	137 -- 141
+	132 -- 133
+	127 -- 135
+	135 -- 137
+	137 -- 134
+	134 -- 43
+	137 -- 136
+	136 -- 51
+	121 -- 139
+	139 -- 140
+	140 -- 138
+	138 -- 141
 	141 -- 142
-	142 -- 140
-	140 -- 129
 }
