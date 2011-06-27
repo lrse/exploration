@@ -34,6 +34,7 @@ namespace HybNav {
           virtual bool is_gateway(void) const { return false; }
           virtual bool is_area(void) const { return false; }
           virtual void to_dot(std::ostream& out)=0;
+          virtual void to_graphml(std::ostream& out)=0;
 
           std::list<Node*> neighbors(void) {
             std::list<Node*> out;
@@ -79,6 +80,7 @@ namespace HybNav {
           }
 
           void to_dot(std::ostream& out);
+          void to_graphml(std::ostream& out);
 
           OccupancyGrid* grid;
           Direction edge;
@@ -92,7 +94,8 @@ namespace HybNav {
           AreaNode(OccupancyGrid* _grid) : Node(), grid(_grid), completely_explored(false) { }
           bool is_area(void) const { return true; }
 
-          void to_dot(std::ostream& out); 
+          void to_dot(std::ostream& out);
+          void to_graphml(std::ostream& out);
 
           OccupancyGrid* grid;
           bool completely_explored;

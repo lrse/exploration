@@ -103,6 +103,31 @@ namespace HybNav {
 
         out << "}" << std::endl;
       }
+
+      void to_graphml(std::ostream& out) {
+        out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl;
+        out << "<graphml "
+          "xmlns=\"http://graphml.graphdrawing.org/xmlns/graphml\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+          "xmlns:y=\"http://www.yworks.com/xml/graphml\" xsi:schemaLocation=\"http://graphml.graphdrawing.org/xmlns/graphml http://www.yworks.com/xml/schema/graphml/1.0/ygraphml.xsd\">" << std::endl;
+        out << "<key for=\"node\" id=\"d0\" yfiles.type=\"nodegraphics\"/>" << std::endl;
+        out << "<key for=\"edge\" id=\"d1\" yfiles.type=\"edgegraphics\"/>" << std::endl;
+        out << "<graph id=\"G\" edgedefault=\"undirected\">" << std::endl;
+        
+        for (NodeIterator it = nodes.begin(); it != nodes.end(); ++it)
+          (*it)->to_graphml(out);
+
+        for (EdgeIterator it = edges.begin(); it != edges.end(); ++it) {
+          out << "<edge source=\"" << node_index(it->first) << "\" target=\"" << node_index(it->second) << "\">" << std::endl;
+          out << "  <data key=\"d1\">" << std::endl;
+          out << "    <y:PolyLineEdge>" << std::endl;
+          out << "      <y:Arrows source=\"none\" target=\"none\"/>" << std::endl;
+          out << "    </y:PolyLineEdge>" << std::endl;
+          out << "  </data>" << std::endl;
+          out << "</edge>" << std::endl;
+        }
+
+        out << "</graph>\n</graphml>" << std::endl;
+      }
   };
 }
 

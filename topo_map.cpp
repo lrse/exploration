@@ -74,11 +74,13 @@ void TopoMap::merge(TopoMap::AreaNode* area1, TopoMap::AreaNode* area2) {
 
 void TopoMap::save(void) {
   cout << "Saving topo map" << endl;
-  //cout << *this << endl;
   ofstream dot_file("csv/topo_map.dot", ios_base::trunc | ios_base::out);
   graph.to_dot(dot_file);
   dot_file.close();
-  //graph.to_png("csv/topo_map.png");
+
+  ofstream graphml_file("csv/topo_map.graphml", ios_base::trunc | ios_base::out);
+  graph.to_graphml(graphml_file);
+  graphml_file.close();
 }
 
 std::ostream& operator<<(std::ostream& out, const std::list<HybNav::TopoMap::Node*>& l) {
@@ -120,6 +122,17 @@ void TopoMap::AreaNode::to_dot(std::ostream& out) {
   out << "label=\"" << grid->position << "\"";
 }
 
+void TopoMap::AreaNode::to_graphml(std::ostream& out) {
+  out << "<node id=\"" << TopoMap::instance()->graph.node_index(this) << "\">" << endl;
+  out << "  <data key=\"d0\">" << endl;
+  out << "    <y:ShapeNode>" << endl;
+  out << "      <y:NodeLabel alignment=\"center\" autoSizePolicy=\"content\" visible=\"true\">" << grid->position << "</y:NodeLabel>" << endl;
+  out << "      <y:Shape type=\"ellipse\"/>" << endl;
+  out << "    </y:ShapeNode>" << endl;
+  out << "  </data>" << endl;
+  out << "</node>" << endl;
+}
+
 void TopoMap::GatewayNode::set_dimensions(uint new_x0, uint new_xf) {
   x0 = new_x0;
   xf = new_xf;
@@ -147,6 +160,17 @@ void TopoMap::GatewayNode::get_ranges(gsl::vector_int& x_range, gsl::vector_int&
 
 void TopoMap::GatewayNode::to_dot(std::ostream& out) {
   out << "label=\"" << edge << " [" << x0 << ":" << xf << "] of " << grid->position << "\",shape=\"box\"";
+}
+
+void TopoMap::GatewayNode::to_graphml(std::ostream& out) {
+  out << "<node id=\"" << TopoMap::instance()->graph.node_index(this) << "\">" << endl;
+  out << "  <data key=\"d0\">" << endl;
+  out << "    <y:ShapeNode>" << endl;
+  out << "      <y:NodeLabel alignment=\"center\" autoSizePolicy=\"content\" visible=\"true\">" << edge << "[" << x0 << ":" << xf << "] of " << grid->position << "</y:NodeLabel>" << endl;
+  out << "      <y:Shape type=\"rectangle\"/>" << endl;
+  out << "    </y:ShapeNode>" << endl;
+  out << "  </data>" << endl;
+  out << "</node>" << endl;
 }
 
 bool TopoMap::GatewayNode::unexplored_gateway(void) {  
