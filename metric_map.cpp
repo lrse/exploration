@@ -16,7 +16,7 @@ using PlayerCc::Position2dProxy;
 // These numbers account for 4m of sensors range (sick has 8m)
 uint MetricMap::WINDOW_SIZE_CELLS = 115; // must be odd!
 uint MetricMap::WINDOW_RADIUS_CELLS = (MetricMap::WINDOW_SIZE_CELLS - 1) / 2;
-double MetricMap::ROBOT_RADIUS = 0.4;
+double MetricMap::ROBOT_RADIUS = 0.1;
 
 /**************************
  * Constructor/Destructor *
@@ -104,9 +104,6 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   cv::Mat_<double> cv_window(WINDOW_SIZE_CELLS, WINDOW_SIZE_CELLS);
   cv_window = 0;
 
-  // create a free circular area around robot
-  cv::circle(cv_window, cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS), (int)floor(ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), OccupancyGrid::Lfree, -1);
-
   // create a free polygonal area between robot and each sensed point
   size_t laser_samples = laser_proxy.GetCount();
   list<cv::Point> pts;
@@ -129,11 +126,14 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   }
   const cv::Point* ptr = &pts2[0];
   int contours = laser_samples;
-  fillPoly(cv_window, &ptr, &contours, 1, OccupancyGrid::Lfree, 4);
+  fillPoly(cv_window, &ptr, &contours, 1, OccupancyGrid::Lfree * 0.05, 4);
 
   // mark individual cells as occupied for each sensed point
   for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it)
-    cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * 0.8;
+    cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * 0.1;
+    
+  // create a free circular area around robot
+  cv::circle(cv_window, cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS), (int)floor(1.5 * ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), OccupancyGrid::Lfree, -1, CV_AA);
 
   // apply window to corresponding grids
   gsl::vector_int window_offset = current_grid->position * OccupancyGrid::CELLS + grid_position();

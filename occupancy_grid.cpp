@@ -11,13 +11,23 @@
 using namespace HybNav;
 using namespace std;
 
+#define SYROTEK 1
+
 /* constants */
+#if SYROTEK
+double OccupancyGrid::CELL_SIZE = 0.02;
+#else
 double OccupancyGrid::CELL_SIZE = 0.07;
-uint OccupancyGrid::CELLS = 49;
+#endif
+uint OccupancyGrid::CELLS = 87;
 double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
-uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(0.8 / OccupancyGrid::CELL_SIZE);
+#if SYROTEK
+uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(0.3 / OccupancyGrid::CELL_SIZE);
+#else
+uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(0.9 / OccupancyGrid::CELL_SIZE);
+#endif
 
 /**************************
  * Constructor/Destructor *

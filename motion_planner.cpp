@@ -9,6 +9,8 @@ using namespace std;
 /**************************
  * Constructor/Destructor *
  **************************/
+ 
+#define SYROTEK 1
 
 MotionPlanner::MotionPlanner(PlayerCc::Position2dProxy& _position_proxy) : Singleton<MotionPlanner>(this),
   position_proxy(_position_proxy), last_position(2), delta_position(2, true)
@@ -17,7 +19,11 @@ MotionPlanner::MotionPlanner(PlayerCc::Position2dProxy& _position_proxy) : Singl
   last_position(0) = position_proxy.GetXPos();
   last_position(1) = position_proxy.GetYPos();
 
-  WINDOW_CELLS = 51; // Must be odd!
+#if SYROTEK
+  WINDOW_CELLS = 81; // Must be odd!
+#else
+  WINDOW_CELLS = 71; // Must be odd!
+#endif
   WINDOW_HALF_CELLS = (WINDOW_CELLS - 1) / 2;
   WINDOW_SIZE = WINDOW_CELLS * OccupancyGrid::CELL_SIZE;
   CENTER_POS = (WINDOW_SIZE * 0.5);
@@ -26,9 +32,13 @@ MotionPlanner::MotionPlanner(PlayerCc::Position2dProxy& _position_proxy) : Singl
   MU1 = 5; // MU1 > MU2 + MU3
   MU2 = 2;
   MU3 = 2;
-  MINIMUM_DISTANCE = 0.10;
+  MINIMUM_DISTANCE = 0.01;
   ENLARGEMENT_RADIUS = MINIMUM_DISTANCE + MetricMap::ROBOT_RADIUS;
+#if SYROTEK
   TAU_HIGH = 0.55; // [0,1]. 1 = al lado del robot, 0 = a WINDOW_CELLS/2 de distancia. Valores mayores a TAU_HIGH se interpretan como obstaculo
+#else
+  TAU_HIGH = 0.55; // [0,1]. 1 = al lado del robot, 0 = a WINDOW_CELLS/2 de distancia. Valores mayores a TAU_HIGH se interpretan como obstaculo
+#endif
   //TAU_LOW = 0.5;
   NARROW_LIMIT = 16;
 
@@ -122,7 +132,7 @@ void MotionPlanner::process_distances(PlayerCc::LaserProxy& laser_proxy)
       double beta = (d == 0 ? 0 : atan2(coord[1], coord[0]));
       if (d != 0) {
         double gamma = abs(asin(min(ENLARGEMENT_RADIUS / d, 1.0)));
-        unsigned int l = (unsigned int)floor(gsl_sf_angle_restrict_pos(beta) / POLAR_SAMPLE_ANGLE);
+        unsigned int l = (unsigned int)floor(gsl_sf_angle_restrict_pos(beta) / POLAR_SAMPLE_ANGLE) % POLAR_SAMPLES;
 
         polar_histogram(l) = e;
         if (polar_histogram(l) > TAU_HIGH) binary_histogram(l) = 1;
@@ -207,6 +217,8 @@ double MotionPlanner::compute_motion_direction(double target_angle) {
     }
   }
   cout << endl;
+  
+  if (candidates.empty()) throw std::runtime_error("no safe angle!");
 
   // should this go outside the loop?
   int minimum_cost = numeric_limits<int>::max();

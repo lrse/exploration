@@ -122,7 +122,7 @@ void ExaBot::update(void) {
       /*if (@delta_position != Vector.zero(2))
         @positions_log << absolute_position.to_a
       end*/
-#if 0
+#if 1
       /* motion planner plots */
       {
         cout << "cells: " << MotionPlanner::instance()->window.size1() << " " << MotionPlanner::instance()->window.size2() << endl;
@@ -163,13 +163,13 @@ void ExaBot::update(void) {
 
     MotionPlanner::Motion motion = Explorer::instance()->compute_motion(position_proxy);
     if (motion == MotionPlanner::ForwardMotion) {
-      position_proxy.SetSpeed(0.5, 0);
+      position_proxy.SetSpeed(0.1, 0);
     }
     else if (motion == MotionPlanner::LeftTurn) {
-      position_proxy.SetSpeed(0, 0.5);
+      position_proxy.SetSpeed(0, 0.2);
     }
     else {
-      position_proxy.SetSpeed(0, -0.5);
+      position_proxy.SetSpeed(0, -0.2);
     }
   }
   catch(const PlayerCc::PlayerError& err) {
