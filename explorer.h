@@ -12,7 +12,7 @@ namespace HybNav {
 
       Explorer(void);
       void update(void);
-      MotionPlanner::Motion compute_motion(PlayerCc::Position2dProxy& position_proxy);
+      void compute_motion(PlayerCc::Position2dProxy& position_proxy);
 
       /* finite state machine */
       enum State { ExploringLocally, ExploringGlobally };

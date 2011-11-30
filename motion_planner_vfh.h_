@@ -10,12 +10,10 @@
 namespace HybNav {
   class MotionPlanner : public Singleton<MotionPlanner> {
     public:
-      MotionPlanner(PlayerCc::PlayerClient* player_client);
-      
-      void set_goal(double x, double y, double theta);
-      bool valid_path(void);
-      
-      /*double winner_direction_angle(void);
+      MotionPlanner(PlayerCc::Position2dProxy& position_proxy);
+      void process_distances(PlayerCc::LaserProxy& laser_proxy);
+
+      double winner_direction_angle(void);
       int cost_function(uint c, uint target);
       int delta_function(int c1, int c2);
 
@@ -25,7 +23,7 @@ namespace HybNav {
       enum Motion { ForwardMotion, LeftTurn, RightTurn };
       Motion compute_motion(double target_angle);
       double compute_motion_direction(double target_angle);
-      Motion compute_motion_from_target(double target_angle);*/
+      Motion compute_motion_from_target(double target_angle);
 
       uint WINDOW_CELLS;
       uint WINDOW_HALF_CELLS;
@@ -40,14 +38,15 @@ namespace HybNav {
       double TAU_LOW;
       uint NARROW_LIMIT;
 
-      /*std::list<uint> candidates;
+      std::list<uint> candidates;
       gsl::matrix window;
       gsl::vector polar_histogram;
       gsl::vector_int binary_histogram;
-      uint winner_direction;*/
+      uint winner_direction;
       
     private:
-      PlayerCc::Position2dProxy position_proxy;
+      PlayerCc::Position2dProxy& position_proxy;
+      gsl::vector last_position, delta_position;
   };
 }
 

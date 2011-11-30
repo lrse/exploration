@@ -288,7 +288,7 @@ void Explorer::recompute_path(void) {
   }
 }
 
-MotionPlanner::Motion Explorer::compute_motion(Position2dProxy& position_proxy) {
+void Explorer::compute_motion(Position2dProxy& position_proxy) {
   // if the robot is trying to reach a target or not
   list<gsl::vector_int>& follow_path = LocalExplorer::instance()->follow_path;
   const gsl::vector& own_position = MetricMap::instance()->position;
@@ -317,8 +317,8 @@ MotionPlanner::Motion Explorer::compute_motion(Position2dProxy& position_proxy) 
     target_angle = gsl_sf_angle_restrict_pos(target_angle);
 
     // follow waypoint
-    double safe_angle = MotionPlanner::instance()->compute_motion_direction(target_angle);
-
+    //double safe_angle = MotionPlanner::instance()->compute_motion_direction(target_angle);
+    
     // threshold given by robot size
     //double target_distance_threshold = (state == ExploringLocally && follow_path.size() == 1 ? 0.4 : 0.2);
     
@@ -326,20 +326,42 @@ MotionPlanner::Motion Explorer::compute_motion(Position2dProxy& position_proxy) 
       cout << "reached point " << target(0) << " " << target(1) << " in path (distance " << target_distance_norm << ")" << endl;
       follow_path.pop_front();
     }
-    else {
+    else {      
       if (!OccupancyGrid::valid_coordinates(target(0),target(1))) target_distance_norm = remainder(target_distance_norm, OccupancyGrid::SIZE);
-      if (abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) > (135.0 * M_PI / 180.0) ||
+      if (/*abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) > (135.0 * M_PI / 180.0) ||*/
         target_distance_norm > far_distance_threshold)
       {
-        cout << "Can't go where expected..." << "delta angle: " << abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) << " d: " << target_distance << " target: "
-          << target << endl;
+        /*cout << "Can't go where expected..." << "delta angle: " << abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) << " d: " << target_distance << " target: "
+          << target << endl;*/
         recompute_path();
+      }
+      else {
+        double x = position_proxy.GetXPos() + target_distance(0);
+        double y = position_proxy.GetYPos() + target_distance(1);
+        double theta = gsl_sf_angle_restrict_symm(target_angle);
+        MotionPlanner::instance()->set_goal(x, y, theta);
+        
+        /*if (planner_proxy.GetGoal().px != x || planner_proxy.GetGoal().py != y || planner_proxy.GetGoal().pa != theta) {
+          planner_proxy.SetGoalPose(x, y, theta);
+          cout << "setting pose to: " << x << " " << y << " " << theta << " current: " << position_proxy.GetXPos() << " " << position_proxy.GetYPos() << " " << position_proxy.GetYaw() << endl;
+        }*/
       }
     }
 
-    return MotionPlanner::instance()->compute_motion_from_target(safe_angle);
+    //return MotionPlanner::instance()->compute_motion_from_target(safe_angle);
   }
   else {
-    return MotionPlanner::instance()->compute_motion(MotionPlanner::instance()->winner_direction_angle());
+    if (!MotionPlanner::instance()->valid_path()) {
+      // go forward
+      double x = position_proxy.GetXPos() + cos(position_proxy.GetYaw()) * 2;
+      double y = position_proxy.GetYPos() + sin(position_proxy.GetYaw()) * 2;
+      double theta = gsl_sf_angle_restrict_symm(position_proxy.GetYaw());
+      MotionPlanner::instance()->set_goal(x, y, theta);
+      
+      /*cout << "setting pose to: " << x << " " << y << " " << theta << " current: " << position_proxy.GetXPos() << " " << position_proxy.GetYPos() << " " << position_proxy.GetYaw() << endl;
+      planner_proxy.SetGoalPose(x, y, theta);
+      planner_proxy.SetEnable(true);*/
+    }
+    //return MotionPlanner::instance()->compute_motion(MotionPlanner::instance()->winner_direction_angle());
   }
 }

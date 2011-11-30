@@ -125,7 +125,7 @@ void OccupancyGrid::update_frontiers(void)
       samples(i, 0) = it2->x;
       samples(i, 1) = it2->y;
     }
-    cv::kmeans(samples, clusters, labels, cv::TermCriteria(cv::TermCriteria::MAX_ITER, 20, 0), 20, cv::KMEANS_RANDOM_CENTERS, &centers);
+    cv::kmeans(samples, clusters, labels, cv::TermCriteria(cv::TermCriteria::MAX_ITER, 20, 0), 20, cv::KMEANS_RANDOM_CENTERS, centers);
     for (i = 0; i < clusters; i++) {
       Position p = { centers(i, 0), centers(i, 1) };
       frontier_centers.insert(p);

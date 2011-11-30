@@ -9,11 +9,21 @@ using namespace std;
 /**************************
  * Constructor/Destructor *
  **************************/
+ 
+#define SYROTEK 1
 
-MotionPlanner::MotionPlanner(PlayerCc::PlayerClient* client_proxy) : Singleton<MotionPlanner>(this),
-  position_proxy(client_proxy)
+MotionPlanner::MotionPlanner(PlayerCc::Position2dProxy& _position_proxy) : Singleton<MotionPlanner>(this),
+  position_proxy(_position_proxy), last_position(2), delta_position(2, true)
 {
-  /*WINDOW_CELLS = 81; // Must be odd!
+  position_proxy.GetPlayerClient()->Read();
+  last_position(0) = position_proxy.GetXPos();
+  last_position(1) = position_proxy.GetYPos();
+
+#if SYROTEK
+  WINDOW_CELLS = 81; // Must be odd!
+#else
+  WINDOW_CELLS = 71; // Must be odd!
+#endif
   WINDOW_HALF_CELLS = (WINDOW_CELLS - 1) / 2;
   WINDOW_SIZE = WINDOW_CELLS * OccupancyGrid::CELL_SIZE;
   CENTER_POS = (WINDOW_SIZE * 0.5);
@@ -21,34 +31,31 @@ MotionPlanner::MotionPlanner(PlayerCc::PlayerClient* client_proxy) : Singleton<M
   POLAR_SAMPLE_ANGLE = ((2 * M_PI) / POLAR_SAMPLES);
   MU1 = 5; // MU1 > MU2 + MU3
   MU2 = 2;
-  MU3 = 2;*/
+  MU3 = 2;
   MINIMUM_DISTANCE = 0.01;
   ENLARGEMENT_RADIUS = MINIMUM_DISTANCE + MetricMap::ROBOT_RADIUS;
-/*#if SYROTEK
+#if SYROTEK
   TAU_HIGH = 0.55; // [0,1]. 1 = al lado del robot, 0 = a WINDOW_CELLS/2 de distancia. Valores mayores a TAU_HIGH se interpretan como obstaculo
 #else
   TAU_HIGH = 0.55; // [0,1]. 1 = al lado del robot, 0 = a WINDOW_CELLS/2 de distancia. Valores mayores a TAU_HIGH se interpretan como obstaculo
 #endif
   //TAU_LOW = 0.5;
-  NARROW_LIMIT = 16;*/
+  NARROW_LIMIT = 16;
+
+  polar_histogram.resize(POLAR_SAMPLES);
+  polar_histogram.set_zero();
+  binary_histogram.resize(POLAR_SAMPLES);
+  binary_histogram.set_zero();
+  
+  window.set_dimensions(WINDOW_CELLS, WINDOW_CELLS);
+  window.set_zero();
 }
 
 /**************************
  *     Public Methods     *
  **************************/
- 
-void MotionPlanner::set_goal(double x, double y, double theta)
-{
-  cout << "setting pose to: " << x << " " << y << " " << theta << endl;
-  position_proxy.GoTo(x, y, theta);
-  position_proxy.SetMotorEnable(true);  
-}
 
-bool MotionPlanner::valid_path(void) {
-  return true;//return (planner_proxy.GetWaypointCount() == 0 || planner_proxy.GetPathValid());
-}
-
-/*double MotionPlanner::winner_direction_angle(void) {
+double MotionPlanner::winner_direction_angle(void) {
   return winner_direction * POLAR_SAMPLE_ANGLE;
 }
 
@@ -278,4 +285,3 @@ void MotionPlanner::slide_window(const gsl::vector_int& delta) {
 
   window.copy(m2);
 }
-*/

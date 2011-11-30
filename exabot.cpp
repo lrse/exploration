@@ -14,7 +14,7 @@ using namespace std;
 
 ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), laser_proxy(&player_client),
   position_proxy(&player_client), target_position_proxy(&player_client, 1), simulator_proxy(&player_client),
-  trajectory_length(0), motion_planner(position_proxy)
+  trajectory_length(0), motion_planner(&player_client)
 {
   laser_proxy.RequestGeom();
   position_proxy.RequestGeom();
@@ -65,7 +65,7 @@ void ExaBot::update(void) {
     update_position();
 
     MetricMap::instance()->process_distances(position_proxy, laser_proxy);
-    MotionPlanner::instance()->process_distances(laser_proxy);
+    //MotionPlanner::instance()->process_distances(laser_proxy);
     Explorer::instance()->update();
 
 #if 1
@@ -122,10 +122,10 @@ void ExaBot::update(void) {
       /*if (@delta_position != Vector.zero(2))
         @positions_log << absolute_position.to_a
       end*/
-#if 1
+#if 0
       /* motion planner plots */
       {
-        cout << "cells: " << MotionPlanner::instance()->window.size1() << " " << MotionPlanner::instance()->window.size2() << endl;
+        //cout << "cells: " << MotionPlanner::instance()->window.size1() << " " << MotionPlanner::instance()->window.size2() << endl;
         p << "set term x11 1";
         p << "set xrange [0:" + to_s(MotionPlanner::instance()->WINDOW_CELLS) + "]";
         p << "set yrange [0:" + to_s(MotionPlanner::instance()->WINDOW_CELLS) + "]";
@@ -161,8 +161,8 @@ void ExaBot::update(void) {
     }
 #endif    
 
-    MotionPlanner::Motion motion = Explorer::instance()->compute_motion(position_proxy);
-    if (motion == MotionPlanner::ForwardMotion) {
+    Explorer::instance()->compute_motion(position_proxy);
+    /*if (motion == MotionPlanner::ForwardMotion) {
       position_proxy.SetSpeed(0.1, 0);
     }
     else if (motion == MotionPlanner::LeftTurn) {
@@ -170,7 +170,7 @@ void ExaBot::update(void) {
     }
     else {
       position_proxy.SetSpeed(0, -0.2);
-    }
+    }*/
   }
   catch(const PlayerCc::PlayerError& err) {
     cout << "player error!" << endl;
@@ -220,7 +220,7 @@ void ExaBot::update_position(void) {
   double delta_rotation = gsl_sf_angle_restrict_symm(absolute_rotation - last_rotation);
 
   MetricMap::instance()->update_position(delta_position, delta_rotation); // TODO: no need for this
-  MotionPlanner::instance()->update_position();
+  //MotionPlanner::instance()->update_position();
   last_position = absolute_position;
   last_rotation = absolute_rotation;
 
