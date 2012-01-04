@@ -68,7 +68,7 @@ void ExaBot::update(void) {
     //MotionPlanner::instance()->process_distances(laser_proxy);
     Explorer::instance()->update();
 
-#if 1
+#if 0
     // Graphics
     cout << "timer " << (std::time(NULL) - graph_timer) << endl;
     if (!first_plot || (std::time(NULL) - graph_timer) >= 1) {

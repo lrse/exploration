@@ -2,8 +2,9 @@
 #include <map>
 #include <cmath>
 #include <gsl/gsl_sf_trig.h>
-#include <cv.h>
-#include <opencv/cxcore.hpp>
+//#include <cv.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/core_c.h>
 #include <plotter.h>
 #include <sys/stat.h>
 #include "metric_map.h"

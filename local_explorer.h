@@ -1,6 +1,7 @@
 #ifndef LOCAL_EXPLORER_H
 #define	LOCAL_EXPLORER_H
 
+
 #include "singleton.h"
 #include "pathfinder.h"
 #include "metric_map.h"
@@ -11,7 +12,7 @@ namespace HybNav {
       LocalPathfinder(double v);
       virtual ~LocalPathfinder(void) {  }
       std::list<gsl::vector_int> neighbors(const gsl::vector_int& current, const gsl::vector_int& previous);
-      ulong movement_cost(const gsl::vector_int& from, const gsl::vector_int& to, const gsl::vector_int& previous) ;
+      unsigned long movement_cost(const gsl::vector_int& from, const gsl::vector_int& to, const gsl::vector_int& previous) ;
 
     protected:
       double frontier_value_condition;

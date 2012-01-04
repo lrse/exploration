@@ -1,8 +1,8 @@
 #include <set>
 #include <map>
 #include <limits>
-#include <cv.h>
-#include <opencv/cxcore.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/core_c.h>
 #include "metric_map.h"
 using namespace HybNav;
 using namespace std;
