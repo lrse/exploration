@@ -51,7 +51,7 @@ namespace HybNav {
       void update_position(void);
       bool first_plot;
 
-      std::time_t graph_timer;
+      std::time_t graph_timer, start_timer;
   };
 }
 

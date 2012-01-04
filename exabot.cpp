@@ -39,6 +39,7 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   trajectory_length = 0;
 
   graph_timer = std::time(NULL);
+  start_timer = std::time(NULL);
   first_plot = false;
 
   sleep(1);
@@ -61,13 +62,15 @@ void ExaBot::update_player(void)
 void ExaBot::update(void) {
   try {
     update_player();
-    if (position_proxy.GetStall()) throw std::runtime_error("collision detected!");
+    //if (position_proxy.GetStall()) throw std::runtime_error("collision detected!");
 
     update_position();
 
     MetricMap::instance()->process_distances(position_proxy, laser_proxy);
     //MotionPlanner::instance()->process_distances(laser_proxy);
-    Explorer::instance()->update();
+    if (std::time(NULL) - start_timer > 3) {
+      Explorer::instance()->update();
+    }
 
 #ifdef ENABLE_PLOTS
     // Graphics
