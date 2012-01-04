@@ -45,7 +45,9 @@ void MotionPlanner::set_goal(double x, double y, double theta)
 }
 
 bool MotionPlanner::valid_path(void) {
-  return true;//return (planner_proxy.GetWaypointCount() == 0 || planner_proxy.GetPathValid());
+  bool valid = (position_proxy.GetXSpeed() != 0 || position_proxy.GetYawSpeed() != 0);
+  cout << "speeds: " << position_proxy.GetXSpeed() << " "  << position_proxy.GetYawSpeed() << " valid?: " << valid << endl;
+  return true;
 }
 
 /*double MotionPlanner::winner_direction_angle(void) {

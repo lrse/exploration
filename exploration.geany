@@ -5,6 +5,7 @@ indent_type=0
 indent_hard_tab_width=8
 detect_indent=false
 indent_mode=2
+detect_indent_width=false
 
 [project]
 name=exploration
@@ -16,14 +17,22 @@ long_line_behaviour=1
 long_line_column=120
 
 [files]
-current_page=5
-FILE_NAME_0=5304;C++;0;16;0;1;1;/home/v01d/coding/exploration/exabot.cpp;0;2
-FILE_NAME_1=3789;C++;0;16;0;1;1;/home/v01d/coding/exploration/metric_map.cpp;0;2
-FILE_NAME_2=681;C++;0;16;0;1;1;/home/v01d/coding/exploration/occupancy_grid.cpp;0;2
+current_page=6
+FILE_NAME_0=1868;C++;0;16;0;1;1;/home/v01d/coding/exploration/exabot.cpp;0;2
+FILE_NAME_1=554;C++;0;16;0;1;1;/home/v01d/coding/exploration/metric_map.cpp;0;2
+FILE_NAME_2=327;C++;0;16;0;1;1;/home/v01d/coding/exploration/occupancy_grid.cpp;0;2
 FILE_NAME_3=0;C;0;16;0;1;1;/home/v01d/coding/exploration/occupancy_grid.h;0;2
 FILE_NAME_4=1471;C;0;16;0;1;1;/home/v01d/coding/exploration/motion_planner.h;0;2
-FILE_NAME_5=1506;C++;0;16;0;1;1;/home/v01d/coding/exploration/motion_planner.cpp;0;2
-FILE_NAME_6=15415;C++;0;16;0;1;1;/home/v01d/coding/exploration/explorer.cpp;0;2
+FILE_NAME_5=1712;C++;0;16;0;1;1;/home/v01d/coding/exploration/motion_planner.cpp;0;2
+FILE_NAME_6=13353;C++;0;16;0;1;1;/home/v01d/coding/exploration/explorer.cpp;0;2
 FILE_NAME_7=295;C;0;16;0;1;1;/home/v01d/coding/exploration/explorer.h;0;2
 FILE_NAME_8=0;C;0;16;0;1;1;/home/v01d/coding/exploration/metric_map.h;0;2
 FILE_NAME_9=4807;C++;0;16;0;1;1;/home/v01d/coding/exploration/occupancy_grid_frontiers.cpp;0;2
+FILE_NAME_10=0;C++;0;16;0;1;1;/home/v01d/coding/exploration/local_explorer.cpp;0;2
+FILE_NAME_11=457;None;0;16;0;1;1;/home/v01d/coding/exploration/TODO_BUGS;0;2
+FILE_NAME_12=0;C++;0;16;0;1;1;/home/v01d/coding/exploration/main.cpp;0;2
+FILE_NAME_13=0;CMake;0;16;0;1;1;/home/v01d/coding/exploration/CMakeLists.txt;0;2
+FILE_NAME_14=1392;C;0;16;0;1;1;/home/v01d/coding/exploration/exabot.h;0;2
+
+[VTE]
+last_dir=/home/v01d

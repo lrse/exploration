@@ -8,3 +8,8 @@ LIMITACIONES
 ============
 - si el robot llega a cruzar dos places en diagonal (puede pasar), el robot se "pierde" porque
 no considere ese caso en terminos del mapa topologico
+
+
+* moverse un poco antes de rearmar camino
+* puntos de laser mas grandes
+* goal de fronteras mas grande

@@ -294,16 +294,17 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
   const gsl::vector& own_position = MetricMap::instance()->position;
 
   // remove all path nodes already considered as "reached"
-  double reached_distance_threshold = 0.4;
+  double reached_distance_threshold = 0.3;
   double far_distance_threshold = 0.9;
   for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end();) {
     gsl::vector target_distance = (gsl::vector)(*it) * OccupancyGrid::CELL_SIZE - own_position;
     cout << "this target: " << *it << " own position: " << own_position << " in cell coords: " << (*it) * OccupancyGrid::CELL_SIZE << endl;
-    cout << "target distance: " << target_distance.norm2() << endl;
+    cout << "target distance: " << target_distance.norm2() << " threshold: " << reached_distance_threshold << endl;
 
-    list<gsl::vector_int>::iterator it2(it); ++it2;
-    if (it2 == follow_path.end()) break; // leave at least one target
-    if (target_distance.norm2() < reached_distance_threshold) { cout << "removing " << *it << " from follow path" << endl; it = follow_path.erase(it); }
+    if (target_distance.norm2() < reached_distance_threshold) {
+      cout << "removing " << *it << " from follow path" << endl;
+      it = follow_path.erase(it);
+    }
     else break;
   }
 
@@ -322,17 +323,16 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
     // threshold given by robot size
     //double target_distance_threshold = (state == ExploringLocally && follow_path.size() == 1 ? 0.4 : 0.2);
     
-    if (target_distance_norm < reached_distance_threshold) {
+    /*if (target_distance_norm < reached_distance_threshold) {
       cout << "reached point " << target(0) << " " << target(1) << " in path (distance " << target_distance_norm << ")" << endl;
       follow_path.pop_front();
     }
-    else {      
+    else {      */
       if (!OccupancyGrid::valid_coordinates(target(0),target(1))) target_distance_norm = remainder(target_distance_norm, OccupancyGrid::SIZE);
-      if (/*abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) > (135.0 * M_PI / 180.0) ||*/
+      if (!MotionPlanner::instance()->valid_path() || /*abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) > (135.0 * M_PI / 180.0) ||*/
         target_distance_norm > far_distance_threshold)
       {
-        /*cout << "Can't go where expected..." << "delta angle: " << abs(gsl_sf_angle_restrict_symm(safe_angle - target_angle)) << " d: " << target_distance << " target: "
-          << target << endl;*/
+        cout << "Can't go where expected..." << endl;
         recompute_path();
       }
       else {
@@ -346,7 +346,7 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
           cout << "setting pose to: " << x << " " << y << " " << theta << " current: " << position_proxy.GetXPos() << " " << position_proxy.GetYPos() << " " << position_proxy.GetYaw() << endl;
         }*/
       }
-    }
+    /*}*/
 
     //return MotionPlanner::instance()->compute_motion_from_target(safe_angle);
   }
