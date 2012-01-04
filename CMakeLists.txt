@@ -7,6 +7,9 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}")
 SET(OpenCV_DIR ${CMAKE_SOURCE_DIR})
 
+configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_SOURCE_DIR}/config.h)
+option(ENABLE_PLOTS "Use GNUplot to display graphs" ON)
+
 execute_process(COMMAND ${PROJECT_SOURCE_DIR}/gslwrap/generate WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/gslwrap)
 
 file(GLOB HybNav_SRCS *.cpp)

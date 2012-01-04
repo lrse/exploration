@@ -5,6 +5,7 @@
 #include "exabot.h"
 #include "explorer.h"
 #include "util.h"
+#include "config.h"
 using namespace HybNav;
 using namespace std;
 
@@ -68,7 +69,7 @@ void ExaBot::update(void) {
     //MotionPlanner::instance()->process_distances(laser_proxy);
     Explorer::instance()->update();
 
-#if 0
+#ifdef ENABLE_PLOTS
     // Graphics
     cout << "timer " << (std::time(NULL) - graph_timer) << endl;
     if (!first_plot || (std::time(NULL) - graph_timer) >= 1) {
