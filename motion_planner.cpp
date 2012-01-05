@@ -11,7 +11,7 @@ using namespace std;
  **************************/
 
 MotionPlanner::MotionPlanner(PlayerCc::PlayerClient* client_proxy) : Singleton<MotionPlanner>(this),
-  position_proxy(client_proxy)
+  position_proxy(client_proxy, 1)
 {
   /*WINDOW_CELLS = 81; // Must be odd!
   WINDOW_HALF_CELLS = (WINDOW_CELLS - 1) / 2;

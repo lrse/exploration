@@ -31,7 +31,6 @@ namespace HybNav {
       PlayerCc::PlayerClient player_client;
       PlayerCc::LaserProxy laser_proxy;
       PlayerCc::Position2dProxy position_proxy;
-      PlayerCc::Position2dProxy target_position_proxy;
       PlayerCc::SimulationProxy simulator_proxy;
       
       double trajectory_length;

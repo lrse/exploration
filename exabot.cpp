@@ -14,12 +14,11 @@ using namespace std;
  **************************/
 
 ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), laser_proxy(&player_client),
-  position_proxy(&player_client), target_position_proxy(&player_client, 1), simulator_proxy(&player_client),
+  position_proxy(&player_client, 0), simulator_proxy(&player_client),
   trajectory_length(0), motion_planner(&player_client)
 {
   laser_proxy.RequestGeom();
   position_proxy.RequestGeom();
-  target_position_proxy.RequestGeom();
 
   // initialize plotter
   new Plotter;
