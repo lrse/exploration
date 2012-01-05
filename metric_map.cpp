@@ -131,9 +131,9 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
 
   // mark individual cells as occupied for each sensed point
   for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it) {
-    //cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * 0.1;
+    cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * 0.1;
     // 5cm per laser hit
-    cv::circle(cv_window, cv::Point(it->x, WINDOW_SIZE_CELLS - it->y - 1), 1/*round(0.05 / OccupancyGrid::CELL_SIZE)*/, OccupancyGrid::Locc * 0.1, -1);
+    //cv::circle(cv_window, cv::Point(it->x, WINDOW_SIZE_CELLS - it->y - 1), 1/*round(0.05 / OccupancyGrid::CELL_SIZE)*/, OccupancyGrid::Locc * 0.1, -1);
   }
     
   // create a free circular area around robot
