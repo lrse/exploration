@@ -5,6 +5,8 @@
 //#include <cv.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/core_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <highgui.h>
 #include <sys/stat.h>
 #include "metric_map.h"
 #include "util.h"
@@ -173,32 +175,22 @@ gsl::vector_int MetricMap::grid_position(void) {
 }
 
 void MetricMap::save(void) {
-  #if 0
-  Plotter& p = *Plotter::instance();
-  p << "set term svg";
-  p << "set xrange [0:" + to_s(OccupancyGrid::CELLS) + "]";
-  p << "set yrange [0:" + to_s(OccupancyGrid::CELLS) + "]";
-  p << "unset xtics; unset ytics; unset ztics; unset key; unset colorbox";
-  p << "set palette gray negative";
-  p << "set cbrange [" + to_s(OccupancyGrid::Lfree) + ":" + to_s(OccupancyGrid::Locc) + "]";
-
   mkdir("csv", 0777);
-  list<string> map_files(glob("csv/grid.*.svg"));
+  list<string> map_files(glob("csv/grid.*.png"));
   for (list<string>::iterator it = map_files.begin(); it != map_files.end(); ++it) unlink(it->c_str());
 
   for (SuperMatrix<OccupancyGrid>::iterator_x itx = super_matrix.matrix_map.begin(); itx != super_matrix.matrix_map.end(); ++itx) {
     for (SuperMatrix<OccupancyGrid>::iterator_y ity = itx->second.begin(); ity != itx->second.end(); ++ity) {
       OccupancyGrid& g = ity->second;
-      string svg_name = "csv/grid." + to_s(g.position(0)) + "." + to_s(g.position(1)) + ".svg";
-      p << "set output \"" + svg_name + "\"";
-      cout << "guardando " << svg_name << endl;
-      p.plot(Plot(g.m, "image", "flipy origin=(0.5,0.5)"));
-      usleep(500000); // sleep 0.5s
+      string png_name = "csv/grid." + to_s(g.position(0)) + "." + to_s(g.position(1)) + ".png";
+      cv::Mat graph;
+      cout << "guardando " << png_name << endl;
+      g.draw(graph);
+      cv::imwrite(png_name, graph);
     }
   }
 
   ofstream dot_file("csv/metric_map.dot", ios_base::trunc | ios_base::out);
   super_matrix.to_dot(dot_file);
   dot_file.close();
-  #endif
 }

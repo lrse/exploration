@@ -210,7 +210,7 @@ void OccupancyGrid::to_dot(std::ostream& out) {
   node_position *= 2;
 
   string node_position_str = to_s(node_position(0)) + "," + to_s(node_position(1)) + "!";
-  string svg_name = "./grid." + to_s(position(0)) + "." + to_s(position(1)) + ".svg";
+  string svg_name = "./grid." + to_s(position(0)) + "." + to_s(position(1)) + ".png";
   out << "label=\"" << position << "\" pos=\"" << node_position_str << "\" image=\"" <<
     svg_name << "\" shape=\"box\" imagescale=\"true\" width=\"1.7\" height=\"1.7\" fixedsize=\"true\" labelloc=\"b\"";
 }
@@ -218,6 +218,18 @@ void OccupancyGrid::to_dot(std::ostream& out) {
 OccupancyGrid& OccupancyGrid::get_neighbor(Direction edge) {
   gsl::vector_int v = position + MetricMap::direction2vector(edge);
   return MetricMap::instance()->super_matrix.submatrix(v(0), v(1));
+}
+
+void OccupancyGrid::draw(cv::Mat& graph) {
+  graph.create(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_8UC3);
+  graph = cv::Scalar(0,0,0);
+  for (uint i = 0; i < OccupancyGrid::CELLS; i++) {
+    for (uint j = 0; j < OccupancyGrid::CELLS; j++) {
+      double value_real = 1 - (m(i,j) + OccupancyGrid::Locc) / (OccupancyGrid::Locc * 2);
+      unsigned char value = (unsigned char)(255.0f * value_real);
+      graph.at<cv::Vec3b>(i,j) = cv::Vec3b(value, value, value);
+    }
+  }
 }
 
 /**************************

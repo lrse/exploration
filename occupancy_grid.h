@@ -24,6 +24,7 @@ namespace HybNav {
       gsl::vector_int position;
 
       void to_dot(std::ostream& out);
+      void draw(cv::Mat& graph);
 
       typedef std::list<gsl::vector_int> FrontierList;
       void update_frontiers(void);
