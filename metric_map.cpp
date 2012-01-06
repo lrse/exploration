@@ -5,7 +5,6 @@
 //#include <cv.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/core_c.h>
-#include <plotter.h>
 #include <sys/stat.h>
 #include "metric_map.h"
 #include "util.h"
@@ -174,6 +173,7 @@ gsl::vector_int MetricMap::grid_position(void) {
 }
 
 void MetricMap::save(void) {
+  #if 0
   Plotter& p = *Plotter::instance();
   p << "set term svg";
   p << "set xrange [0:" + to_s(OccupancyGrid::CELLS) + "]";
@@ -200,4 +200,5 @@ void MetricMap::save(void) {
   ofstream dot_file("csv/metric_map.dot", ios_base::trunc | ios_base::out);
   super_matrix.to_dot(dot_file);
   dot_file.close();
+  #endif
 }

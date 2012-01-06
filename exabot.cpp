@@ -1,7 +1,6 @@
 #include <gsl/gsl_sf_trig.h>
 #include <iostream>
 #include "metric_map.h"
-#include "plotter.h"
 #include "exabot.h"
 #include "explorer.h"
 #include "util.h"
@@ -26,12 +25,6 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   laser_proxy.RequestGeom();
   position_proxy.RequestGeom();
 
-  // initialize plotter
-  new Plotter;
-  *Plotter::instance() << "set term x11 0 noraise persist";
-  *Plotter::instance() << "set term x11 1 noraise persist";
-  *Plotter::instance() << "set term x11 2 noraise persist";
-
   player_client.Read();
 
   // initialize variables
@@ -54,8 +47,6 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
 }
 
 ExaBot::~ExaBot(void) {
-  cout << "destroying plotter" << endl;
-  delete Plotter::instance();
 }
 
 /**************************

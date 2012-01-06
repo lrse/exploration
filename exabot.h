@@ -6,7 +6,6 @@
 #include <ctime>
 #include <libplayerc++/playerc++.h>
 #include "singleton.h"
-#include "plotter.h"
 #include "metric_map.h"
 #include "explorer.h"
 #include "local_explorer.h"
