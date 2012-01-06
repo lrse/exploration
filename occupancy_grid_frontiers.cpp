@@ -9,6 +9,7 @@ using namespace std;
 
 double MetricMap::frontier_cell_threshold = 0.25;
 
+
 struct Position {
   size_t x, y;
   bool operator<(const Position& other) const {
@@ -20,6 +21,11 @@ struct centroid { size_t x, y; size_t n; };
 
 void OccupancyGrid::update_frontiers(void)
 {
+  debug_graph = cv::Scalar(0,0,0);
+  
+  const uint minimum_frontier_length = (uint)round(MetricMap::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE);
+  cout << "minimum_frontier_length: " << minimum_frontier_length << endl;
+  
   /* compute frontier cell positions and add to list */
   std::map<Position, uint> frontier_cells_set;
 
@@ -44,6 +50,8 @@ void OccupancyGrid::update_frontiers(void)
       if (free_count >= 3 && unknown_count >= 3) {
         Position p = { i, j };
         frontier_cells_set[p] = numeric_limits<uint>::max();
+        debug_graph.at<cv::Vec3b>(i, j) = cv::Vec3b(255, 0, 0);
+        cout << "cell pos: " << i << " " << j << endl;
       }
     }
   }
@@ -114,7 +122,11 @@ void OccupancyGrid::update_frontiers(void)
   set<Position> frontier_centers;
   for (map< uint, set<Position> >::const_iterator it = frontiers_map.begin(); it != frontiers_map.end(); ++it) {
     const set<Position>& s = it->second;
-    if (s.size() == 1) continue; // k-means doesn't seem to work right with one frontier cell only
+    if (s.size() == 1 || s.size() < minimum_frontier_length) {
+      cout << "frontier of size " << s.size() << " discarded" << endl;
+      continue; // k-means doesn't seem to work right with one frontier cell only
+    }
+      
     //uint clusters = (uint)ceil(s.size() / (float)20);
     uint clusters = 1;
     cv::Mat_<float> samples(s.size(), 2);
@@ -138,6 +150,7 @@ void OccupancyGrid::update_frontiers(void)
   uint i = 0;
   for (set<Position>::const_iterator it = frontier_centers.begin(); it != frontier_centers.end(); ++it, ++i) {
     gsl::vector_int pos(2);
+    debug_graph.at<cv::Vec3b>(it->x, it->y) = cv::Vec3b(0, 0, 255);
     pos(0) = it->y;
     pos(1) = CELLS - it->x - 1;
     cout << " [" << pos(0) << "," << pos(1) << "]";

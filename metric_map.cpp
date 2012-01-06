@@ -115,8 +115,8 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
     double dist = laser_proxy.GetRange(i);
     double x = dist * cos(angle);
     double y = dist * sin(angle);
-    pts2[i].x = (int)floor(x / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
-    pts2[i].y = (int)floor(-y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
+    pts2[i].x = (int)round(x / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
+    pts2[i].y = (int)round(-y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
     //cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << x << "," << y << "," << angle << endl;
     if (dist < max_range) {
       cv::Point p;
@@ -133,7 +133,7 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it) {
     cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * 0.1;
     // 5cm per laser hit
-    //cv::circle(cv_window, cv::Point(it->x, WINDOW_SIZE_CELLS - it->y - 1), 1/*round(0.05 / OccupancyGrid::CELL_SIZE)*/, OccupancyGrid::Locc * 0.1, -1);
+    //cv::circle(cv_window, cv::Point(it->x, WINDOW_SIZE_CELLS - it->y - 1), 1/*round(0.05 / OccupancyGrid::CELL_SIZE)*/, OccupancyGrid::Locc * 0.05, -1);
   }
     
   // create a free circular area around robot

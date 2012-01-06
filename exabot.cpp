@@ -6,6 +6,12 @@
 #include "explorer.h"
 #include "util.h"
 #include "config.h"
+
+#ifdef ENABLE_PLOTS
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#endif
+
 using namespace HybNav;
 using namespace std;
 
@@ -40,6 +46,9 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   graph_timer = std::time(NULL);
   start_timer = std::time(NULL);
   first_plot = false;
+  
+  cvStartWindowThread();
+  cv::namedWindow("grid");
 
   sleep(1);
 }
@@ -77,103 +86,45 @@ void ExaBot::update(void) {
     if (!first_plot || (std::time(NULL) - graph_timer) >= 1) {
       first_plot = true;
       graph_timer = std::time(NULL);
-      Plotter& p = *Plotter::instance();
-      p << "set term x11 0";
-      p << "set xrange [0:" + to_s(OccupancyGrid::CELLS) + "]";
-      p << "set yrange [0:" + to_s(OccupancyGrid::CELLS) + "]";
-      //p << "set xrange [0:" + to_s(MetricMap::WINDOW_SIZE_CELLS) + "]";
-      //p << "set yrange [0:" + to_s(MetricMap::WINDOW_SIZE_CELLS) + "]";
-      p << "set xtics 1; set ytics 1; set grid front; unset key";
-      p << "set palette gray negative";
-      p << "set cbrange [" + to_s(OccupancyGrid::Lfree) + ":" + to_s(OccupancyGrid::Locc) + "]";
-
-      list<Plot> plots;
-
-      Plot locc_plot(MetricMap::instance()->current_grid->m, "image", "flipy origin=(0.5,0.5)");
-      //Plot locc_plot(MetricMap::instance()->window, "image", "flipy origin=(0.5,0.5)");
-      plots.push_back(locc_plot);
-
+      
+      cv::Mat graph(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_8UC3);
+      
+      // plot grid      
+      graph = cv::Scalar(0,0,0);
+      for (uint i = 0; i < OccupancyGrid::CELLS; i++) {
+        for (uint j = 0; j < OccupancyGrid::CELLS; j++) {
+          double value_real = 1 - (MetricMap::instance()->current_grid->m(i,j) + OccupancyGrid::Locc) / (OccupancyGrid::Locc * 2);
+          unsigned char value = (unsigned char)(255.0f * value_real);
+          graph.at<cv::Vec3b>(i,j) = cv::Vec3b(value, value, value);
+        }
+      }
+      
+      // plot robot position
       gsl::vector_int robot_position = MetricMap::instance()->grid_position();
-      gsl::matrix robot_position_mat(1, 2);
-      robot_position_mat(0, 0) = robot_position(0) + 0.5; robot_position_mat(0, 1) = robot_position(1) + 0.5;
-      Plot pos_plot(robot_position_mat, "points");
-      plots.push_back(pos_plot);
-
-      gsl::matrix path_data;
+      robot_position = robot_position + 0.5;
+      cv::circle(graph, cv::Point(robot_position(0), OccupancyGrid::CELLS - robot_position(1) - 1), MetricMap::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE, cv::Scalar(0,0,255), -1);
+      
+      // plot path
       if (!LocalExplorer::instance()->follow_path.empty()) {
         list<gsl::vector_int>& path = LocalExplorer::instance()->follow_path;
-        path_data = gsl::matrix(path.size(), 2);
+        vector<cv::Point> path_points(path.size());
         size_t i = 0;
         for (list<gsl::vector_int>::iterator it = path.begin(); it != path.end(); ++it, i++) {
-          path_data(i, 0) = (*it)(0); path_data(i, 1) = (*it)(1);
+          path_points[i] = cv::Point((*it)(0), OccupancyGrid::CELLS - (*it)(1) - 1);
         }
-        plots.push_back(Plot(path_data, "linespoints"));
+        cv::polylines(graph, vector< vector<cv::Point> >(1, path_points), false, cv::Scalar(0, 255, 0));
       }
-
-      OccupancyGrid::FrontierList& frontiers = MetricMap::instance()->current_grid->frontiers;
-      gsl::matrix frontiers_data;
-      if (!frontiers.empty()) {
-        frontiers_data = gsl::matrix(frontiers.size(), 2);
-        size_t i = 0;
-        for (OccupancyGrid::FrontierList::iterator it = frontiers.begin(); it != frontiers.end(); ++it, i++) {
-          frontiers_data(i, 0) = (*it)(0) + 0.5; frontiers_data(i, 1) = (*it)(1) + 0.5;
-        }
-        plots.push_back(Plot(frontiers_data, "points"));
-      }
-
-      p.plot(plots);
-      /*if (@delta_position != Vector.zero(2))
-        @positions_log << absolute_position.to_a
-      end*/
-#if 0
-      /* motion planner plots */
-      {
-        //cout << "cells: " << MotionPlanner::instance()->window.size1() << " " << MotionPlanner::instance()->window.size2() << endl;
-        p << "set term x11 1";
-        p << "set xrange [0:" + to_s(MotionPlanner::instance()->WINDOW_CELLS) + "]";
-        p << "set yrange [0:" + to_s(MotionPlanner::instance()->WINDOW_CELLS) + "]";
-        p << "set cbrange [0:1]";
-        p.plot(Plot(MotionPlanner::instance()->window, "image", "flipy origin=(0.5,0.5)"));
-
-        list<Plot> more_plots;
-        p << "set term x11 2";
-        p << "set polar";
-        p << "set xrange [-1:1]; set yrange [-1:1]; unset key; set pointsize 2.0";
-        gsl::matrix m(MotionPlanner::instance()->POLAR_SAMPLES, 2);
-        for (uint i = 0; i < MotionPlanner::instance()->POLAR_SAMPLES; i++) {
-          m(i,0) = MotionPlanner::instance()->POLAR_SAMPLE_ANGLE * i;
-          m(i,1) = MotionPlanner::instance()->binary_histogram(i);
-        }
-        more_plots.push_back(Plot(m, "lines"));
-
-        gsl::matrix m2;
-        if (!MotionPlanner::instance()->candidates.empty()) {
-          m2.set_dimensions(MotionPlanner::instance()->candidates.size(), 2);
-          list<uint>& candidates = MotionPlanner::instance()->candidates;
-          uint i = 0;
-          for (list<uint>::iterator it = candidates.begin(); it != candidates.end(); ++it, ++i) {
-            m2(i,0) = *it * MotionPlanner::instance()->POLAR_SAMPLE_ANGLE;
-            m2(i,1) = 1;
-          }
-          more_plots.push_back(Plot(m2, "points"));
-        }
-        p.plot(more_plots);
-        p << "unset polar";
-      }
+      
+      cout << MetricMap::instance()->current_grid->debug_graph.size().width << endl;
+      graph += MetricMap::instance()->current_grid->debug_graph;
+      
+      cv::Mat graph_big;
+      cv::resize(graph, graph_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
+      cv::imshow("grid", graph_big);
 #endif
-    }
-#endif    
+    }  
 
     Explorer::instance()->compute_motion(position_proxy);
-    /*if (motion == MotionPlanner::ForwardMotion) {
-      position_proxy.SetSpeed(0.1, 0);
-    }
-    else if (motion == MotionPlanner::LeftTurn) {
-      position_proxy.SetSpeed(0, 0.2);
-    }
-    else {
-      position_proxy.SetSpeed(0, -0.2);
-    }*/
   }
   catch(const PlayerCc::PlayerError& err) {
     cout << "player error!" << endl;

@@ -24,16 +24,17 @@ double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
 #if SYROTEK
-uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(0.3 / OccupancyGrid::CELL_SIZE);
+uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(0.2 / OccupancyGrid::CELL_SIZE);
 #else
 uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(0.9 / OccupancyGrid::CELL_SIZE);
 #endif
+
 
 /**************************
  * Constructor/Destructor *
  **************************/
 
-OccupancyGrid::OccupancyGrid(ssize_t x, ssize_t y) : position(2), m(CELLS, CELLS, true)
+OccupancyGrid::OccupancyGrid(ssize_t x, ssize_t y) : position(2), m(CELLS, CELLS, true), debug_graph(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_8UC3)
 {
   position(0) = x; position(1) = y;
   cout << "created grid: " << position << endl;
@@ -289,6 +290,7 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
     cout << "\t" << (Direction)d << ":";
     list< pair<uint,uint> >::iterator it = gateways[d].begin();
     while (it != gateways[d].end()) {
+      cout << "gw size: " <<  (it->second - it->first) << " threshold: " <<  ceil((MotionPlanner::instance()->ENLARGEMENT_RADIUS) / OccupancyGrid::CELL_SIZE) << endl;
       if (it->second - it->first < ceil((MotionPlanner::instance()->ENLARGEMENT_RADIUS) / OccupancyGrid::CELL_SIZE))
         it = gateways[d].erase(it);
       else {

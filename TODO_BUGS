@@ -3,6 +3,8 @@ BUGS/PROBLEMAS:
 - a veces se insiste en seguir un camino global que es muy rebuscado, por no haber descubierto un gateway topologico que vaya directo.
   -> poner GW topo al descubrir GW metricos en celdas adyacentes?
   -> 
+  
+- no gateway found for that edge! 
 
 LIMITACIONES
 ============
@@ -13,3 +15,9 @@ no considere ese caso en terminos del mapa topologico
 * moverse un poco antes de rearmar camino
 * puntos de laser mas grandes
 * goal de fronteras mas grande
+
+
+TODO
+====
+- cambiar la deteccion de celdas frontera: usar algun algoritmo de deteccion de bordes y luego recorrer las celdas como antes
+

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "motion_planner.h"
 #include "metric_map.h"
+#include "exabot.h"
 using namespace HybNav;
 using namespace std;
 
@@ -47,6 +48,9 @@ void MotionPlanner::set_goal(double x, double y, double theta)
 bool MotionPlanner::valid_path(void) {
   bool valid = (position_proxy.GetXSpeed() != 0 || position_proxy.GetYawSpeed() != 0);
   cout << "speeds: " << position_proxy.GetXSpeed() << " "  << position_proxy.GetYawSpeed() << " valid?: " << valid << endl;
+  cout << "real speeds: " << ExaBot::instance()->position_proxy.GetXSpeed() << " " << ExaBot::instance()->position_proxy.GetYawSpeed() << endl;
+  cout << "enabled? " << position_proxy.GetStall() << " " << ExaBot::instance()->position_proxy.GetStall() << endl;
+  
   return true;
 }
 

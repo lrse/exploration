@@ -26,12 +26,13 @@ namespace HybNav {
       void deinitialize(void);
 
       void update_player(void);
-
-    private:
+      
       PlayerCc::PlayerClient player_client;
       PlayerCc::LaserProxy laser_proxy;
       PlayerCc::Position2dProxy position_proxy;
       PlayerCc::SimulationProxy simulator_proxy;
+      
+    private:     
       
       double trajectory_length;
       std::list<gsl::vector> trajectory;

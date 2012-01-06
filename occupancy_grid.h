@@ -3,7 +3,7 @@
 
 #include <gslwrap/matrix_double.h>
 #include <gslwrap/vector_int.h>
-
+#include <opencv2/core/core.hpp>
 
 namespace HybNav {
   class OccupancyGrid {
@@ -32,6 +32,8 @@ namespace HybNav {
       gsl::matrix m;
 
       static gsl::vector_int rowcol2xy(gsl::vector_int rowcol);
+      
+      cv::Mat debug_graph;
 
     private:
       std::list<TopoMap::GatewayNode*> gateway_nodes;
