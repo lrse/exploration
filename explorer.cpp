@@ -301,6 +301,11 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
     cout << "this target: " << *it << " own position: " << own_position << " in cell coords: " << (*it) * OccupancyGrid::CELL_SIZE << endl;
     cout << "target distance: " << target_distance.norm2() << " threshold: " << reached_distance_threshold << endl;
 
+    if (!OccupancyGrid::valid_coordinates((*it)(0), (*it)(1))) {
+      cout << "found fictitious node, stopping" << endl;
+      break;
+    }
+    
     if (target_distance.norm2() < reached_distance_threshold) {
       cout << "removing " << *it << " from follow path" << endl;
       it = follow_path.erase(it);
@@ -353,6 +358,7 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
   else {
     if (!MotionPlanner::instance()->valid_path()) {
       // go forward
+      cout << "no path, going forward" << endl;
       double x = position_proxy.GetXPos() + cos(position_proxy.GetYaw()) * 2;
       double y = position_proxy.GetYPos() + sin(position_proxy.GetYaw()) * 2;
       double theta = gsl_sf_angle_restrict_symm(position_proxy.GetYaw());

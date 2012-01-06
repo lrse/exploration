@@ -26,6 +26,16 @@ void OccupancyGrid::update_frontiers(void)
   const uint minimum_frontier_length = (uint)round(MetricMap::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE);
   cout << "minimum_frontier_length: " << minimum_frontier_length << endl;
   
+  // copy to OpenCV mat
+  cv::Mat_<double> mat(OccupancyGrid::CELLS, OccupancyGrid::CELLS);
+  for (uint i = 0; i < OccupancyGrid::CELLS; i++) {
+    for (uint j = 0; j < OccupancyGrid::CELLS; j++) {
+      mat.at<double>(i,j) = m(i, j);
+    }
+  }
+  
+  // 
+  
   /* compute frontier cell positions and add to list */
   std::map<Position, uint> frontier_cells_set;
 
@@ -41,13 +51,16 @@ void OccupancyGrid::update_frontiers(void)
           if ((ssize_t)i + ii < 0 || i + ii >= m.size1() || (ssize_t)j + jj < 0 || j + jj >= m.size2()) continue;
 
           double v2 = m(i + ii, j + jj);
-          if (v2 < Lfree * 0.2) free_count++;
-          else if (v2 < Locc * 0.2) unknown_count++;
+          /*if (v2 < Lfree * 0.2) free_count++;
+          else if (v2 < Locc * 0.2) unknown_count++;*/
+          if (v2 < 0) free_count++;
+          else if (v2 == 0) unknown_count++;
         }
       }
 
       // condition for "frontier cell"
-      if (free_count >= 3 && unknown_count >= 3) {
+      //if (free_count >= 3 && unknown_count >= 3) {
+      if (v == 0 && free_count >= 1) {
         Position p = { i, j };
         frontier_cells_set[p] = numeric_limits<uint>::max();
         debug_graph.at<cv::Vec3b>(i, j) = cv::Vec3b(255, 0, 0);

@@ -78,17 +78,10 @@ void ExaBot::update(void) {
       first_plot = true;
       graph_timer = std::time(NULL);
       
-      cv::Mat graph(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_8UC3);
+      cv::Mat graph;
       
       // plot grid      
-      graph = cv::Scalar(0,0,0);
-      for (uint i = 0; i < OccupancyGrid::CELLS; i++) {
-        for (uint j = 0; j < OccupancyGrid::CELLS; j++) {
-          double value_real = 1 - (MetricMap::instance()->current_grid->m(i,j) + OccupancyGrid::Locc) / (OccupancyGrid::Locc * 2);
-          unsigned char value = (unsigned char)(255.0f * value_real);
-          graph.at<cv::Vec3b>(i,j) = cv::Vec3b(value, value, value);
-        }
-      }
+      MetricMap::instance()->current_grid->draw(graph);
       
       // plot robot position
       gsl::vector_int robot_position = MetricMap::instance()->grid_position();
@@ -106,9 +99,11 @@ void ExaBot::update(void) {
         cv::polylines(graph, vector< vector<cv::Point> >(1, path_points), false, cv::Scalar(0, 255, 0));
       }
       
+      // plot debug overlay
       cout << MetricMap::instance()->current_grid->debug_graph.size().width << endl;
       graph += MetricMap::instance()->current_grid->debug_graph;
       
+      // make window bigger
       cv::Mat graph_big;
       cv::resize(graph, graph_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
       cv::imshow("grid", graph_big);
@@ -124,7 +119,7 @@ void ExaBot::update(void) {
 }
 
 void ExaBot::stop(void) {
-  position_proxy.SetSpeed(0, 0);
+  position_proxy.SetMotorEnable(false);
   player_client.Read();
 }
 

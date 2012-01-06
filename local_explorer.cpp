@@ -165,12 +165,13 @@ void LocalExplorer::compute_gateway_path(TopoMap::GatewayNode* gateway, bool fol
     found = false;
   }
   else {
+    int extra_node_dist = 10;
     gsl::vector_int extra_node(2);
     switch(gateway->edge) {
-      case North: extra_node(0) = 0; extra_node(1) = OccupancyGrid::CELLS; break;
-      case South: extra_node(0) = 0; extra_node(1) = -OccupancyGrid::CELLS; break;
-      case East: extra_node(0) = OccupancyGrid::CELLS; extra_node(1) = 0; break;
-      case West: extra_node(0) = -OccupancyGrid::CELLS; extra_node(1) = 0; break;
+      case North: extra_node(0) = 0; extra_node(1) = extra_node_dist; break;
+      case South: extra_node(0) = 0; extra_node(1) = -extra_node_dist; break;
+      case East: extra_node(0) = extra_node_dist; extra_node(1) = 0; break;
+      case West: extra_node(0) = -extra_node_dist; extra_node(1) = 0; break;
     }
 
     // add a ficticious far node at the end of each path, to ensure crossing OccupancyGrids

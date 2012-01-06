@@ -21,3 +21,5 @@ TODO
 ====
 - cambiar la deteccion de celdas frontera: usar algun algoritmo de deteccion de bordes y luego recorrer las celdas como antes
 
+
+- poner opcion de guardar video de la ventana

@@ -122,7 +122,7 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
     if (dist < max_range) {
       cv::Point p;
       p.x = pts2[i].x;
-      p.y  = (int)floor(y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
+      p.y  = (int)round(y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
       if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_SIZE_CELLS && (uint)p.y < WINDOW_SIZE_CELLS) pts.push_back(p);
     }
   }
@@ -134,7 +134,7 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it) {
     cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * 0.1;
     // 5cm per laser hit
-    //cv::circle(cv_window, cv::Point(it->x, WINDOW_SIZE_CELLS - it->y - 1), 1/*round(0.05 / OccupancyGrid::CELL_SIZE)*/, OccupancyGrid::Locc * 0.05, -1);
+    //cv::circle(cv_window, cv::Point(it->x, WINDOW_SIZE_CELLS - it->y - 1), 0/*round(0.05 / OccupancyGrid::CELL_SIZE)*/, OccupancyGrid::Locc * 0.05, 0, 4);
   }
     
   // create a free circular area around robot
