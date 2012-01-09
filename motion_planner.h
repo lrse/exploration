@@ -14,6 +14,7 @@ namespace HybNav {
       
       void set_goal(double x, double y, double theta);
       bool valid_path(void);
+      void stop(void);
       
       /*double winner_direction_angle(void);
       int cost_function(uint c, uint target);

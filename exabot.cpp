@@ -125,6 +125,7 @@ void ExaBot::update(void) {
 }
 
 void ExaBot::stop(void) {
+  MotionPlanner::instance()->stop();
   position_proxy.SetMotorEnable(false);
   player_client.Read();
 }

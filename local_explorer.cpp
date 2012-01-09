@@ -1,3 +1,4 @@
+#include "explorer.h"
 #include "local_explorer.h"
 using namespace HybNav;
 using namespace std;
@@ -117,6 +118,11 @@ struct DistanceCost : public binary_function<list<gsl::vector_int>,list<gsl::vec
   }
 };
 
+void LocalExplorer::update(void) {
+  frontier_pathfinder.process_current_grid();
+  connectivity_pathfinder.process_current_grid();
+}
+
 void LocalExplorer::sort_paths(void) {
   if (last_target_valid) all_paths.sort(DistanceCost(last_target));
 }
@@ -133,6 +139,22 @@ bool LocalExplorer::found_path(void) {
 
 bool LocalExplorer::other_paths_left(void) {
   return !all_paths.empty();
+}
+
+bool LocalExplorer::valid_path(void)
+{
+  if (follow_path.empty()) return true;
+  for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end(); ++it) {
+    if (OccupancyGrid::valid_coordinates((*it)(0),(*it)(1))) {
+      if ((Explorer::instance()->state == Explorer::ExploringLocally && frontier_pathfinder.get_occupancy((*it)(0), (*it)(1)) == 0) ||
+          (Explorer::instance()->state == Explorer::ExploringGlobally && connectivity_pathfinder.get_occupancy((*it)(0), (*it)(1)) == 0))
+      {
+        cout << "path crosses obstacle" << endl;
+        return false;
+      }
+    }    
+  }
+  return true;
 }
 
 // Given the array of paths, it follows the first path in it and removes it from the given array

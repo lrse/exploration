@@ -45,6 +45,11 @@ void MotionPlanner::set_goal(double x, double y, double theta)
   position_proxy.SetMotorEnable(true);  
 }
 
+void MotionPlanner::stop(void) {
+  position_proxy.GoTo(position_proxy.GetXPos(), position_proxy.GetYPos(), position_proxy.GetYaw());
+  position_proxy.SetMotorEnable(false);
+}
+
 bool MotionPlanner::valid_path(void) {
   bool valid = (position_proxy.GetXSpeed() != 0 || position_proxy.GetYawSpeed() != 0);
   cout << "speeds: " << position_proxy.GetXSpeed() << " "  << position_proxy.GetYawSpeed() << " valid?: " << valid << endl;

@@ -13,6 +13,7 @@ namespace HybNav {
       virtual ~LocalPathfinder(void) {  }
       std::list<gsl::vector_int> neighbors(const gsl::vector_int& current, const gsl::vector_int& previous);
       unsigned long movement_cost(const gsl::vector_int& from, const gsl::vector_int& to, const gsl::vector_int& previous) ;
+
       void prepare(void);
       
       void process_current_grid(void);
@@ -52,6 +53,9 @@ namespace HybNav {
       void compute_gateway_path(TopoMap::GatewayNode* gateway, bool follow = true);
 
       void print_all_paths(void);
+      
+      void update(void);
+      bool valid_path(void);
 
       ConnectivityPathfinder connectivity_pathfinder;
       FrontierPathfinder frontier_pathfinder;

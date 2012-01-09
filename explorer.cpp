@@ -35,6 +35,7 @@ void Explorer::fsm_advance(void) {
 }
 
 void Explorer::update(void) {
+  LocalExplorer::instance()->update();
   cout << "Current grid: " << MetricMap::instance()->current_grid->position << endl;
   if (current_grid != MetricMap::instance()->current_grid) {
     ExaBot::instance()->stop(); // stop robot motion during this iteration
@@ -136,31 +137,21 @@ void Explorer::update(void) {
   fsm_advance();
 
   // Check for valid local path
-  list<gsl::vector_int>& follow_path = LocalExplorer::instance()->follow_path;
-  if (!follow_path.empty()) {
-    // invalid path or unnecessary path
-    bool valid = true;
-    /*for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end(); ++it) {
-      if (OccupancyGrid::valid_coordinates((*it)(0),(*it)(1)) && LocalExplorer::instance()->get_occupancy((*it)(0), (*it)(1)) == 0) {
-        cout << "path crosses obstacle" << endl;
-        valid = false;
-        break;
-      }
-    }*/ 
+  if (!LocalExplorer::instance()->valid_path()) {
+    cout << "path is invalid" << endl;
+    LocalExplorer::instance()->clear_paths();
+  }
 
+    // invalid path or unnecessary path
+  
     // TODO: this does not work correctly. Frontiers should be re-detected periodically and this would use LocalExplorer's target_is_frontier()
     // to check validity of the current target
     /*const gsl::vector_int& last = follow_path.back();
     if (state == ExploringLocally && fabs((*current_grid)(last(0), last(1))) > 2 * MetricMap::frontier_cell_threshold) {
       cout << "target is no longer frontier cell" << endl;
       valid = false;
-    }*/
-
-    if (!valid) {
-      LocalExplorer::instance()->clear_paths();
-      cout << "path is invalid" << endl;
     }
-  }
+  }*/
 }
 
 void Explorer::while_exploring_locally(void) {
