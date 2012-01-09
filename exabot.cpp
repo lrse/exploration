@@ -40,8 +40,12 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   start_timer = std::time(NULL);
   first_plot = false;
   
+#ifdef ENABLE_PLOTS  
   cvStartWindowThread();
   cv::namedWindow("grid");
+  cv::namedWindow("debug");
+  
+#endif
 
   sleep(1);
 }
@@ -107,6 +111,8 @@ void ExaBot::update(void) {
       cv::Mat graph_big;
       cv::resize(graph, graph_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
       cv::imshow("grid", graph_big);
+      
+      cv::imshow("debug", LocalExplorer::instance()->frontier_pathfinder.grid);
 #endif
     }  
 

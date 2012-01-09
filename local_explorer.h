@@ -13,9 +13,15 @@ namespace HybNav {
       virtual ~LocalPathfinder(void) {  }
       std::list<gsl::vector_int> neighbors(const gsl::vector_int& current, const gsl::vector_int& previous);
       unsigned long movement_cost(const gsl::vector_int& from, const gsl::vector_int& to, const gsl::vector_int& previous) ;
+      void prepare(void);
+      
+      void process_current_grid(void);
+      uchar get_occupancy(uint i, uint j);
+      cv::Mat grid;
 
     protected:
       double frontier_value_condition;
+
   };
 
   class FrontierPathfinder : public LocalPathfinder {

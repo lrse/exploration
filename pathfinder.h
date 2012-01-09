@@ -13,8 +13,10 @@ namespace HybNav {
       virtual unsigned long distance_heuristic(const T& target) { return 0; }
       virtual bool is_goal(const T& current) { return false; }
       virtual ~Pathfinder(void) { }
+      virtual void prepare(void) { }
 
       bool exists_path(const T& start, const T& goal);
+      
       std::list< std::list<T> > findpath(const T& start, const T& goal, bool first_solution = false);
       std::list< std::list<T> > findpath(const T& start, bool first_solution = false);
 

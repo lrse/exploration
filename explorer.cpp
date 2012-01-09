@@ -140,13 +140,13 @@ void Explorer::update(void) {
   if (!follow_path.empty()) {
     // invalid path or unnecessary path
     bool valid = true;
-    for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end(); ++it) {
-      if (OccupancyGrid::valid_coordinates((*it)(0),(*it)(1)) && (*current_grid)((*it)(0), (*it)(1)) >= OccupancyGrid::Locc) {
+    /*for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end(); ++it) {
+      if (OccupancyGrid::valid_coordinates((*it)(0),(*it)(1)) && LocalExplorer::instance()->get_occupancy((*it)(0), (*it)(1)) == 0) {
         cout << "path crosses obstacle" << endl;
         valid = false;
         break;
       }
-    }
+    }*/ 
 
     // TODO: this does not work correctly. Frontiers should be re-detected periodically and this would use LocalExplorer's target_is_frontier()
     // to check validity of the current target

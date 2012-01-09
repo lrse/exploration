@@ -30,6 +30,8 @@ bool Pathfinder<T>::exists_path(const T& start, const T& goal) {
 template<class T>
 list< list<T> > Pathfinder<T>::findpath(const T& start, const T& goal, bool use_goal_function, bool first_solution)
 {
+  prepare();
+  
   map<T,T> predecessors;
   set<T> visited;
   map<T,unsigned long> g;
