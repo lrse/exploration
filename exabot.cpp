@@ -59,7 +59,8 @@ ExaBot::~ExaBot(void) {
 
 void ExaBot::update_player(void)
 {
-  player_client.Read();
+  while (player_client.Peek(0))
+    player_client.Read();
 }
 
 void ExaBot::update(void) {
@@ -90,7 +91,7 @@ void ExaBot::update(void) {
       // plot robot position
       gsl::vector_int robot_position = MetricMap::instance()->grid_position();
       robot_position = robot_position + 0.5;
-      cv::circle(graph, cv::Point(robot_position(0), OccupancyGrid::CELLS - robot_position(1) - 1), MetricMap::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE, cv::Scalar(0,0,255), -1);
+      cv::circle(graph, cv::Point(robot_position(0), OccupancyGrid::CELLS - robot_position(1) - 1), floor(MetricMap::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), cv::Scalar(0,0,255), -1, 4);
       
       // plot path
       if (!LocalExplorer::instance()->follow_path.empty()) {

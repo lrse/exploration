@@ -18,7 +18,7 @@ using PlayerCc::Position2dProxy;
 // These numbers account for 4m of sensors range (sick has 8m)
 uint MetricMap::WINDOW_SIZE_CELLS = 115; // must be odd!
 uint MetricMap::WINDOW_RADIUS_CELLS = (MetricMap::WINDOW_SIZE_CELLS - 1) / 2;
-double MetricMap::ROBOT_RADIUS = 0.1;
+double MetricMap::ROBOT_RADIUS = 0.09;
 
 /**************************
  * Constructor/Destructor *
@@ -110,6 +110,7 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   size_t laser_samples = laser_proxy.GetCount();
   list<cv::Point> pts;
   vector<cv::Point> pts2(laser_samples);
+  list<float> pts_distances;
 
   for (size_t i = 0; i < laser_samples; i++) {
     double angle = laser_proxy.GetBearing(i) + position_proxy.GetYaw();
@@ -123,22 +124,27 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
       cv::Point p;
       p.x = pts2[i].x;
       p.y  = (int)round(y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
-      if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_SIZE_CELLS && (uint)p.y < WINDOW_SIZE_CELLS) pts.push_back(p);
+      if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_SIZE_CELLS && (uint)p.y < WINDOW_SIZE_CELLS) {
+        pts.push_back(p);
+        pts_distances.push_back(dist);
+      }
     }
   }
   const cv::Point* ptr = &pts2[0];
   int contours = laser_samples;
-  fillPoly(cv_window, &ptr, &contours, 1, OccupancyGrid::Lfree * 0.05, 4);
+  fillPoly(cv_window, &ptr, &contours, 1, OccupancyGrid::Lfree * 0.2, 4);
 
   // mark individual cells as occupied for each sensed point
-  for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it) {
-    cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * 0.1;
+  list<float>::const_iterator it_list = pts_distances.begin();
+  for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it, ++it_list) {
+    float rel_dist = 1 - *it_list / max_range;
+    cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * rel_dist * 0.1;
     // 5cm per laser hit
     //cv::circle(cv_window, cv::Point(it->x, WINDOW_SIZE_CELLS - it->y - 1), 0/*round(0.05 / OccupancyGrid::CELL_SIZE)*/, OccupancyGrid::Locc * 0.05, 0, 4);
   }
     
   // create a free circular area around robot
-  cv::circle(cv_window, cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS), (int)floor(1.5 * ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), OccupancyGrid::Lfree, -1, CV_AA);
+  cv::circle(cv_window, cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS), (int)floor(ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), OccupancyGrid::Lfree, -1, 8);
 
   // apply window to corresponding grids
   gsl::vector_int window_offset = current_grid->position * OccupancyGrid::CELLS + grid_position();

@@ -3,8 +3,6 @@
 using namespace HybNav;
 using namespace std;
 
-const double wall_safety_radius = 0.4;
-
 LocalPathfinder::LocalPathfinder(double v) : frontier_value_condition(v) {
   grid.create(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_8UC1);
 }
@@ -23,23 +21,16 @@ list<gsl::vector_int> LocalPathfinder::neighbors(const gsl::vector_int& v, const
 }
 
 unsigned long LocalPathfinder::movement_cost(const gsl::vector_int& from, const gsl::vector_int& to, const gsl::vector_int& previous) {
-  //OccupancyGrid& grid = *MetricMap::instance()->current_grid;
   unsigned long cost = 1;
 
-  int safety_radius_cells = ceil(wall_safety_radius / OccupancyGrid::CELL_SIZE);
+  int safety_radius_cells = ceil(MetricMap::ROBOT_RADIUS * 0.7 / OccupancyGrid::CELL_SIZE);
 
-  /*for (int i = -safety_radius_cells; i <= safety_radius_cells; i++) {
-    for (int j = -safety_radius_cells; j <= safety_radius_cells; j++) {
-      if ((i == 0) && (j == 0)) continue;
-      int x = to(0) + i;
-      int y = to(1) + j;
-      if (OccupancyGrid::valid_coordinates(x, y)) {
-        double occupancy = grid(x, y);
-        if (occupancy > 0) cost += (unsigned long)(occupancy * 50.0);
-        else if ((uint)x == 0 || (uint)y == 0 || (uint)x == (OccupancyGrid::CELLS - 1) || (uint)y == (OccupancyGrid::CELLS - 1)) cost += 5;
-      }
-    }
-  }*/
+  // avoid grid edges
+  int x = to(0);
+  int y = to(1);
+  if ((x < safety_radius_cells) || (x > OccupancyGrid::CELLS - safety_radius_cells - 1) ||
+      (y < safety_radius_cells) || (y > OccupancyGrid::CELLS - safety_radius_cells - 1))
+    cost += 15;
 
   // if there's a previous node in the path
   if (previous != from) {
@@ -64,7 +55,7 @@ void LocalPathfinder::process_current_grid(void) {
   for (uint i = 0; i < OccupancyGrid::CELLS; i++) {
     for (uint j = 0; j < OccupancyGrid::CELLS; j++) {
       if (current_grid(i,j) >= frontier_value_condition)
-        cv::circle(grid, cv::Point(i,OccupancyGrid::CELLS - j - 1), MetricMap::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE, 0, -1, 4);
+        cv::circle(grid, cv::Point(i,OccupancyGrid::CELLS - j - 1), floor(MetricMap::ROBOT_RADIUS * 0.8 / OccupancyGrid::CELL_SIZE), 0, -1, 4);
     }
   }
 }
