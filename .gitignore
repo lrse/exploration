@@ -10,3 +10,4 @@ csv/*.dot
 main
 cmake_install.cmake
 config.h
+*.geany
