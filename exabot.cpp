@@ -114,8 +114,8 @@ void ExaBot::update(void) {
       cv::imshow("grid", graph_big);
       
       cv::imshow("debug", LocalExplorer::instance()->frontier_pathfinder.grid);
-#endif
     }  
+#endif    
 
     Explorer::instance()->compute_motion(position_proxy);
   }
