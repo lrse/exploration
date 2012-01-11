@@ -6,7 +6,7 @@ SET(CMAKE_BUILD_TYPE debug)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}")
 
-option(ENABLE_PLOTS "Use GNUplot to display graphs" ON)
+option(ENABLE_DISPLAY "Shows GUI (if disabled, sends images to videos)" ON)
 configure_file(${CMAKE_SOURCE_DIR}/config.h.cmake ${CMAKE_SOURCE_DIR}/config.h)
 
 

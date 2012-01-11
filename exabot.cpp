@@ -6,11 +6,6 @@
 #include "util.h"
 #include "config.h"
 
-#ifdef ENABLE_PLOTS
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#endif
-
 using namespace HybNav;
 using namespace std;
 
@@ -40,11 +35,13 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   start_timer = std::time(NULL);
   first_plot = false;
   
-#ifdef ENABLE_PLOTS  
+#ifdef ENABLE_DISPLAY
   cvStartWindowThread();
   cv::namedWindow("grid");
   cv::namedWindow("debug");
-  
+#else
+  graph_writer.open("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
+  debug_writer.open("debug.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
 #endif
 
   sleep(1);
@@ -76,7 +73,6 @@ void ExaBot::update(void) {
       Explorer::instance()->update();
     }
 
-#ifdef ENABLE_PLOTS
     // Graphics
     cout << "timer " << (std::time(NULL) - graph_timer) << endl;
     if (!first_plot || (std::time(NULL) - graph_timer) >= 1) {
@@ -111,11 +107,20 @@ void ExaBot::update(void) {
       // make window bigger
       cv::Mat graph_big;
       cv::resize(graph, graph_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
-      cv::imshow("grid", graph_big);
       
-      cv::imshow("debug", LocalExplorer::instance()->frontier_pathfinder.grid);
+      cv::Mat debug_big;
+      cv::resize(LocalExplorer::instance()->frontier_pathfinder.grid, debug_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
+      
+#ifdef ENABLE_DISPLAY      
+      cv::imshow("grid", graph_big);
+      cv::imshow("debug", debug_big);
+#else
+      graph_writer << graph_big;
+      cv::Mat debug_big_color;
+      cv::cvtColor(debug_big, debug_big_color, CV_GRAY2BGR);
+      debug_writer << debug_big;
+#endif
     }  
-#endif    
 
     Explorer::instance()->compute_motion(position_proxy);
   }

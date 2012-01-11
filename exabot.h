@@ -4,6 +4,8 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <ctime>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <libplayerc++/playerc++.h>
 #include "singleton.h"
 #include "metric_map.h"
@@ -51,6 +53,8 @@ namespace HybNav {
       bool first_plot;
 
       std::time_t graph_timer, start_timer;
+      
+      cv::VideoWriter graph_writer, debug_writer;
   };
 }
 
