@@ -1,5 +1,6 @@
 #include "explorer.h"
 #include "local_explorer.h"
+#include "exabot.h"
 using namespace HybNav;
 using namespace std;
 
@@ -23,7 +24,7 @@ list<gsl::vector_int> LocalPathfinder::neighbors(const gsl::vector_int& v, const
 unsigned long LocalPathfinder::movement_cost(const gsl::vector_int& from, const gsl::vector_int& to, const gsl::vector_int& previous) {
   unsigned long cost = 1;
 
-  int safety_radius_cells = ceil(MetricMap::ROBOT_RADIUS * 0.7 / OccupancyGrid::CELL_SIZE);
+  int safety_radius_cells = ceil(ExaBot::ROBOT_RADIUS * 0.7 / OccupancyGrid::CELL_SIZE);
 
   // avoid grid edges
   int x = to(0);
@@ -55,7 +56,7 @@ void LocalPathfinder::process_current_grid(void) {
   for (uint i = 0; i < OccupancyGrid::CELLS; i++) {
     for (uint j = 0; j < OccupancyGrid::CELLS; j++) {
       if (current_grid(i,j) >= frontier_value_condition)
-        cv::circle(grid, cv::Point(i,OccupancyGrid::CELLS - j - 1), floor(MetricMap::ROBOT_RADIUS * 0.8 / OccupancyGrid::CELL_SIZE), 0, -1, 4);
+        cv::circle(grid, cv::Point(i,OccupancyGrid::CELLS - j - 1), floor(ExaBot::ROBOT_RADIUS * 0.8 / OccupancyGrid::CELL_SIZE), 0, -1, 4);
     }
   }
 }

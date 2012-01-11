@@ -4,6 +4,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/core_c.h>
 #include "metric_map.h"
+#include "exabot.h"
 using namespace HybNav;
 using namespace std;
 
@@ -23,7 +24,7 @@ void OccupancyGrid::update_frontiers(void)
 {
   debug_graph = cv::Scalar(0,0,0);
   
-  const uint minimum_frontier_length = (uint)round(MetricMap::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE);
+  const uint minimum_frontier_length = (uint)round(ExaBot::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE);
   cout << "minimum_frontier_length: " << minimum_frontier_length << endl;
   
   // copy to OpenCV mat

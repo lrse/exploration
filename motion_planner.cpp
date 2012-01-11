@@ -23,8 +23,8 @@ MotionPlanner::MotionPlanner(PlayerCc::PlayerClient* client_proxy) : Singleton<M
   MU1 = 5; // MU1 > MU2 + MU3
   MU2 = 2;
   MU3 = 2;*/
-  MINIMUM_DISTANCE = 0.01;
-  ENLARGEMENT_RADIUS = MINIMUM_DISTANCE + MetricMap::ROBOT_RADIUS;
+  /*MINIMUM_DISTANCE = 0.01;
+  ENLARGEMENT_RADIUS = MINIMUM_DISTANCE + ExaBot::ROBOT_RADIUS;*/
 /*#if SYROTEK
   TAU_HIGH = 0.55; // [0,1]. 1 = al lado del robot, 0 = a WINDOW_CELLS/2 de distancia. Valores mayores a TAU_HIGH se interpretan como obstaculo
 #else

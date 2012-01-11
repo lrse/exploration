@@ -9,6 +9,12 @@
 using namespace HybNav;
 using namespace std;
 
+#ifdef SYROTEK
+double ExaBot::ROBOT_RADIUS = 0.04;
+#else
+double ExaBot::ROBOT_RADIUS = 0.09;
+#endif
+
 /**************************
  * Constructor/Destructor *
  **************************/
@@ -16,7 +22,7 @@ using namespace std;
 ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), laser_proxy(&player_client),
   position_proxy(&player_client, 0), simulator_proxy(&player_client),
   trajectory_length(0), motion_planner(&player_client)
-{
+{  
   laser_proxy.RequestGeom();
   position_proxy.RequestGeom();
 
@@ -87,7 +93,7 @@ void ExaBot::update(void) {
       // plot robot position
       gsl::vector_int robot_position = MetricMap::instance()->grid_position();
       robot_position = robot_position + 0.5;
-      cv::circle(graph, cv::Point(robot_position(0), OccupancyGrid::CELLS - robot_position(1) - 1), floor(MetricMap::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), cv::Scalar(0,0,255), -1, 4);
+      cv::circle(graph, cv::Point(robot_position(0), OccupancyGrid::CELLS - robot_position(1) - 1), floor(ExaBot::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), cv::Scalar(0,0,255), -1, 4);
       
       // plot path
       if (!LocalExplorer::instance()->follow_path.empty()) {

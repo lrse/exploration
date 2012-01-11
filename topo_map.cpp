@@ -1,5 +1,6 @@
 #include "metric_map.h"
 #include "global_explorer.h"
+#include "exabot.h"
 using namespace HybNav;
 using namespace std;
 
@@ -137,7 +138,7 @@ void TopoMap::GatewayNode::set_dimensions(uint new_x0, uint new_xf) {
   x0 = new_x0;
   xf = new_xf;
   // the number of attempts equals to the number of robots that can fit into the gateway
-  MAX_REACH_ATTEMPTS = MAX(2, (xf - x0) * (OccupancyGrid::CELL_SIZE / MetricMap::ROBOT_RADIUS));
+  MAX_REACH_ATTEMPTS = MAX(2, (xf - x0) * (OccupancyGrid::CELL_SIZE / ExaBot::ROBOT_RADIUS));
 }
 
 gsl::vector_int TopoMap::GatewayNode::position(void) const {

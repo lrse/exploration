@@ -3,4 +3,6 @@
 
 #cmakedefine ENABLE_DISPLAY
 
+#cmakedefine SYROTEK
+
 #endif

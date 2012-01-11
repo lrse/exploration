@@ -33,6 +33,8 @@ namespace HybNav {
       PlayerCc::Position2dProxy position_proxy;
       PlayerCc::SimulationProxy simulator_proxy;
       
+      static double ROBOT_RADIUS;
+      
     private:     
       
       double trajectory_length;

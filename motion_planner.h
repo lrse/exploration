@@ -47,7 +47,6 @@ namespace HybNav {
       gsl::vector_int binary_histogram;
       uint winner_direction;*/
       
-    private:
       PlayerCc::Position2dProxy position_proxy;
   };
 }

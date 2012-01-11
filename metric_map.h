@@ -37,7 +37,6 @@ namespace HybNav {
       /* constants */
       static uint WINDOW_RADIUS_CELLS;
       static uint WINDOW_SIZE_CELLS;
-      static double ROBOT_RADIUS;
       static double frontier_cell_threshold;
 
       OccupancyGrid* current_grid;

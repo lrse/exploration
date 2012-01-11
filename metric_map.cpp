@@ -9,6 +9,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <sys/stat.h>
 #include "metric_map.h"
+#include "exabot.h"
 #include "util.h"
 using namespace HybNav;
 using namespace std;
@@ -18,7 +19,6 @@ using PlayerCc::Position2dProxy;
 // These numbers account for 4m of sensors range (sick has 8m)
 uint MetricMap::WINDOW_SIZE_CELLS = 115; // must be odd!
 uint MetricMap::WINDOW_RADIUS_CELLS = (MetricMap::WINDOW_SIZE_CELLS - 1) / 2;
-double MetricMap::ROBOT_RADIUS = 0.09;
 
 /**************************
  * Constructor/Destructor *
@@ -70,6 +70,7 @@ Direction MetricMap::opposite_direction(Direction dir) {
     case West: return East; break;
     case East: return West; break;
   }
+  return North;
 }
 
 void MetricMap::update_position(const gsl::vector& delta_pos, double delta_rot) {
@@ -144,7 +145,7 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   }
     
   // create a free circular area around robot
-  cv::circle(cv_window, cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS), (int)floor(ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), OccupancyGrid::Lfree, -1, 8);
+  cv::circle(cv_window, cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS), (int)floor(ExaBot::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), OccupancyGrid::Lfree, -1, 8);
 
   // apply window to corresponding grids
   gsl::vector_int window_offset = current_grid->position * OccupancyGrid::CELLS + grid_position();
