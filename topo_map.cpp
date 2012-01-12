@@ -200,3 +200,4 @@ bool TopoMap::GatewayNode::unexplored_gateway(void) {
 }
 
 
+

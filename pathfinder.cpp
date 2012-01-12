@@ -103,3 +103,4 @@ template class Pathfinder<gsl::vector_int>;
 namespace gsl {
   bool operator<(const vector_int& a, const vector_int& b) { return (a(0) < b(0) || (a(0) == b(0) && a(1) < b(1))); }
 }
+

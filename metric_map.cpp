@@ -201,3 +201,4 @@ void MetricMap::save(void) {
   super_matrix.to_dot(dot_file);
   dot_file.close();
 }
+

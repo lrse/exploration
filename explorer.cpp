@@ -362,3 +362,4 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
     //return MotionPlanner::instance()->compute_motion(MotionPlanner::instance()->winner_direction_angle());
   }
 }
+

@@ -63,3 +63,4 @@ std::ostream& operator<<(std::ostream& out, HybNav::Direction dir);
 #endif
 
 #endif
+

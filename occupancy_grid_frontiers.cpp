@@ -172,3 +172,4 @@ void OccupancyGrid::update_frontiers(void)
   }
   cout << endl;
 }
+

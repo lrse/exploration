@@ -72,3 +72,4 @@ std::ostream& operator<<(std::ostream& out, const std::list<gsl::vector_int>& l)
 
 #endif	/* LOCAL_EXPLORER_H */
 
+

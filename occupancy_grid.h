@@ -61,3 +61,4 @@ std::ostream& operator<<(std::ostream& out, const HybNav::OccupancyGrid* node);
 
 #endif
 
+

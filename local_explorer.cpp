@@ -221,3 +221,4 @@ void LocalExplorer::compute_gateway_path(TopoMap::GatewayNode* gateway, bool fol
     if (follow) follow_next_path();
   }
 }
+

@@ -188,3 +188,4 @@ void ExaBot::update_position(void) {
     trajectory.push_back(absolute_position);
   }
 }
+
