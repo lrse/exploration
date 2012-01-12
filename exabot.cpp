@@ -124,7 +124,7 @@ void ExaBot::update(void) {
       graph_writer << graph_big;
       cv::Mat debug_big_color;
       cv::cvtColor(debug_big, debug_big_color, CV_GRAY2BGR);
-      debug_writer << debug_big;
+      debug_writer << debug_big_color;
 #endif
     }  
 
