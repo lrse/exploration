@@ -105,7 +105,7 @@ std::ostream& operator<<(std::ostream& out, const HybNav::TopoMap::AreaNode* nod
 }
 
 std::ostream& operator<<(std::ostream& out, const HybNav::TopoMap::GatewayNode* node) {
-  out << "gw of " << node->grid << " at " << node->edge << " " << node->position();
+  out << "gw of " << node->grid << " at " << node->edge << " [" << node->x0 << ":" << node->xf << "]";
   return out;
 }
 

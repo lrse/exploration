@@ -55,7 +55,7 @@ namespace HybNav {
 
       std::time_t graph_timer, start_timer;
       
-      cv::VideoWriter graph_writer, debug_writer;
+      cv::VideoWriter *graph_writer, *debug_writer;
   };
 }
 

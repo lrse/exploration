@@ -1,6 +1,7 @@
 #include <limits>
 #include <iostream>
 #include <gslwrap/vector_int.h>
+#include "exabot.h"
 #include "metric_map.h"
 #include "local_explorer.h"
 #include "global_explorer.h"
@@ -289,12 +290,13 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
   }
 
   /* filter out too small gateways and rearrange coordinates for valid gateways */
+  uint minimum_gateway = ceil(2 * ExaBot::ROBOT_RADIUS * 1.1 / OccupancyGrid::CELL_SIZE); // in cells
   for (uint d = 0; d < 4; d++) {
     cout << "\t" << (Direction)d << ":";
     list< pair<uint,uint> >::iterator it = gateways[d].begin();
     while (it != gateways[d].end()) {
-      cout << "gw size: " <<  (it->second - it->first) << " threshold: " <<  ceil((MotionPlanner::instance()->ENLARGEMENT_RADIUS) / OccupancyGrid::CELL_SIZE) << endl;
-      if (it->second - it->first < ceil((MotionPlanner::instance()->ENLARGEMENT_RADIUS) / OccupancyGrid::CELL_SIZE))
+      cout << "gw size: " <<  (it->second - it->first) << " threshold: " <<  minimum_gateway << endl;
+      if (it->second - it->first < minimum_gateway)
         it = gateways[d].erase(it);
       else {
         uint i, j;

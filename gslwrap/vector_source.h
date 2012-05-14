@@ -321,14 +321,14 @@ public:
 //      This function multiplies the elements of vector a by the constant factor x, a'_i = x a_i. 
 	vector#typeext#& operator/=(#type# x) { gsl_vector#typeext#_scale (gsldata, 1/x); return *this; }
 
-	vector#typeext# operator+(const vector#typeext# &other) { vector#typeext# out(*this); out += other; return out; }
-	vector#typeext# operator-(const vector#typeext# &other) { vector#typeext# out(*this); out -= other; return out; }
-	vector#typeext# operator*(const vector#typeext# &other) { vector#typeext# out(*this); out *= other; return out; }
-	vector#typeext# operator/(const vector#typeext# &other) { vector#typeext# out(*this); out /= other; return out; }
-	vector#typeext# operator*(#type# other) { vector#typeext# out(*this); out *= other; return out; }
-	vector#typeext# operator+(#type# other) { vector#typeext# out(*this); out += other; return out; }
-	vector#typeext# operator-(#type# other) { vector#typeext# out(*this); out -= other; return out; }
-	vector#typeext# operator/(#type# other) { vector#typeext# out(*this); out /= other; return out; }
+	vector#typeext# operator+(const vector#typeext# &other) const { vector#typeext# out(*this); out += other; return out; }
+	vector#typeext# operator-(const vector#typeext# &other) const { vector#typeext# out(*this); out -= other; return out; }
+	vector#typeext# operator*(const vector#typeext# &other) const { vector#typeext# out(*this); out *= other; return out; }
+	vector#typeext# operator/(const vector#typeext# &other) const { vector#typeext# out(*this); out /= other; return out; }
+	vector#typeext# operator*(#type# other) const { vector#typeext# out(*this); out *= other; return out; }
+	vector#typeext# operator+(#type# other) const { vector#typeext# out(*this); out += other; return out; }
+	vector#typeext# operator-(#type# other) const { vector#typeext# out(*this); out -= other; return out; }
+	vector#typeext# operator/(#type# other) const { vector#typeext# out(*this); out /= other; return out; }
 
 // bool operators:
 	bool operator==(const vector#typeext#& other) const;

@@ -46,8 +46,8 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   cv::namedWindow("grid");
   cv::namedWindow("debug");
 #else
-  graph_writer.open("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
-  debug_writer.open("debug.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
+  graph_writer = new cv::VideoWriter("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
+  debug_writer = new cv::VideoWriter("debug.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
 #endif
 
   sleep(1);
@@ -107,7 +107,6 @@ void ExaBot::update(void) {
       }
       
       // plot debug overlay
-      cout << MetricMap::instance()->current_grid->debug_graph.size().width << endl;
       graph += MetricMap::instance()->current_grid->debug_graph;
       
       // make window bigger
@@ -121,10 +120,10 @@ void ExaBot::update(void) {
       cv::imshow("grid", graph_big);
       cv::imshow("debug", debug_big);
 #else
-      graph_writer << graph_big;
+      *graph_writer << graph_big;
       cv::Mat debug_big_color;
       cv::cvtColor(debug_big, debug_big_color, CV_GRAY2BGR);
-      debug_writer << debug_big_color;
+      *debug_writer << debug_big_color;
 #endif
     }  
 
@@ -151,6 +150,10 @@ void ExaBot::deinitialize(void) {
   cout << "Saving Map..." << endl;
   MetricMap::instance()->save();
   TopoMap::instance()->save();
+  
+  cout << "Closing videos..." << endl;
+  if (debug_writer) { delete debug_writer; debug_writer = NULL; }
+  if (graph_writer) { delete graph_writer; graph_writer = NULL; }
 }
 
 
