@@ -18,11 +18,16 @@ namespace HybNav {
       
       void process_current_grid(void);
       uchar get_occupancy(uint i, uint j);
-      cv::Mat grid;
+      uchar get_cost(uint i, uint j);
+      cv::Mat grid, cost_grid;
 
     protected:
       double frontier_value_condition;
 
+    private:
+      cv::Mat brush;
+      int brush_size, half_brush_size;
+      void create_cost_brush(void);
   };
 
   class FrontierPathfinder : public LocalPathfinder {

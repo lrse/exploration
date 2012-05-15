@@ -114,7 +114,7 @@ void ExaBot::update(void) {
       cv::resize(graph, graph_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
       
       cv::Mat debug_big;
-      cv::resize(LocalExplorer::instance()->frontier_pathfinder.grid, debug_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
+      cv::resize(LocalExplorer::instance()->frontier_pathfinder.cost_grid, debug_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
       
 #ifdef ENABLE_DISPLAY      
       cv::imshow("grid", graph_big);

@@ -6,6 +6,22 @@ using namespace std;
 
 LocalPathfinder::LocalPathfinder(double v) : frontier_value_condition(v) {
   grid.create(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_8UC1);
+  cost_grid.create(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_8UC1);
+  create_cost_brush();
+}
+
+void LocalPathfinder::create_cost_brush(void) {
+  brush_size = 21;
+  half_brush_size = brush_size / 2;
+  brush.create(brush_size, brush_size, CV_8UC1);
+  
+  uchar* bptr = brush.ptr(0);
+  for (int i = 0; i < brush_size; i++) {
+    for (int j = 0; j < brush_size; j++, bptr++) {
+      double d = hypot(i - half_brush_size, j - half_brush_size) / half_brush_size;
+      *bptr = ceil(255 * (d > 1 ? 1 : d));
+    }
+  }
 }
 
 list<gsl::vector_int> LocalPathfinder::neighbors(const gsl::vector_int& v, const gsl::vector_int& previous) {
@@ -42,12 +58,16 @@ unsigned long LocalPathfinder::movement_cost(const gsl::vector_int& from, const 
     if (a2b != old2a) cost += 10; // jaggy paths cost more
   }
   
+  cost += (1 - (float)get_cost(x, y) / 255) * 20;
+  
   return cost;
 }
 
 void LocalPathfinder::prepare(void) {
   process_current_grid();
 }
+
+
 
 void LocalPathfinder::process_current_grid(void) {
   OccupancyGrid& current_grid = *MetricMap::instance()->current_grid;
@@ -60,13 +80,39 @@ void LocalPathfinder::process_current_grid(void) {
         cv::circle(grid, cv::Point(i,OccupancyGrid::CELLS - j - 1), floor(ExaBot::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), 0, -1, 4);
     }
   }
+  
+  // create cost grid
+  grid.copyTo(cost_grid);
+  for (int i = 0; i < OccupancyGrid::CELLS; i++) {
+    for (int j = 0; j < OccupancyGrid::CELLS; j++) {
+      if (grid.at<uchar>(i,j) == 255) continue;
+      
+      cv::Rect output_rect(j - half_brush_size, i - half_brush_size, brush_size, brush_size);
+      cv::Mat brush_ref = brush;
+      
+      // detect borders
+      if (i - half_brush_size < 0 || j - half_brush_size < 0 ||
+          i + half_brush_size >= OccupancyGrid::CELLS || j + half_brush_size >= OccupancyGrid::CELLS)
+      {
+        cv::Rect output_rect2 = output_rect & cv::Rect(0, 0, OccupancyGrid::CELLS, OccupancyGrid::CELLS);
+        cv::Rect brush_rect = cv::Rect(output_rect2.x - output_rect.x, output_rect2.y - output_rect.y, output_rect2.width, output_rect2.height);
+        output_rect = output_rect2;
+        brush_ref = brush(brush_rect);
+      }
+      
+      cv::Mat subgrid(cost_grid, output_rect);
+      cv::min(subgrid, brush_ref, subgrid);
+    }
+  }
 }
 
 uchar LocalPathfinder::get_occupancy(uint i, uint j) {
   return grid.at<uchar>(OccupancyGrid::CELLS - j - 1,i);
 }
 
-
+uchar LocalPathfinder::get_cost(uint i, uint j) {
+  return cost_grid.at<uchar>(OccupancyGrid::CELLS - j - 1,i);
+}
 
 ConnectivityPathfinder::ConnectivityPathfinder(void) : LocalPathfinder(0), x_range(2), y_range(2) { }
 

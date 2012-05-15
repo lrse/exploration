@@ -285,7 +285,7 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
   const gsl::vector& own_position = MetricMap::instance()->position;
 
   // remove all path nodes already considered as "reached"
-  double reached_distance_threshold = ExaBot::ROBOT_RADIUS*1.05;
+  double reached_distance_threshold = ExaBot::ROBOT_RADIUS*1.2;
   double far_distance_threshold = 0.9;
   for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end();) {
     gsl::vector target_distance = (gsl::vector)(*it) * OccupancyGrid::CELL_SIZE - own_position;
