@@ -156,6 +156,7 @@ double mod(double angle) {
 
 void HybNav::angleCorrection(HybNav::SPosition &pos, const LaserProxy &laser) {
   HybNav::Scan scan = getPoints(pos,laser);
+  if (scan.size() == 0) return;
   PolarLineVector lines = getLines(scan);
   int n = 0;
   int nn;
