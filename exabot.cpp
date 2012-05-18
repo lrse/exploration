@@ -45,10 +45,9 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   cvStartWindowThread();
   cv::namedWindow("grid");
   cv::namedWindow("debug");
-#else
+#endif
   graph_writer = new cv::VideoWriter("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
   debug_writer = new cv::VideoWriter("debug.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
-#endif
 
   sleep(1);
 }
@@ -119,12 +118,11 @@ void ExaBot::update(void) {
 #ifdef ENABLE_DISPLAY      
       cv::imshow("grid", graph_big);
       cv::imshow("debug", debug_big);
-#else
+#endif
       *graph_writer << graph_big;
       cv::Mat debug_big_color;
       cv::cvtColor(debug_big, debug_big_color, CV_GRAY2BGR);
       *debug_writer << debug_big_color;
-#endif
     }  
 
     Explorer::instance()->compute_motion(position_proxy);
