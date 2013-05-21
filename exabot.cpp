@@ -19,11 +19,11 @@ double ExaBot::ROBOT_RADIUS = 0.09;
  * Constructor/Destructor *
  **************************/
 
-ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), laser_proxy(&player_client),
+ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), ranger_proxy(&player_client),
   position_proxy(&player_client, 0),
   trajectory_length(0), motion_planner(&player_client)
 {  
-  laser_proxy.RequestGeom();
+  ranger_proxy.RequestGeom();
   position_proxy.RequestGeom();
 
   player_client.Read();
@@ -72,7 +72,7 @@ void ExaBot::update(void) {
 
     update_position();
 
-    MetricMap::instance()->process_distances(position_proxy, laser_proxy);
+    MetricMap::instance()->process_distances(position_proxy, ranger_proxy);
     //MotionPlanner::instance()->process_distances(laser_proxy);
     if (std::time(NULL) - start_timer > 3) {
       Explorer::instance()->update();

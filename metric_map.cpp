@@ -13,7 +13,7 @@
 #include "util.h"
 using namespace HybNav;
 using namespace std;
-using PlayerCc::LaserProxy;
+using PlayerCc::RangerProxy;
 using PlayerCc::Position2dProxy;
 
 // These numbers account for 4m of sensors range (sick has 8m)
@@ -98,7 +98,7 @@ void MetricMap::update_position(const gsl::vector& delta_pos, double delta_rot) 
   }
 }
 
-void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& laser_proxy)
+void MetricMap::process_distances(Position2dProxy& position_proxy, RangerProxy& ranger_proxy)
 {
   // apply sensor readings to window
   double max_range = 4;
@@ -108,14 +108,14 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   cv_window = 0;
 
   // create a free polygonal area between robot and each sensed point
-  size_t laser_samples = laser_proxy.GetCount();
+  size_t laser_samples = ranger_proxy.GetRangeCount();
   list<cv::Point> pts;
   vector<cv::Point> pts2(laser_samples);
   list<float> pts_distances;
 
   for (size_t i = 0; i < laser_samples; i++) {
-    double angle = laser_proxy.GetBearing(i) + position_proxy.GetYaw();
-    double dist = laser_proxy.GetRange(i);
+    double angle = ranger_proxy.GetElementPose(i).pyaw + position_proxy.GetYaw();
+    double dist = ranger_proxy.GetRange(i);
     double x = dist * cos(angle);
     double y = dist * sin(angle);
     pts2[i].x = (int)round(x / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;

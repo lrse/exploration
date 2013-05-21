@@ -29,7 +29,7 @@ namespace HybNav {
       void update_player(void);
       
       PlayerCc::PlayerClient player_client;
-      PlayerCc::LaserProxy laser_proxy;
+      PlayerCc::RangerProxy ranger_proxy;
       PlayerCc::Position2dProxy position_proxy;
       
       static double ROBOT_RADIUS;
