@@ -6,13 +6,6 @@ S1R
   # can refer to the robot by this name
   name "r0"
   pose [ 0.186 3.032 0 -91.606 ]
-  minedetector(
-    alwayson 1
-    pose [0 0 -0.120 0]
-    size [0.030 0.030 0.010]
-    fov 120
-    range_max 1
-  )
 
   hokuyolaser(
     color "gray"
@@ -40,23 +33,7 @@ window
   camera_sx 0
   camera_translation [ 0 0 0 ]
   camera_rotation [ 0 0 0 ]
-
-  view (       
-    show_data 1              
-    show_laser 1
-    show_laser_strikes 1
-    show_ranger 0
-  )
 )
-
-
-occgrid
-(
-  name "grid"
-  size [0 0 0]
-  cell_size 2
-)
-
 
 ###########################
 # OBSTACLES

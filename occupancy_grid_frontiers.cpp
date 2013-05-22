@@ -144,13 +144,14 @@ void OccupancyGrid::update_frontiers(void)
     //uint clusters = (uint)ceil(s.size() / (float)20);
     uint clusters = 1;
     cv::Mat_<float> samples(s.size(), 2);
-    cv::Mat_<uint> labels(s.size(), 1);
     cv::Mat_<float> centers(clusters, 2);
     uint i = 0;
     for (set<Position>::const_iterator it2 = s.begin(); it2 != s.end(); ++it2, ++i) {
       samples(i, 0) = it2->x;
       samples(i, 1) = it2->y;
-    }
+    } 
+    cout << s.size() << " " << clusters << endl;
+    cv::Mat labels;
     cv::kmeans(samples, clusters, labels, cv::TermCriteria(cv::TermCriteria::MAX_ITER, 20, 0), 20, cv::KMEANS_RANDOM_CENTERS, centers);
     for (i = 0; i < clusters; i++) {
       Position p = { centers(i, 0), centers(i, 1) };

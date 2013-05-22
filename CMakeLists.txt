@@ -16,12 +16,13 @@ execute_process(COMMAND ${PROJECT_SOURCE_DIR}/gslwrap/generate WORKING_DIRECTORY
 find_package(OpenCV REQUIRED)
 find_package(GSL REQUIRED)
 find_package(Boost COMPONENTS system REQUIRED)
+INCLUDE(UsePlayerC++)
 
-include(FindPkgConfig)
-pkg_search_module(PLAYER REQUIRED playerc++)
+#include(FindPkgConfig)
+#pkg_search_module(PLAYER REQUIRED playerc++)
 
 message("found lib ${OpenCV_LIB_DIR}")
-include_directories(${GSL_INCLUDE_DIR} ${PROJECT_SOURCE_DIR} ${PLAYER_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS})
+include_directories(${GSL_INCLUDE_DIR} ${PROJECT_SOURCE_DIR} ${PLAYER_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${PLAYERCPP_INCLUDE_DIRS})
 
 file(GLOB HybNav_SRCS *.cpp)
 SET(SOURCES ${SOURCES} ${HybNav_SRCS})

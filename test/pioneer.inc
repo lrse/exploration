@@ -162,7 +162,7 @@ define pioneer2dx_base_front_sonar pioneer2dx_base_no_sonar
 )
 
 
-define pioneer2dx pioneer2dx_base
+define pioneer2dx pioneer2dx_base_no_sonar
 (  
   # simplified Body shape:
   block( 

@@ -16,23 +16,23 @@ int main(void) {
   
   HybNav::ExaBot exabot;
 
-  try {
+  //try {
     while(true) {
       exabot.update();
       usleep(0);
       if (end) break;
     }
-  }
-  catch(...) {
-    exabot.stop();
-    exabot.update_player();
+  //}
+  /*catch(...) {
     cout << "Type ctrl+d to end" << endl;
     string a;
     cin >> a;
     exabot.deinitialize();
     throw;
-  }
+  }*/
 
+  exabot.stop();
+  exabot.update_player();
   exabot.deinitialize();
 
   return 0;

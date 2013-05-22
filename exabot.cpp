@@ -19,11 +19,11 @@ double ExaBot::ROBOT_RADIUS = 0.09;
  * Constructor/Destructor *
  **************************/
 
-ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), ranger_proxy(&player_client),
+ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), laser_proxy(&player_client, 0),
   position_proxy(&player_client, 0),
   trajectory_length(0), motion_planner(&player_client)
 {  
-  ranger_proxy.RequestGeom();
+  laser_proxy.RequestGeom();
   position_proxy.RequestGeom();
 
   player_client.Read();
@@ -66,71 +66,65 @@ void ExaBot::update_player(void)
 }
 
 void ExaBot::update(void) {
-  try {
-    update_player();
-    //if (position_proxy.GetStall()) throw std::runtime_error("collision detected!");
+  update_player();
+  //if (position_proxy.GetStall()) throw std::runtime_error("collision detected!");
 
-    update_position();
+  update_position();
 
-    MetricMap::instance()->process_distances(position_proxy, ranger_proxy);
-    //MotionPlanner::instance()->process_distances(laser_proxy);
-    if (std::time(NULL) - start_timer > 3) {
-      Explorer::instance()->update();
-    }
+  MetricMap::instance()->process_distances(position_proxy, laser_proxy);
+  //MotionPlanner::instance()->process_distances(laser_proxy);
+  if (std::time(NULL) - start_timer > 3) {
+    Explorer::instance()->update();
+  }
 
-    // Graphics
-    cout << "timer " << (std::time(NULL) - graph_timer) << endl;
-    if (!first_plot || (std::time(NULL) - graph_timer) >= 1) {
-      first_plot = true;
-      graph_timer = std::time(NULL);
-      
-      cv::Mat graph;
-      
-      // plot grid      
-      MetricMap::instance()->current_grid->draw(graph);
-      
-      // plot robot position
-      gsl::vector_int robot_position = MetricMap::instance()->grid_position();
-      robot_position = robot_position + 0.5;
-      cv::circle(graph, cv::Point(robot_position(0), OccupancyGrid::CELLS - robot_position(1) - 1), floor(ExaBot::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), cv::Scalar(0,0,255), -1, 4);
-      
-      // plot path
-      if (!LocalExplorer::instance()->follow_path.empty()) {
-        list<gsl::vector_int>& path = LocalExplorer::instance()->follow_path;
-        vector<cv::Point> path_points(path.size());
-        size_t i = 0;
-        for (list<gsl::vector_int>::iterator it = path.begin(); it != path.end(); ++it, i++) {
-          path_points[i] = cv::Point((*it)(0), OccupancyGrid::CELLS - (*it)(1) - 1);
-        }
-        cv::polylines(graph, vector< vector<cv::Point> >(1, path_points), false, cv::Scalar(0, 255, 0));
+  // Graphics
+  cout << "timer " << (std::time(NULL) - graph_timer) << endl;
+  if (!first_plot || (std::time(NULL) - graph_timer) >= 1) {
+    first_plot = true;
+    graph_timer = std::time(NULL);
+    
+    cv::Mat graph;
+    
+    // plot grid      
+    MetricMap::instance()->current_grid->draw(graph);
+    
+    // plot robot position
+    gsl::vector_int robot_position = MetricMap::instance()->grid_position();
+    robot_position = robot_position + 0.5;
+    cv::circle(graph, cv::Point(robot_position(0), OccupancyGrid::CELLS - robot_position(1) - 1), floor(ExaBot::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), cv::Scalar(0,0,255), -1, 4);
+    
+    // plot path
+    if (!LocalExplorer::instance()->follow_path.empty()) {
+      list<gsl::vector_int>& path = LocalExplorer::instance()->follow_path;
+      vector<cv::Point> path_points(path.size());
+      size_t i = 0;
+      for (list<gsl::vector_int>::iterator it = path.begin(); it != path.end(); ++it, i++) {
+        path_points[i] = cv::Point((*it)(0), OccupancyGrid::CELLS - (*it)(1) - 1);
       }
-      
-      // plot debug overlay
-      graph += MetricMap::instance()->current_grid->debug_graph;
-      
-      // make window bigger
-      cv::Mat graph_big;
-      cv::resize(graph, graph_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
-      
-      cv::Mat debug_big;
-      cv::resize(LocalExplorer::instance()->frontier_pathfinder.cost_grid, debug_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
-      
+      cv::polylines(graph, vector< vector<cv::Point> >(1, path_points), false, cv::Scalar(0, 255, 0));
+    }
+    
+    // plot debug overlay
+    graph += MetricMap::instance()->current_grid->debug_graph;
+    
+    // make window bigger
+    cv::Mat graph_big;
+    cv::resize(graph, graph_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
+    
+    cv::Mat debug_big;
+    cv::resize(LocalExplorer::instance()->frontier_pathfinder.cost_grid, debug_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
+    
 #ifdef ENABLE_DISPLAY      
-      cv::imshow("grid", graph_big);
-      cv::imshow("debug", debug_big);
+    cv::imshow("grid", graph_big);
+    cv::imshow("debug", debug_big);
 #endif
-      *graph_writer << graph_big;
-      cv::Mat debug_big_color;
-      cv::cvtColor(debug_big, debug_big_color, CV_GRAY2BGR);
-      *debug_writer << debug_big_color;
-    }  
+    *graph_writer << graph_big;
+    cv::Mat debug_big_color;
+    cv::cvtColor(debug_big, debug_big_color, CV_GRAY2BGR);
+    *debug_writer << debug_big_color;
+  }  
 
-    Explorer::instance()->compute_motion(position_proxy);
-  }
-  catch(const PlayerCc::PlayerError& err) {
-    cout << "player error!" << endl;
-    throw;
-  }
+  Explorer::instance()->compute_motion(position_proxy);
 }
 
 void ExaBot::stop(void) {
