@@ -65,7 +65,7 @@ void OccupancyGrid::update_frontiers(void)
         Position p = { i, j };
         frontier_cells_set[p] = numeric_limits<uint>::max();
         debug_graph.at<cv::Vec3b>(i, j) = cv::Vec3b(255, 0, 0);
-        cout << "cell pos: " << i << " " << j << endl;
+        //cout << "cell pos: " << i << " " << j << endl;
       }
     }
   }

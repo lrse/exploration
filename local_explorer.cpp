@@ -204,7 +204,7 @@ void LocalExplorer::follow_next_path(void) {
   last_target = follow_path.back();
   last_target_valid = true;
   
-  cout << follow_path << endl;
+  cout << "current follow path: " << follow_path << endl;
   print_all_paths();
 }
 
@@ -230,7 +230,12 @@ void LocalExplorer::compute_frontier_paths(void) {
   else {    
     gsl::vector_int grid_position = MetricMap::instance()->grid_position();
     all_paths = frontier_pathfinder.findpath(grid_position, false);
-    if (!all_paths.empty()) { found = true; sort_paths(); follow_next_path(); }
+    if (!all_paths.empty()) {
+      sort_paths();
+      follow_next_path();
+      /*if (follow_path.empty()) found = false;
+      else*/ found = true;
+    }
     else found = false;
   }
 }

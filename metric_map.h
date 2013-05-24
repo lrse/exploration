@@ -33,6 +33,7 @@ namespace HybNav {
 
       // TODO: coord2index
       void save(void);
+      void draw(void);
 
       /* constants */
       static uint WINDOW_RADIUS_CELLS;

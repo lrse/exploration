@@ -7,6 +7,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <libplayerc++/playerc++.h>
+#include <libplayerc/playerc.h>
 #include "singleton.h"
 #include "metric_map.h"
 #include "explorer.h"
@@ -31,6 +32,7 @@ namespace HybNav {
       PlayerCc::PlayerClient player_client;
       PlayerCc::LaserProxy laser_proxy;
       PlayerCc::Position2dProxy position_proxy;
+      PlayerCc::Graphics2dProxy graphics_proxy;
       
       static double ROBOT_RADIUS;
       

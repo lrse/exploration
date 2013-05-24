@@ -9,10 +9,10 @@
 using namespace HybNav;
 using namespace std;
 
-#ifdef SYROTEK
-double ExaBot::ROBOT_RADIUS = 0.04;
-#else
+#ifdef ENABLE_SYROTEK
 double ExaBot::ROBOT_RADIUS = 0.09;
+#else
+double ExaBot::ROBOT_RADIUS = 0.25;
 #endif
 
 /**************************
@@ -20,7 +20,7 @@ double ExaBot::ROBOT_RADIUS = 0.09;
  **************************/
 
 ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), laser_proxy(&player_client, 0),
-  position_proxy(&player_client, 0),
+  position_proxy(&player_client, 0), graphics_proxy(&player_client, 0),
   trajectory_length(0), motion_planner(&player_client)
 {  
   laser_proxy.RequestGeom();
@@ -45,6 +45,7 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   cvStartWindowThread();
   cv::namedWindow("grid");
   cv::namedWindow("debug");
+  cv::namedWindow("complete_map");
 #endif
   graph_writer = new cv::VideoWriter("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
   debug_writer = new cv::VideoWriter("debug.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
@@ -66,11 +67,13 @@ void ExaBot::update_player(void)
 }
 
 void ExaBot::update(void) {
+  
   update_player();
   //if (position_proxy.GetStall()) throw std::runtime_error("collision detected!");
 
   update_position();
 
+  MotionPlanner::instance()->update();
   MetricMap::instance()->process_distances(position_proxy, laser_proxy);
   //MotionPlanner::instance()->process_distances(laser_proxy);
   if (std::time(NULL) - start_timer > 3) {
@@ -84,6 +87,7 @@ void ExaBot::update(void) {
     graph_timer = std::time(NULL);
     
     cv::Mat graph;
+    graphics_proxy.Clear();
     
     // plot grid      
     MetricMap::instance()->current_grid->draw(graph);
@@ -97,11 +101,15 @@ void ExaBot::update(void) {
     if (!LocalExplorer::instance()->follow_path.empty()) {
       list<gsl::vector_int>& path = LocalExplorer::instance()->follow_path;
       vector<cv::Point> path_points(path.size());
+      vector<player_point_2d_t> path_points_player(path_points.size());
       size_t i = 0;
       for (list<gsl::vector_int>::iterator it = path.begin(); it != path.end(); ++it, i++) {
         path_points[i] = cv::Point((*it)(0), OccupancyGrid::CELLS - (*it)(1) - 1);
+        path_points_player[i].px = path_points[i].x * OccupancyGrid::CELL_SIZE;
+        path_points_player[i].py = path_points[i].y * OccupancyGrid::CELL_SIZE;
       }
       cv::polylines(graph, vector< vector<cv::Point> >(1, path_points), false, cv::Scalar(0, 255, 0));
+      graphics_proxy.DrawPolyline(&path_points_player[0], path_points.size());
     }
     
     // plot debug overlay
@@ -117,6 +125,7 @@ void ExaBot::update(void) {
 #ifdef ENABLE_DISPLAY      
     cv::imshow("grid", graph_big);
     cv::imshow("debug", debug_big);
+    MetricMap::instance()->draw();
 #endif
     *graph_writer << graph_big;
     cv::Mat debug_big_color;

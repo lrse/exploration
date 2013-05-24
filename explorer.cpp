@@ -246,7 +246,7 @@ void Explorer::recompute_path(void) {
     if (!paths_found) {
       start(ExploringGlobally);
       dynamic_cast<TopoMap::AreaNode*>(TopoMap::instance()->current_node)->completely_explored = true;
-      cout << "No more frontier paths, so marking as explored" << endl;
+      cout << "No more paths to frontiers, so marking as explored" << endl;
     }
     else {
       cout << "Local paths available" << endl;
@@ -280,6 +280,7 @@ void Explorer::recompute_path(void) {
 }
 
 void Explorer::compute_motion(Position2dProxy& position_proxy) {
+  cout << "computing motion" << endl;
   // if the robot is trying to reach a target or not
   list<gsl::vector_int>& follow_path = LocalExplorer::instance()->follow_path;
   const gsl::vector& own_position = MetricMap::instance()->position;
@@ -289,6 +290,9 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
   double far_distance_threshold = 0.9;
   for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end();) {
     gsl::vector target_distance = (gsl::vector)(*it) * OccupancyGrid::CELL_SIZE - own_position;
+    double target_distance_norm = target_distance.norm2();
+    double target_angle = (target_distance_norm == 0 ? 0 : atan2(target_distance(1), target_distance(0))); // cartesian to polar
+    double theta = gsl_sf_angle_restrict_symm(target_angle);
     cout << "this target: " << *it << " own position: " << own_position / OccupancyGrid::CELL_SIZE << endl;
     cout << "target distance: " << target_distance.norm2() << " threshold: " << reached_distance_threshold << endl;
 
@@ -297,7 +301,7 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
       break;
     }
     
-    if (target_distance.norm2() < reached_distance_threshold) {
+    if (MotionPlanner::instance()->reached(target_distance(0) + position_proxy.GetXPos(), target_distance(1) + position_proxy.GetYPos(), theta)) {
       cout << "removing " << *it << " from follow path" << endl;
       it = follow_path.erase(it);
     }
@@ -347,7 +351,8 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
     //return MotionPlanner::instance()->compute_motion_from_target(safe_angle);
   }
   else {
-    if (!MotionPlanner::instance()->valid_path()) {
+    // once last goal is reached...
+    if (MotionPlanner::instance()->reached_goal()) {
       // go forward
       cout << "no path, going forward" << endl;
       double x = position_proxy.GetXPos() + cos(position_proxy.GetYaw()) * 2;
@@ -359,7 +364,6 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
       planner_proxy.SetGoalPose(x, y, theta);
       planner_proxy.SetEnable(true);*/
     }
-    //return MotionPlanner::instance()->compute_motion(MotionPlanner::instance()->winner_direction_angle());
   }
 }
 

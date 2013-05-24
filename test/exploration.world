@@ -84,7 +84,7 @@ pioneer2dx
   pose [1.0 17.0 0.0 0.0]
   sicklaser(
    samples 361
-   range_max 4.0
+   range_max 8.0
   )
   watchdog_timeout -1.0
   localization "gps"

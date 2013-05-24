@@ -104,10 +104,10 @@ define S1R position
 #     )
 
 
-	s1r_front_ir()
-	s1r_base_ir()
-	s1r_base_sonar()
-	s1r_frontsensor_ir()
-	s1r_frontsensor_sonar()
+#	s1r_front_ir()
+#	s1r_base_ir()
+#	s1r_base_sonar()
+#	s1r_frontsensor_ir()
+#	s1r_frontsensor_sonar()
 	)
 

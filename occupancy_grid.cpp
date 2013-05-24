@@ -215,11 +215,12 @@ OccupancyGrid& OccupancyGrid::get_neighbor(Direction edge) {
 void OccupancyGrid::draw(cv::Mat& graph) {
   graph.create(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_8UC3);
   graph = cv::Scalar(0,0,0);
+  cv::Vec3b* cv_ptr = graph.ptr<cv::Vec3b>(0);
   for (uint i = 0; i < OccupancyGrid::CELLS; i++) {
-    for (uint j = 0; j < OccupancyGrid::CELLS; j++) {
+    for (uint j = 0; j < OccupancyGrid::CELLS; j++, cv_ptr++) {
       double value_real = 1 - (m(i,j) + OccupancyGrid::Locc) / (OccupancyGrid::Locc * 2);
       unsigned char value = (unsigned char)(255.0f * value_real);
-      graph.at<cv::Vec3b>(i,j) = cv::Vec3b(value, value, value);
+      *cv_ptr = cv::Vec3b(value, value, value);
     }
   }
 }

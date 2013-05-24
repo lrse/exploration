@@ -1,10 +1,17 @@
 #include <iostream>
+#include <limits>
 #include "topo_map.h"
 #include "occupancy_grid.h"
 #include "super_matrix.h"
 using namespace HybNav;
 using namespace std;
 
+template<class T>
+SuperMatrix<T>::SuperMatrix(void) {
+  size_x = size_y = 0;
+  min_x = min_y = std::numeric_limits<ssize_t>::max();
+  max_x = max_y = std::numeric_limits<ssize_t>::min();
+}
 
 template<class T>
 double& SuperMatrix<T>::cell(ssize_t x, ssize_t y) {
@@ -25,6 +32,14 @@ double& SuperMatrix<T>::cell(ssize_t x, ssize_t y) {
 
 template<class T>
 T& SuperMatrix<T>::submatrix(ssize_t x, ssize_t y) {
+  if (x < min_x) min_x = x;
+  if (x > max_x) max_x = x;
+  if (y < min_y) min_y = y;
+  if (y > max_y) max_y = y;
+  
+  size_x = (max_x - min_x) + 1;
+  size_y = (max_y - min_y) + 1;
+  
   //cout << "submatrix: " << x << "," << y << endl;
   iterator_x it = matrix_map.find(x);
   iterator_y it2;

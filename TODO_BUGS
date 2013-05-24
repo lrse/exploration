@@ -1,8 +1,27 @@
+ACTUALES
+==================
+
+* cuando hay paredes cerca de un borde y hay un camino a una frontera dentro de esa grilla, intentar seguir ese camino genera que el robot se salga de la grilla. al intentar volver a la grill anterior lo hace
+de tal forma que cae cerca del borde y esto se repite -> PROBLEMA: planeo de una grilla a la otra no considera obstaculos en la 2da ni el objetivo concreto que se busca
+
+
+
+
+
+
+
+
+
+
+
+
+VIEJOS
+====================
+
 BUGS/PROBLEMAS:
 ==============
 - a veces se insiste en seguir un camino global que es muy rebuscado, por no haber descubierto un gateway topologico que vaya directo.
   -> poner GW topo al descubrir GW metricos en celdas adyacentes?
-  -> 
   
 - no gateway found for that edge! 
 

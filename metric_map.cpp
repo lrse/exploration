@@ -16,8 +16,9 @@ using namespace std;
 using PlayerCc::LaserProxy;
 using PlayerCc::Position2dProxy;
 
+// 115 for 4m, 231 for 8m
 // These numbers account for 4m of sensors range (sick has 8m)
-uint MetricMap::WINDOW_SIZE_CELLS = 115; // must be odd!
+uint MetricMap::WINDOW_SIZE_CELLS = 231; // must be odd!
 uint MetricMap::WINDOW_RADIUS_CELLS = (MetricMap::WINDOW_SIZE_CELLS - 1) / 2;
 
 /**************************
@@ -101,7 +102,7 @@ void MetricMap::update_position(const gsl::vector& delta_pos, double delta_rot) 
 void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& laser_proxy)
 {
   // apply sensor readings to window
-  double max_range = 4;
+  double max_range = 8;
 
   // create a cv::Mat out of the window
   cv::Mat_<double> cv_window(WINDOW_SIZE_CELLS, WINDOW_SIZE_CELLS);
@@ -201,4 +202,26 @@ void MetricMap::save(void) {
   super_matrix.to_dot(dot_file);
   dot_file.close();
 }
+
+void MetricMap::draw(void) {
+  if (super_matrix.size_x == 0 || super_matrix.size_y == 0) return;
+  cv::Mat complete_map(super_matrix.size_y * OccupancyGrid::CELLS, super_matrix.size_x * OccupancyGrid::CELLS, CV_8UC3);
+  complete_map = cv::Scalar(0,0,255);
+  
+  for (SuperMatrix<OccupancyGrid>::iterator_x itx = super_matrix.matrix_map.begin(); itx != super_matrix.matrix_map.end(); ++itx) {
+    int j = itx->first;
+    j += abs(super_matrix.min_x);
+    for (SuperMatrix<OccupancyGrid>::iterator_y ity = itx->second.begin(); ity != itx->second.end(); ++ity) {
+      int i = ity->first;
+      i += abs(super_matrix.min_y);
+      i = (super_matrix.size_y - 1) - i;
+      cv::Mat submap_ref = complete_map(cv::Range(i * OccupancyGrid::CELLS, (i+1) * OccupancyGrid::CELLS), cv::Range(j * OccupancyGrid::CELLS, (j+1) * OccupancyGrid::CELLS));
+      cv::Mat submap;
+      ity->second.draw(submap);
+      submap.copyTo(submap_ref);
+    }
+  }
+  cv::imshow("complete_map", complete_map);
+}
+
 
