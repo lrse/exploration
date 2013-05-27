@@ -28,6 +28,6 @@ file(GLOB HybNav_SRCS *.cpp)
 SET(SOURCES ${SOURCES} ${HybNav_SRCS})
 link_directories(${PLAYERCPP_LIBRARY_DIRS})
 add_executable(main ${SOURCES})
-target_link_libraries(main gslwrap ${GSL_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PLAYER_LDFLAGS} ${PLAYER_LIBRARIES})
+target_link_libraries(main gslwrap ${GSL_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PLAYER_LDFLAGS} ${PLAYERCPP_LINK_LIBS})
 
 add_subdirectory(gslwrap)
