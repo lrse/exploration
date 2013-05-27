@@ -26,8 +26,8 @@ include_directories(${GSL_INCLUDE_DIR} ${PROJECT_SOURCE_DIR} ${PLAYER_INCLUDE_DI
 
 file(GLOB HybNav_SRCS *.cpp)
 SET(SOURCES ${SOURCES} ${HybNav_SRCS})
-add_executable(main ${SOURCES})
 link_directories(${PLAYERCPP_LIBRARY_DIRS})
+add_executable(main ${SOURCES})
 target_link_libraries(main gslwrap ${GSL_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PLAYER_LDFLAGS} ${PLAYER_LIBRARIES})
 
 add_subdirectory(gslwrap)
