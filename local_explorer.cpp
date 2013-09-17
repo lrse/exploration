@@ -77,7 +77,7 @@ void LocalPathfinder::process_current_grid(void) {
   for (uint i = 0; i < OccupancyGrid::CELLS; i++) {
     for (uint j = 0; j < OccupancyGrid::CELLS; j++) {
       if (current_grid(i,j) >= frontier_value_condition)
-        cv::circle(grid, cv::Point(i,OccupancyGrid::CELLS - j - 1), floor(ExaBot::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), 0, -1, 4);
+        cv::circle(grid, cv::Point(i,OccupancyGrid::CELLS - j - 1), floor(ExaBot::ROBOT_RADIUS * 0.8 / OccupancyGrid::CELL_SIZE), 0, -1, 4);
     }
   }
   
