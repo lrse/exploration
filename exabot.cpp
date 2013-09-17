@@ -44,7 +44,8 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
 #ifdef ENABLE_DISPLAY
   cvStartWindowThread();
   cv::namedWindow("grid");
-  cv::namedWindow("debug");
+  cv::namedWindow("cost grid");
+  cv::namedWindow("planning grid");
   cv::namedWindow("complete_map", CV_WINDOW_NORMAL);
 #endif
   graph_writer = new cv::VideoWriter("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
@@ -119,18 +120,22 @@ void ExaBot::update(void) {
     cv::Mat graph_big;
     cv::resize(graph, graph_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
     
-    cv::Mat debug_big;
-    cv::resize(LocalExplorer::instance()->frontier_pathfinder.cost_grid, debug_big, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
+    cv::Mat cost_grid;
+    cv::resize(LocalExplorer::instance()->frontier_pathfinder.cost_grid, cost_grid, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
+
+    cv::Mat planning_grid;
+    cv::resize(LocalExplorer::instance()->frontier_pathfinder.grid, planning_grid, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
     
 #ifdef ENABLE_DISPLAY      
     cv::imshow("grid", graph_big);
-    cv::imshow("debug", debug_big);
+    cv::imshow("cost grid", cost_grid);
+    cv::imshow("planning grid", planning_grid);
     MetricMap::instance()->draw();
 #endif
     *graph_writer << graph_big;
-    cv::Mat debug_big_color;
-    cv::cvtColor(debug_big, debug_big_color, CV_GRAY2BGR);
-    *debug_writer << debug_big_color;
+    cv::Mat cost_grid_color;
+    cv::cvtColor(cost_grid, cost_grid_color, CV_GRAY2BGR);
+    *debug_writer << cost_grid_color;
   }  
 
   Explorer::instance()->compute_motion(position_proxy);
