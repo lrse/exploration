@@ -14,7 +14,7 @@ using namespace std;
 
 
 /* constants */
-double OccupancyGrid::CELL_SIZE = 0.02;
+double OccupancyGrid::CELL_SIZE = 0.03/*0.02*/;
 uint OccupancyGrid::CELLS = 87;
 double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;

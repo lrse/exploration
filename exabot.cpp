@@ -45,7 +45,7 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   cvStartWindowThread();
   cv::namedWindow("grid");
   cv::namedWindow("debug");
-  cv::namedWindow("complete_map");
+  cv::namedWindow("complete_map", CV_WINDOW_NORMAL);
 #endif
   graph_writer = new cv::VideoWriter("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
   debug_writer = new cv::VideoWriter("debug.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
@@ -105,8 +105,8 @@ void ExaBot::update(void) {
       size_t i = 0;
       for (list<gsl::vector_int>::iterator it = path.begin(); it != path.end(); ++it, i++) {
         path_points[i] = cv::Point((*it)(0), OccupancyGrid::CELLS - (*it)(1) - 1);
-        path_points_player[i].px = path_points[i].x * OccupancyGrid::CELL_SIZE;
-        path_points_player[i].py = path_points[i].y * OccupancyGrid::CELL_SIZE;
+        path_points_player[i].px = path_points[i].x * OccupancyGrid::CELL_SIZE/* - robot_position(1)*/;
+        path_points_player[i].py = path_points[i].y * OccupancyGrid::CELL_SIZE/* - robot_position(0)*/;
       }
       cv::polylines(graph, vector< vector<cv::Point> >(1, path_points), false, cv::Scalar(0, 255, 0));
       graphics_proxy.DrawPolyline(&path_points_player[0], path_points.size());

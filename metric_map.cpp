@@ -102,7 +102,7 @@ void MetricMap::update_position(const gsl::vector& delta_pos, double delta_rot) 
 void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& laser_proxy)
 {
   // apply sensor readings to window
-  double max_range = 8;
+  double max_range = 1;
 
   // create a cv::Mat out of the window
   cv::Mat_<double> cv_window(WINDOW_SIZE_CELLS, WINDOW_SIZE_CELLS);
@@ -112,29 +112,34 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   size_t laser_samples = laser_proxy.GetCount();
   list<cv::Point> pts;
   vector<cv::Point> pts2(laser_samples);
+  vector<cv::Point> pts_near(laser_samples);
   list<float> pts_distances;
+  int near_samples = 0;
 
   for (size_t i = 0; i < laser_samples; i++) {
     double angle = laser_proxy.GetBearing(i) + position_proxy.GetYaw();
     double dist = laser_proxy.GetRange(i);
     double x = dist * cos(angle);
     double y = dist * sin(angle);
-    pts2[i].x = (int)round(x / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
-    pts2[i].y = (int)round(-y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
+    cv::Point discrete_pos;
+    discrete_pos.x = (int)round(x / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
+    discrete_pos.y = (int)round(-y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
     //cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << x << "," << y << "," << angle << endl;
     if (dist < max_range) {
       cv::Point p;
-      p.x = pts2[i].x;
+      p.x = discrete_pos.x;
       p.y  = (int)round(y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
       if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_SIZE_CELLS && (uint)p.y < WINDOW_SIZE_CELLS) {
         pts.push_back(p);
         pts_distances.push_back(dist);
       }
+      pts_near[near_samples] = discrete_pos;
+      near_samples++;
     }
   }
-  const cv::Point* ptr = &pts2[0];
-  int contours = laser_samples;
-  fillPoly(cv_window, &ptr, &contours, 1, OccupancyGrid::Lfree * 0.2, 4);
+  const cv::Point* ptr = &pts_near[0];
+  int contours = near_samples;
+  fillPoly(cv_window, &ptr, &contours, 1, OccupancyGrid::Lfree * 0.2, 8);
 
   // mark individual cells as occupied for each sensed point
   list<float>::const_iterator it_list = pts_distances.begin();
