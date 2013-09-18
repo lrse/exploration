@@ -33,11 +33,12 @@ namespace HybNav {
 
       // TODO: coord2index
       void save(void);
-      void draw(void);
+      void draw(bool draw_gateways = true);
 
       /* constants */
       static uint WINDOW_RADIUS_CELLS;
       static uint WINDOW_SIZE_CELLS;
+      static double SENSOR_MODEL_DELTA;
       static double frontier_cell_threshold;
 
       OccupancyGrid* current_grid;
@@ -50,6 +51,7 @@ namespace HybNav {
       
     private:
       enum NodeDirections { NorthEast, NorthWest, SouthEast, SouthWest };
+      double sensor_model(double r, double delta);
   };
 }
 

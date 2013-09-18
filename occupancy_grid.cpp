@@ -19,7 +19,11 @@ uint OccupancyGrid::CELLS = 87;
 double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
-uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)(0.2 / OccupancyGrid::CELL_SIZE);
+/*uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)((ExaBot::ROBOT_RADIUS - MetricMap::SENSOR_MODEL_DELTA) * 2 * 0.8 / OccupancyGrid::CELL_SIZE);*/
+uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = 3;
+uint OccupancyGrid::MINIMUM_GATEWAY_CELLS = 2;
+// TODO: these two should be computed from ROBOT_RADIUS, but since map is noisy, these constants are tuned ad-hoc
+
 
 
 /**************************
@@ -86,12 +90,12 @@ TopoMap::GatewayNode* OccupancyGrid::find_gateway(gsl::vector_int pos, Direction
 }
 
 void OccupancyGrid::update_gateways(bool and_connectivity) {
-  GatewayCoordinates gateway_coordinates = detect_gateways();
+  detect_gateways();
 
   // Find GW nodes (and update coordinates, if necessary) which cover detected gateways
   list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin();
   while (it != gateway_nodes.end()) {
-    list< pair<uint,uint> >& edge_coordinates = gateway_coordinates[(*it)->edge];
+    list< pair<uint,uint> > edge_coordinates = gateway_coordinates[(*it)->edge];
     list< pair<uint,uint> >::iterator match_it = edge_coordinates.end();
     // find a gw coordinate covered by the gw node
     for (list< pair<uint,uint> >::iterator it2 = edge_coordinates.begin(); it2 != edge_coordinates.end(); ++it2) {
@@ -212,16 +216,32 @@ OccupancyGrid& OccupancyGrid::get_neighbor(Direction edge) {
   return MetricMap::instance()->super_matrix.submatrix(v(0), v(1));
 }
 
-void OccupancyGrid::draw(cv::Mat& graph) {
+void OccupancyGrid::draw(cv::Mat& graph, bool draw_gateways) {
   graph.create(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_8UC3);
-  graph = cv::Scalar(0,0,0);
-  cv::Vec3b* cv_ptr = graph.ptr<cv::Vec3b>(0);
-  for (uint i = 0; i < OccupancyGrid::CELLS; i++) {
-    for (uint j = 0; j < OccupancyGrid::CELLS; j++, cv_ptr++) {
-      double value_real = 1 - (m(i,j) + OccupancyGrid::Locc) / (OccupancyGrid::Locc * 2);
-      unsigned char value = (unsigned char)(255.0f * value_real);
-      *cv_ptr = cv::Vec3b(value, value, value);
-    }
+
+  cv::Mat m_cv(OccupancyGrid::CELLS, OccupancyGrid::CELLS, CV_64FC1, m.gslobj()->data);
+  cv::Mat tmp = (1 - (m_cv + OccupancyGrid::Locc) / (OccupancyGrid::Locc * 2)) * 255;
+  cv::Mat graph_gray;
+  tmp.convertTo(graph_gray, CV_8UC1);
+  cvtColor(graph_gray, graph, CV_GRAY2BGR);  
+
+  if (draw_gateways) {
+    if (gateway_coordinates.empty()) return;
+    for (int i = 0; i < 4; i++) {
+      list< pair<uint,uint> >& edge_coordinates = gateway_coordinates[i];
+
+      cv::Mat edge_view;
+      if (i == (int)North) { cout << "drawing north" << endl; edge_view = graph.row(0); }
+      else if (i == (int)South) { cout << "drawing south" << endl;  edge_view = graph.row(graph.rows - 1); }
+      else if (i == (int)West) { cout << "drawing west" << endl; edge_view = graph.col(0); }
+      else { cout << "drawing east" << endl; edge_view = graph.col(graph.cols - 1); }
+      
+      for (list< pair<uint, uint> >::iterator it = edge_coordinates.begin(); it != edge_coordinates.end(); ++it) {
+        if (i == (int)North || i == (int)South) edge_view.colRange(it->first, it->second + 1) = cv::Scalar(255, 0, 0);
+        else edge_view.rowRange((OccupancyGrid::CELLS - it->second - 1), OccupancyGrid::CELLS - it->first - 1 + 1) = cv::Scalar(255, 0, 0);
+        cout << "gw: " << it->first << " " << it->second << endl;
+      }
+    }    
   }
 }
 
@@ -238,6 +258,7 @@ bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
   // cells in the current grid up to a certain lookahead distance need to be free
   int posneg = (d == North || d == West ? 1 : -1);
   int dim = (d == North || d == South ? i : j);
+#if 0    
   for (int k = posneg; abs<int>(k) < GATEWAY_LOOKAHEAD_CELLS; k += posneg) {
     int kk = dim + k;
 
@@ -247,6 +268,7 @@ bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
     //cout << "value: " << neighbor_v << endl;
     if (v > 0) return false;
   }
+#endif
 
   // also, cells in the neighboring grid need also to be free
   OccupancyGrid& neighbor = get_neighbor((Direction)d);
@@ -269,9 +291,10 @@ bool OccupancyGrid::gateway_condition(uint i, uint j, uint d) {
   return true;
 }
 
-vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
+void OccupancyGrid::detect_gateways(void) {
   cout << "Gateways detected for " << position << ":" << endl;
-  GatewayCoordinates gateways(4); // for each edge, a list of x0,xf of each gateway
+  gateway_coordinates.clear();
+  gateway_coordinates.resize(4); // for each edge, a list of x0,xf of each gateway
 
   for (uint d = 0; d < 4; d++) {
     bool in_gateway = false;
@@ -280,25 +303,24 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
       uint j = (d == South || d == North ? k : (d == East ? OccupancyGrid::CELLS - 1 : 0));
 
       if (gateway_condition(i, j, d)) {
-        if (!in_gateway) { gateways[d].push_back(pair<uint,uint>(k,k)); in_gateway = true; }
-        if (k == m.size1() - 1 && in_gateway) { gateways[d].back().second = k; in_gateway = false; }
+        if (!in_gateway) { gateway_coordinates[d].push_back(pair<uint,uint>(k,k)); in_gateway = true; }
+        if (k == m.size1() - 1 && in_gateway) { gateway_coordinates[d].back().second = k; in_gateway = false; }
       }
       else {
         //cout << "not a gateway cell: " << i << "," << j << " d: " << d << endl;
-        if (in_gateway) { gateways[d].back().second = k - 1; in_gateway = false; }
+        if (in_gateway) { gateway_coordinates[d].back().second = k - 1; in_gateway = false; }
       }
     }
   }
 
   /* filter out too small gateways and rearrange coordinates for valid gateways */
-  uint minimum_gateway = ceil(2 * ExaBot::ROBOT_RADIUS * 1.1 / OccupancyGrid::CELL_SIZE); // in cells
   for (uint d = 0; d < 4; d++) {
     cout << "\t" << (Direction)d << ":";
-    list< pair<uint,uint> >::iterator it = gateways[d].begin();
-    while (it != gateways[d].end()) {
-      cout << "gw size: " <<  (it->second - it->first) << " threshold: " <<  minimum_gateway << endl;
-      if (it->second - it->first < minimum_gateway)
-        it = gateways[d].erase(it);
+    list< pair<uint,uint> >::iterator it = gateway_coordinates[d].begin();
+    while (it != gateway_coordinates[d].end()) {
+      cout << "\t\tsize: " <<  (it->second - it->first) << " threshold: " <<  MINIMUM_GATEWAY_CELLS << " ";
+      if (it->second - it->first < MINIMUM_GATEWAY_CELLS)
+        it = gateway_coordinates[d].erase(it);
       else {
         uint i, j;
         if (d == East || d == West) { i = OccupancyGrid::CELLS - 1 - it->second; j = OccupancyGrid::CELLS - 1 - it->first; }
@@ -307,11 +329,10 @@ vector< list< pair<uint, uint> > > OccupancyGrid::detect_gateways(void) {
         it->first = i; it->second = j;
         ++it;
       }
+      cout << endl;
     }
     cout << endl;
   }
-
-  return gateways;
 }
 
 std::ostream& operator<<(std::ostream& out, const HybNav::OccupancyGrid* grid) {

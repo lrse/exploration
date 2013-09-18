@@ -15,6 +15,8 @@ double ExaBot::ROBOT_RADIUS = 0.09;
 double ExaBot::ROBOT_RADIUS = 0.25;
 #endif
 
+int draw_gateways = 1;
+
 /**************************
  * Constructor/Destructor *
  **************************/
@@ -42,11 +44,14 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   first_plot = false;
   
 #ifdef ENABLE_DISPLAY
-  cvStartWindowThread();
+  cv::startWindowThread();
   cv::namedWindow("grid");
   cv::namedWindow("cost grid");
   cv::namedWindow("planning grid");
   cv::namedWindow("complete_map", CV_WINDOW_NORMAL);
+  
+  cv::namedWindow("controls");
+  cv::createTrackbar("gateways", "controls", &draw_gateways, 1);
 #endif
   graph_writer = new cv::VideoWriter("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
   debug_writer = new cv::VideoWriter("debug.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
@@ -91,7 +96,7 @@ void ExaBot::update(void) {
     graphics_proxy.Clear();
     
     // plot grid      
-    MetricMap::instance()->current_grid->draw(graph);
+    MetricMap::instance()->current_grid->draw(graph, draw_gateways);
     
     // plot robot position
     gsl::vector_int robot_position = MetricMap::instance()->grid_position();
@@ -114,7 +119,7 @@ void ExaBot::update(void) {
     }
     
     // plot debug overlay
-    graph += MetricMap::instance()->current_grid->debug_graph;
+    //graph += MetricMap::instance()->current_grid->debug_graph;
     
     // make window bigger
     cv::Mat graph_big;
@@ -126,17 +131,17 @@ void ExaBot::update(void) {
     cv::Mat planning_grid;
     cv::resize(LocalExplorer::instance()->frontier_pathfinder.grid, planning_grid, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
     
-#ifdef ENABLE_DISPLAY      
+    #ifdef ENABLE_DISPLAY      
     cv::imshow("grid", graph_big);
     cv::imshow("cost grid", cost_grid);
     cv::imshow("planning grid", planning_grid);
-    MetricMap::instance()->draw();
-#endif
+    MetricMap::instance()->draw(draw_gateways);
+    #endif
     *graph_writer << graph_big;
     cv::Mat cost_grid_color;
     cv::cvtColor(cost_grid, cost_grid_color, CV_GRAY2BGR);
     *debug_writer << cost_grid_color;
-  }  
+  }
 
   Explorer::instance()->compute_motion(position_proxy);
 }

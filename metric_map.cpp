@@ -20,6 +20,7 @@ using PlayerCc::Position2dProxy;
 // These numbers account for 4m of sensors range (sick has 8m)
 uint MetricMap::WINDOW_SIZE_CELLS = 231; // must be odd!
 uint MetricMap::WINDOW_RADIUS_CELLS = (MetricMap::WINDOW_SIZE_CELLS - 1) / 2;
+double MetricMap::SENSOR_MODEL_DELTA = 0.03;
 
 /**************************
  * Constructor/Destructor *
@@ -99,6 +100,20 @@ void MetricMap::update_position(const gsl::vector& delta_pos, double delta_rot) 
   }
 }
 
+double MetricMap::sensor_model(double r, double delta) {
+  double epsilon = MetricMap::SENSOR_MODEL_DELTA;
+  double p;
+  if (delta < r - epsilon)  
+    p = pow(delta / (r - epsilon), 2) * 0.5;
+  else {
+    if (delta < r + epsilon)
+      p = (1 - pow((delta - r) / epsilon, 2)) * 0.5 + 0.5;
+    else
+      p = 0;
+  }
+  return p;
+}
+
 void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& laser_proxy)
 {
   // apply sensor readings to window
@@ -108,48 +123,29 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   cv::Mat_<double> cv_window(WINDOW_SIZE_CELLS, WINDOW_SIZE_CELLS);
   cv_window = 0;
 
-  // create a free polygonal area between robot and each sensed point
+  // apply sensor model to sensor window
   size_t laser_samples = laser_proxy.GetCount();
-  list<cv::Point> pts;
-  vector<cv::Point> pts2(laser_samples);
-  vector<cv::Point> pts_near(laser_samples);
-  list<float> pts_distances;
-  int near_samples = 0;
-
   for (size_t i = 0; i < laser_samples; i++) {
     double angle = laser_proxy.GetBearing(i) + position_proxy.GetYaw();
     double dist = laser_proxy.GetRange(i);
     double x = dist * cos(angle);
     double y = dist * sin(angle);
-    cv::Point discrete_pos;
-    discrete_pos.x = (int)round(x / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
-    discrete_pos.y = (int)round(-y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS; // the fillConvexPoly requires the angles to go CCW for some reason
-    //cout << "x,y: " << pts2[i].x << "," << pts2[i].y << " " << x << "," << y << "," << angle << endl;
-    if (dist < max_range) {
-      cv::Point p;
-      p.x = discrete_pos.x;
-      p.y  = (int)round(y / OccupancyGrid::CELL_SIZE) + (int)WINDOW_RADIUS_CELLS;
-      if (p.x >= 0 && p.y >= 0 && (uint)p.x < WINDOW_SIZE_CELLS && (uint)p.y < WINDOW_SIZE_CELLS) {
-        pts.push_back(p);
-        pts_distances.push_back(dist);
-      }
-      pts_near[near_samples] = discrete_pos;
-      near_samples++;
+    cv::Point measurement;
+    measurement.x = (int)round(x / OccupancyGrid::CELL_SIZE);
+    measurement.y = (int)round(y / OccupancyGrid::CELL_SIZE);
+    cv::Point discrete_pos = measurement + cv::Point((int)WINDOW_RADIUS_CELLS, (int)WINDOW_RADIUS_CELLS);
+
+    cv::LineIterator it(cv_window, cv::Point((int)WINDOW_RADIUS_CELLS, (int)WINDOW_RADIUS_CELLS), discrete_pos);
+    for (int j = 0; j < it.count; j++, it++) {
+      double rel_dist = norm(it.pos() - cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS));
+      if (rel_dist * OccupancyGrid::CELL_SIZE > max_range) break;
+      
+      double p = sensor_model(dist, norm(it.pos() - cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS)) * OccupancyGrid::CELL_SIZE);
+      if (it.pos().x >= 0 && it.pos().y >= 0 && (uint)it.pos().x < WINDOW_SIZE_CELLS && (uint)it.pos().y < WINDOW_SIZE_CELLS)
+        cv_window(WINDOW_SIZE_CELLS - it.pos().y - 1, it.pos().x) = log(p / (1 - p));
     }
   }
-  const cv::Point* ptr = &pts_near[0];
-  int contours = near_samples;
-  fillPoly(cv_window, &ptr, &contours, 1, OccupancyGrid::Lfree * 0.2, 8);
 
-  // mark individual cells as occupied for each sensed point
-  list<float>::const_iterator it_list = pts_distances.begin();
-  for (list<cv::Point>::const_iterator it = pts.begin(); it != pts.end(); ++it, ++it_list) {
-    float rel_dist = 1 - *it_list / max_range;
-    cv_window(WINDOW_SIZE_CELLS - it->y - 1, it->x) = OccupancyGrid::Locc * rel_dist * 0.1;
-    // 5cm per laser hit
-    //cv::circle(cv_window, cv::Point(it->x, WINDOW_SIZE_CELLS - it->y - 1), 0/*round(0.05 / OccupancyGrid::CELL_SIZE)*/, OccupancyGrid::Locc * 0.05, 0, 4);
-  }
-    
   // create a free circular area around robot
   cv::circle(cv_window, cv::Point(WINDOW_RADIUS_CELLS, WINDOW_RADIUS_CELLS), (int)floor(ExaBot::ROBOT_RADIUS / OccupancyGrid::CELL_SIZE), OccupancyGrid::Lfree, -1, 8);
 
@@ -208,7 +204,7 @@ void MetricMap::save(void) {
   dot_file.close();
 }
 
-void MetricMap::draw(void) {
+void MetricMap::draw(bool draw_gateways) {
   if (super_matrix.size_x == 0 || super_matrix.size_y == 0) return;
   cv::Mat complete_map(super_matrix.size_y * OccupancyGrid::CELLS, super_matrix.size_x * OccupancyGrid::CELLS, CV_8UC3);
   complete_map = cv::Scalar(0,0,255);
@@ -222,7 +218,7 @@ void MetricMap::draw(void) {
       i = (super_matrix.size_y - 1) - i;
       cv::Mat submap_ref = complete_map(cv::Range(i * OccupancyGrid::CELLS, (i+1) * OccupancyGrid::CELLS), cv::Range(j * OccupancyGrid::CELLS, (j+1) * OccupancyGrid::CELLS));
       cv::Mat submap;
-      ity->second.draw(submap);
+      ity->second.draw(submap, draw_gateways);
       submap.copyTo(submap_ref);
     }
   }

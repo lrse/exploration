@@ -24,7 +24,7 @@ namespace HybNav {
       gsl::vector_int position;
 
       void to_dot(std::ostream& out);
-      void draw(cv::Mat& graph);
+      void draw(cv::Mat& graph, bool draw_gateways = true);
 
       typedef std::list<gsl::vector_int> FrontierList;
       void update_frontiers(void);
@@ -41,7 +41,8 @@ namespace HybNav {
       OccupancyGrid(void);
 
       typedef std::vector< std::list< std::pair<uint, uint> > > GatewayCoordinates;
-      GatewayCoordinates detect_gateways(void);
+      void detect_gateways(void);
+      GatewayCoordinates gateway_coordinates;
 
       bool gateway_condition(uint i, uint j, uint d);
 
@@ -53,6 +54,7 @@ namespace HybNav {
       static double Locc;
       static double Lfree;
       static uint GATEWAY_LOOKAHEAD_CELLS;
+      static uint MINIMUM_GATEWAY_CELLS;
   };
 }
 
