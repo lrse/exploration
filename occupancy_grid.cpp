@@ -92,10 +92,12 @@ TopoMap::GatewayNode* OccupancyGrid::find_gateway(gsl::vector_int pos, Direction
 void OccupancyGrid::update_gateways(bool and_connectivity) {
   detect_gateways();
 
+  GatewayCoordinates gateway_coordinates_copy = gateway_coordinates;
+
   // Find GW nodes (and update coordinates, if necessary) which cover detected gateways
   list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin();
   while (it != gateway_nodes.end()) {
-    list< pair<uint,uint> > edge_coordinates = gateway_coordinates[(*it)->edge];
+    list< pair<uint,uint> >& edge_coordinates = gateway_coordinates_copy[(*it)->edge];
     list< pair<uint,uint> >::iterator match_it = edge_coordinates.end();
     // find a gw coordinate covered by the gw node
     for (list< pair<uint,uint> >::iterator it2 = edge_coordinates.begin(); it2 != edge_coordinates.end(); ++it2) {
@@ -124,7 +126,7 @@ void OccupancyGrid::update_gateways(bool and_connectivity) {
 
   // and now, add new GW nodes to cover the remaining detected gateway coordinates
   for (uint i = 0; i < 4; i++) {
-    list< pair<uint,uint> >& edge_coordinates = gateway_coordinates[i];
+    list< pair<uint,uint> >& edge_coordinates = gateway_coordinates_copy[i];
     for (list< pair<uint,uint> >::iterator it = edge_coordinates.begin(); it != edge_coordinates.end(); ++it) {
       cout << "adding gateway node for [" << it->first << "," << it->second << "] at grid " << position << endl;
       TopoMap::GatewayNode* new_gateway = TopoMap::instance()->add_gateway(this, (Direction)i, it->first, it->second);
@@ -141,12 +143,18 @@ void OccupancyGrid::update_connectivity(void) {
   
   cout << "current topo node: " << current_topo_node << endl;
 
+#if 1
   // determine origin of pathfinding
   gsl::vector_int start_position(2);
   if (current_topo_node->is_area())
     start_position = MetricMap::instance()->grid_position();
   else
     start_position = ((TopoMap::GatewayNode*)current_topo_node)->position();
+#endif
+
+  // test: origin of pathfinding will always be robot position, since when current node is a gateway, the robot is passing by the gw
+  // and therefore, the connectivity should be tried from this position and not some arbitrary middle point in the gateway range
+  //gsl::vector_int start_position = MetricMap::instance()->grid_position();
 
   // create a new area node in case the current one is a gateway with no area node
   // if an area node already exists for this topological space (and is associated to gw nodes)
@@ -164,11 +172,12 @@ void OccupancyGrid::update_connectivity(void) {
   }
 
   cout << "current topo node now: " << current_topo_node << endl;
+  cout << "starting position for pathfinding: " << start_position << endl;
 
   for (list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin(); it != gateway_nodes.end(); ++it) {
     gsl::vector_int it_position = (*it)->position();
     // connect area nodes to gateways
-    cout << "finding connectivity to " << it_position << endl;
+    cout << "finding connectivity to " << *it << " at position " << it_position << endl;
     if (LocalExplorer::instance()->connectivity_pathfinder.exists_path(start_position, it_position)) {
       TopoMap::instance()->connect(TopoMap::instance()->current_node, *it);
       cout << "connected" << endl;
