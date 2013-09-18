@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(HybNav)
 
 SET(CMAKE_BUILD_TYPE debug)
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror=return-type -Wfatal-errors")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror=return-type -Wfatal-errors -DBOOST_SIGNALS_NO_DEPRECATION_WARNING")
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}")
 
 option(ENABLE_DISPLAY "Shows GUI (if disabled, sends images to videos)" ON)
