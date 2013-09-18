@@ -143,18 +143,10 @@ void OccupancyGrid::update_connectivity(void) {
   
   cout << "current topo node: " << current_topo_node << endl;
 
-#if 1
   // determine origin of pathfinding
-  gsl::vector_int start_position(2);
-  if (current_topo_node->is_area())
-    start_position = MetricMap::instance()->grid_position();
-  else
-    start_position = ((TopoMap::GatewayNode*)current_topo_node)->position();
-#endif
-
-  // test: origin of pathfinding will always be robot position, since when current node is a gateway, the robot is passing by the gw
+  // this will always be the robot position, since when current node is a gateway, the robot is passing by the gw
   // and therefore, the connectivity should be tried from this position and not some arbitrary middle point in the gateway range
-  //gsl::vector_int start_position = MetricMap::instance()->grid_position();
+  gsl::vector_int start_position = MetricMap::instance()->grid_position();
 
   // create a new area node in case the current one is a gateway with no area node
   // if an area node already exists for this topological space (and is associated to gw nodes)
