@@ -6,6 +6,14 @@
 #include "motion_planner.h"
 
 namespace HybNav {
+  class ExplorerException : public std::runtime_error {
+    public:
+      enum ExceptionCode { END, FAIL };
+      ExplorerException(ExceptionCode code, const std::string& reason);
+      virtual ~ExplorerException(void) throw() { }
+      ExceptionCode code;
+  };
+  
   class Explorer : public Singleton<Explorer> {
     public:
       OccupancyGrid* current_grid;

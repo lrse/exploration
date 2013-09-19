@@ -260,7 +260,7 @@ void Explorer::recompute_path(void) {
   // At this point: only exploring globally
   cout << "Recomputing Global paths..." << endl;
   GlobalExplorer::instance()->recompute_paths();
-  if (!GlobalExplorer::instance()->found_path()) { cout << "EXPLORATION IS OVER!" << endl; throw false; }
+  if (!GlobalExplorer::instance()->found_path()) throw ExplorerException(ExplorerException::END, "EXPLORATION IS OVER!");
   cout << "done: " << GlobalExplorer::instance()->follow_path << endl;
 
   while(true) {
@@ -273,7 +273,7 @@ void Explorer::recompute_path(void) {
     else {
       cout << "Couldn't find path to edge, so recomputing global path" << endl;
       GlobalExplorer::instance()->recompute_paths();
-      if (!GlobalExplorer::instance()->found_path()) { cout <<  "EXPLORATION IS OVER!" << endl; throw false; }
+      if (!GlobalExplorer::instance()->found_path()) throw ExplorerException(ExplorerException::END, "EXPLORATION IS OVER!");
       else { /*cout << "Proposing global path: " << GlobalExplorer::instance()->follow_path << endl*/; }
     }
   }
@@ -365,5 +365,10 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
       planner_proxy.SetEnable(true);*/
     }
   }
+}
+
+ExplorerException::ExplorerException(ExplorerException::ExceptionCode _code, const std::string& reason) :
+  std::runtime_error(reason), code(_code)
+{
 }
 

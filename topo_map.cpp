@@ -84,6 +84,14 @@ void TopoMap::save(void) {
   graphml_file.close();
 }
 
+void TopoMap::plot(void) {
+  ofstream dot_file("csv/topo_map.dot", ios_base::trunc | ios_base::out);
+  graph.to_dot(dot_file);
+  dot_file.close();
+
+  system("dot -Tpng csv/topo_map.dot -ocsv/topo_map.png");
+}
+
 std::ostream& operator<<(std::ostream& out, const std::list<HybNav::TopoMap::Node*>& l) {
   for (list<HybNav::TopoMap::Node*>::const_iterator it = l.begin(); it != l.end(); ++it) {
     if (it != l.begin()) out << ", ";

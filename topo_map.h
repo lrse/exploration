@@ -24,6 +24,7 @@ namespace HybNav {
       void merge(AreaNode* node1, AreaNode* node2);
 
       void save(void);
+      void plot(void);
 
       Node* current_node;
 

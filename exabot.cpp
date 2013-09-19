@@ -49,6 +49,7 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), lase
   cv::namedWindow("cost grid");
   cv::namedWindow("planning grid");
   cv::namedWindow("complete_map", CV_WINDOW_NORMAL);
+  cv::namedWindow("topo map", CV_WINDOW_NORMAL);
   
   cv::namedWindow("controls");
   cv::createTrackbar("gateways", "controls", &draw_gateways, 1);
@@ -130,8 +131,12 @@ void ExaBot::update(void) {
 
     cv::Mat planning_grid;
     cv::resize(LocalExplorer::instance()->frontier_pathfinder.grid, planning_grid, cv::Size(0,0), 4, 4, cv::INTER_NEAREST);
+
+    // plot (save) topo map
+    TopoMap::instance()->plot();
     
-    #ifdef ENABLE_DISPLAY      
+    #ifdef ENABLE_DISPLAY
+    cv::imshow("topo map", cv::imread("csv/topo_map.png"));
     cv::imshow("grid", graph_big);
     cv::imshow("cost grid", cost_grid);
     cv::imshow("planning grid", planning_grid);

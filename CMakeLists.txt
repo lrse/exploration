@@ -24,10 +24,10 @@ INCLUDE(UsePlayerC++)
 message("found lib ${OpenCV_LIB_DIR}")
 include_directories(${GSL_INCLUDE_DIR} ${PROJECT_SOURCE_DIR} ${PLAYER_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIRS} ${PLAYERCPP_INCLUDE_DIRS})
 
-file(GLOB HybNav_SRCS *.cpp)
+file(GLOB HybNav_SRCS *.cpp death_handler.cc)
 SET(SOURCES ${SOURCES} ${HybNav_SRCS})
 link_directories(${PLAYERCPP_LIBRARY_DIRS})
 add_executable(main ${SOURCES})
-target_link_libraries(main gslwrap ${GSL_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PLAYER_LDFLAGS} ${PLAYERCPP_LINK_LIBS})
+target_link_libraries(main gslwrap ${GSL_LIBRARIES} ${OpenCV_LIBS} ${Boost_LIBRARIES} ${PLAYER_LDFLAGS} ${PLAYERCPP_LINK_LIBS} dl)
 
 add_subdirectory(gslwrap)

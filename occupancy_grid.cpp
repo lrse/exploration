@@ -84,9 +84,17 @@ TopoMap::GatewayNode* OccupancyGrid::find_gateway(gsl::vector_int pos, Direction
   }
   if (!closest_node) {
     if (accept_nonexistant) return NULL;
-    else throw std::runtime_error("No gateway found for that edge");
+    else throw ExplorerException(ExplorerException::FAIL, "No gateway found for that edge and position");
   }
   else return closest_node;
+}
+
+TopoMap::GatewayNode* OccupancyGrid::find_gateway(const std::pair<uint,uint>& range, Direction edge, bool accept_nonexistant) {
+  for (list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin(); it != gateway_nodes.end(); ++it) {
+    if ((*it)->edge == edge && (*it)->x0 == range.first && (*it)->xf == range.second) return *it;
+  }
+  if (accept_nonexistant) return NULL;
+  else throw ExplorerException(ExplorerException::FAIL, "No gateway found for that edge and range");
 }
 
 void OccupancyGrid::update_gateways(bool and_connectivity) {
@@ -238,8 +246,14 @@ void OccupancyGrid::draw(cv::Mat& graph, bool draw_gateways) {
       else { cout << "drawing east" << endl; edge_view = graph.col(graph.cols - 1); }
       
       for (list< pair<uint, uint> >::iterator it = edge_coordinates.begin(); it != edge_coordinates.end(); ++it) {
-        if (i == (int)North || i == (int)South) edge_view.colRange(it->first, it->second + 1) = cv::Scalar(255, 0, 0);
-        else edge_view.rowRange((OccupancyGrid::CELLS - it->second - 1), OccupancyGrid::CELLS - it->first - 1 + 1) = cv::Scalar(255, 0, 0);
+        TopoMap::GatewayNode* node = find_gateway(*it, (Direction)i);
+        cv::Scalar color;
+        if (node->is_inaccessible()) color = cv::Scalar(0,0,255);
+        else if (node->unexplored_gateway()) color = cv::Scalar(0,255,0);
+        else color = cv::Scalar(255,0,0);
+        
+        if (i == (int)North || i == (int)South) edge_view.colRange(it->first, it->second + 1) = color;
+        else edge_view.rowRange((OccupancyGrid::CELLS - it->second - 1), OccupancyGrid::CELLS - it->first - 1 + 1) = color;
         cout << "gw: " << it->first << " " << it->second << endl;
       }
     }    
