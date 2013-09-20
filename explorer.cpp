@@ -338,7 +338,7 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
       else {
         double x = position_proxy.GetXPos() + target_distance(0);
         double y = position_proxy.GetYPos() + target_distance(1);
-        double theta = gsl_sf_angle_restrict_symm(target_angle);
+        double theta = gsl_sf_angle_restrict_symm(target_angle); // TODO: is this ok? GetYaw() is not here
         MotionPlanner::instance()->set_goal(x, y, theta);
         
         /*if (planner_proxy.GetGoal().px != x || planner_proxy.GetGoal().py != y || planner_proxy.GetGoal().pa != theta) {

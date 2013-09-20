@@ -9,20 +9,21 @@
 using namespace HybNav;
 using namespace std;
 
-#ifdef ENABLE_SYROTEK
 double ExaBot::ROBOT_RADIUS = 0.09;
-#else
-double ExaBot::ROBOT_RADIUS = 0.25;
-#endif
 
 int draw_gateways = 1;
+
+
 
 /**************************
  * Constructor/Destructor *
  **************************/
 
-ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client("localhost"), laser_proxy(&player_client, 0),
-  position_proxy(&player_client, 0), graphics_proxy(&player_client, 0),
+ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client(PLAYER_SERVER), laser_proxy(&player_client, 0),
+  position_proxy(&player_client, POSITION_PROXY_ID),
+  #ifndef ENABLE_SYROTEK
+  graphics_proxy(&player_client, 0),
+  #endif
   trajectory_length(0), motion_planner(&player_client)
 {  
   laser_proxy.RequestGeom();
@@ -94,7 +95,7 @@ void ExaBot::update(void) {
     graph_timer = std::time(NULL);
     
     cv::Mat graph;
-    graphics_proxy.Clear();
+    ONLY_ON_SIMULATION(graphics_proxy.Clear();)
     
     // plot grid      
     MetricMap::instance()->current_grid->draw(graph, draw_gateways);
@@ -116,7 +117,9 @@ void ExaBot::update(void) {
         path_points_player[i].py = path_points[i].y * OccupancyGrid::CELL_SIZE/* - robot_position(0)*/;
       }
       cv::polylines(graph, vector< vector<cv::Point> >(1, path_points), false, cv::Scalar(0, 255, 0));
+      #ifndef ENABLE_SYROTEK
       graphics_proxy.DrawPolyline(&path_points_player[0], path_points.size());
+      #endif
     }
     
     // plot debug overlay
@@ -181,7 +184,13 @@ void ExaBot::get_pose(gsl::vector& absolute_position, double& absolute_rotation)
   absolute_position(0) = position_proxy.GetXPos();
   absolute_position(1) = position_proxy.GetYPos();
 
-  absolute_rotation = gsl_sf_angle_restrict_pos(position_proxy.GetYaw());
+  #ifdef ENABLE_SYROTEK
+  float angle_offset = 0/*-M_PI*0.5*/;
+  #else
+  float angle_offset = 0;
+  #endif
+  
+  absolute_rotation = gsl_sf_angle_restrict_pos(position_proxy.GetYaw() +  angle_offset);
   cout << "Position: " << absolute_position(0) << "," << absolute_position(1) << " Yaw: " << absolute_rotation << endl;
 }
 

@@ -14,6 +14,7 @@
 #include "local_explorer.h"
 #include "global_explorer.h"
 #include "motion_planner.h"
+#include "config.h"
 
 using namespace boost::numeric;
 
@@ -32,7 +33,7 @@ namespace HybNav {
       PlayerCc::PlayerClient player_client;
       PlayerCc::LaserProxy laser_proxy;
       PlayerCc::Position2dProxy position_proxy;
-      PlayerCc::Graphics2dProxy graphics_proxy;
+      ONLY_ON_SIMULATION(PlayerCc::Graphics2dProxy graphics_proxy;)
       
       static double ROBOT_RADIUS;
       
