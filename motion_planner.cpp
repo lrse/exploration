@@ -28,11 +28,13 @@ MotionPlanner::MotionPlanner(PlayerCc::PlayerClient* client_proxy) : Singleton<M
 void MotionPlanner::set_goal(double x, double y, double theta)
 {
   cout << "setting pose to: " << x << " " << y << " " << theta << endl;
+  #ifdef SYROTEK
   double current_angle = ExaBot::instance()->position_proxy.GetYaw();
   double delta_angle = gsl_sf_angle_restrict_symm(theta - current_angle);
   if (fabsf(delta_angle) > REACHED_ANGLE_EPSILON)
     position_proxy.SetSpeed(0, copysignf(0.75, delta_angle));
   else
+  #endif
     position_proxy.GoTo(x, y, theta);
   position_proxy.SetMotorEnable(true);
   goal_x = x;

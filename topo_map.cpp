@@ -129,6 +129,12 @@ std::ostream& operator<<(std::ostream& out, HybNav::Direction dir) {
 
 void TopoMap::AreaNode::to_dot(std::ostream& out) {
   out << "label=\"" << grid->position << "\"";
+  if (!completely_explored) out << "style=\"filled\" fillcolor=\"darkgreen\"";
+  if (TopoMap::instance()->current_node == this) out << " color=\"deeppink\"";
+  else if (Explorer::instance()->state == Explorer::ExploringGlobally) {
+    const list<TopoMap::Node*>& path = GlobalExplorer::instance()->follow_path;
+    if (find(path.begin(), path.end(), this) != path.end()) out << " color=\"deepskyblue\"";
+  }
 }
 
 void TopoMap::AreaNode::to_graphml(std::ostream& out) {
@@ -169,6 +175,10 @@ void TopoMap::GatewayNode::get_ranges(gsl::vector_int& x_range, gsl::vector_int&
 
 void TopoMap::GatewayNode::to_dot(std::ostream& out) {
   out << "label=\"" << edge << " [" << x0 << ":" << xf << "] of " << grid->position << "\",shape=\"box\"";
+  if (Explorer::instance()->state == Explorer::ExploringGlobally) {
+    const list<TopoMap::Node*>& path = GlobalExplorer::instance()->follow_path;
+    if (find(path.begin(), path.end(), this) != path.end()) out << " color=\"deepskyblue\"";
+  }
 }
 
 void TopoMap::GatewayNode::to_graphml(std::ostream& out) {
