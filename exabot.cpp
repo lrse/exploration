@@ -5,6 +5,7 @@
 #include "explorer.h"
 #include "util.h"
 #include "config.h"
+#include "orloc.h"
 
 using namespace HybNav;
 using namespace std;
@@ -180,18 +181,27 @@ void ExaBot::deinitialize(void) {
  *    Private Methods     *
  **************************/
 
-void ExaBot::get_pose(gsl::vector& absolute_position, double& absolute_rotation) {
+void ExaBot::get_pose(gsl::vector& absolute_position, double& absolute_rotation) {    
   absolute_position(0) = position_proxy.GetXPos();
   absolute_position(1) = position_proxy.GetYPos();
+  absolute_rotation = gsl_sf_angle_restrict_pos(position_proxy.GetYaw());
+  
+  cout << "Position: " << absolute_position(0) << "," << absolute_position(1) << " Yaw: " << absolute_rotation << endl;
 
-  #ifdef ENABLE_SYROTEK
-  float angle_offset = 0/*-M_PI*0.5*/;
-  #else
-  float angle_offset = 0;
+  #ifdef ENABLE_SYROTEK  
+  SPosition pos;
+  pos.x = absolute_position(0);
+  pos.y = absolute_position(1);
+  pos.yaw = absolute_rotation;
+  angleCorrection(pos, laser_proxy);
+ 
+  absolute_position(0) = pos.x;
+  absolute_position(1) = pos.y;
+  absolute_rotation = gsl_sf_angle_restrict_pos(pos.yaw);  
+
+  cout << "Corrected Position: " << absolute_position(0) << "," << absolute_position(1) << " Yaw: " << absolute_rotation << endl;
   #endif
   
-  absolute_rotation = gsl_sf_angle_restrict_pos(position_proxy.GetYaw() +  angle_offset);
-  cout << "Position: " << absolute_position(0) << "," << absolute_position(1) << " Yaw: " << absolute_rotation << endl;
 }
 
 void ExaBot::update_position(void) {
