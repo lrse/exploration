@@ -17,7 +17,7 @@ namespace HybNav {
       void stop(void);
 
       bool reached_goal(void);
-      bool reached(double x, double y, double angle);
+      bool reached(const gsl::vector& pos, double angle);
       void update(void);
 
       double goal_x, goal_y, goal_theta;

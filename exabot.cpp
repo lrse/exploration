@@ -80,10 +80,16 @@ void ExaBot::update(void) {
   update_player();
   //if (position_proxy.GetStall()) throw std::runtime_error("collision detected!");
 
-  update_position();
+  if (position_proxy.IsFresh() && position_proxy.IsValid()) {
+    update_position();
+    position_proxy.NotFresh();
+  }
+  if (laser_proxy.IsFresh() && laser_proxy.IsValid()) {
+    update_position();
+    MetricMap::instance()->process_distances(position_proxy, laser_proxy);
+    laser_proxy.NotFresh();
+  }
 
-  MotionPlanner::instance()->update();
-  MetricMap::instance()->process_distances(position_proxy, laser_proxy);
   //MotionPlanner::instance()->process_distances(laser_proxy);
   if (std::time(NULL) - start_timer > 3) {
     Explorer::instance()->update();
@@ -152,7 +158,11 @@ void ExaBot::update(void) {
     *debug_writer << cost_grid_color;
   }
 
+  MotionPlanner::instance()->update();
   Explorer::instance()->compute_motion(position_proxy);
+  /*if (position_proxy.IsFresh() && position_proxy.IsValid()) {
+    
+  }*/
 }
 
 void ExaBot::stop(void) {
@@ -181,14 +191,8 @@ void ExaBot::deinitialize(void) {
  *    Private Methods     *
  **************************/
 
-void ExaBot::get_pose(gsl::vector& absolute_position, double& absolute_rotation) {    
-  absolute_position(0) = position_proxy.GetXPos();
-  absolute_position(1) = position_proxy.GetYPos();
-  absolute_rotation = gsl_sf_angle_restrict_pos(position_proxy.GetYaw());
-  
-  cout << "Position: " << absolute_position(0) << "," << absolute_position(1) << " Yaw: " << absolute_rotation << endl;
-
-  #ifdef ENABLE_SYROTEK  
+void ExaBot::correct_pose(gsl::vector& absolute_position, double& absolute_rotation)
+{
   SPosition pos;
   pos.x = absolute_position(0);
   pos.y = absolute_position(1);
@@ -200,8 +204,17 @@ void ExaBot::get_pose(gsl::vector& absolute_position, double& absolute_rotation)
   absolute_rotation = gsl_sf_angle_restrict_pos(pos.yaw);  
 
   cout << "Corrected Position: " << absolute_position(0) << "," << absolute_position(1) << " Yaw: " << absolute_rotation << endl;
+}
+
+void ExaBot::get_pose(gsl::vector& absolute_position, double& absolute_rotation) {    
+  absolute_position(0) = position_proxy.GetXPos();
+  absolute_position(1) = position_proxy.GetYPos();
+  absolute_rotation = gsl_sf_angle_restrict_pos(position_proxy.GetYaw());
+  cout << "Position: " << absolute_position(0) << "," << absolute_position(1) << " Yaw: " << absolute_rotation << endl;  
+
+  #ifdef ENABLE_SYROTEK
+  if (laser_proxy.IsFresh() && laser_proxy.IsValid()) correct_pose(absolute_position, absolute_rotation);
   #endif
-  
 }
 
 void ExaBot::update_position(void) {

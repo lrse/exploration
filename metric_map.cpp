@@ -107,7 +107,7 @@ double MetricMap::sensor_model(double r, double delta) {
     p = pow(delta / (r - epsilon), 2) * 0.5;
   else {
     if (delta < r + epsilon)
-      p = (1 - pow((delta - r) / epsilon, 2)) * 0.5 + 0.5;
+      p = (1 - pow((delta - r) / epsilon, 2)) * 0.3 + 0.5;
     else
       p = 0;
   }
@@ -126,7 +126,7 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   // apply sensor model to sensor window
   size_t laser_samples = laser_proxy.GetCount();
   for (size_t i = 0; i < laser_samples; i++) {
-    double angle = laser_proxy.GetBearing(i) + position_proxy.GetYaw();
+    double angle = laser_proxy.GetBearing(i) + ExaBot::instance()->last_rotation;
     double dist = laser_proxy.GetRange(i);
     double x = dist * cos(angle);
     double y = dist * sin(angle);

@@ -28,14 +28,7 @@ MotionPlanner::MotionPlanner(PlayerCc::PlayerClient* client_proxy) : Singleton<M
 void MotionPlanner::set_goal(double x, double y, double theta)
 {
   cout << "setting pose to: " << x << " " << y << " " << theta << endl;
-  #ifdef ENABLE_SYROTEK
-  double current_angle = ExaBot::instance()->position_proxy.GetYaw();
-  double delta_angle = gsl_sf_angle_restrict_symm(theta - current_angle);
-  if (fabsf(delta_angle) > REACHED_ANGLE_EPSILON)
-    position_proxy.SetSpeed(0, copysignf(0.75, delta_angle));
-  else
-  #endif
-    position_proxy.GoTo(x, y, theta);
+  position_proxy.GoTo(x, y, theta);
   position_proxy.SetMotorEnable(true);
   goal_x = x;
   goal_y = y;
@@ -54,19 +47,24 @@ void MotionPlanner::stop(void) {
 
 bool MotionPlanner::reached_goal(void) {
   if (!goal_set) return true;
-  
-  return reached(goal_x, goal_y, goal_theta);
+
+  gsl::vector goal_vec(2);
+  goal_vec(0) = goal_x;
+  goal_vec(1) = goal_y;
+  return reached(goal_vec, goal_theta);
 }
 
-bool MotionPlanner::reached(double other_x, double other_y, double other_theta) {
-  double x = ExaBot::instance()->position_proxy.GetXPos();
-  double y = ExaBot::instance()->position_proxy.GetYPos();
-  double theta = ExaBot::instance()->position_proxy.GetYaw();
-  double delta_norm = hypot(other_x - x, other_y - y);
+bool MotionPlanner::reached(const gsl::vector& other_pos, double other_theta) {
+  double x = ExaBot::instance()->last_position(0);
+  double y = ExaBot::instance()->last_position(1);
+  double theta = ExaBot::instance()->last_rotation;
+  double delta_norm = hypot(other_pos(0) - x, other_pos(1) - y);
   double delta_angle = fabsf(gsl_sf_angle_restrict_pos(other_theta - theta));
   //bool was_reached = (delta_norm < REACHED_POS_EPSILON && delta_angle < REACHED_ANGLE_EPSILON);
-  bool was_reached = delta_norm < REACHED_POS_EPSILON;
-  cout << "reached? " << delta_norm << " < " << REACHED_POS_EPSILON << " AND " << delta_angle << " < " <<  REACHED_ANGLE_EPSILON << " : " << was_reached << endl;
+
+  double reached_threshold = REACHED_POS_EPSILON;
+  bool was_reached = delta_norm < reached_threshold;
+  cout << "reached? " << delta_norm << " < " << reached_threshold << /*" AND " << delta_angle << " < " <<  REACHED_ANGLE_EPSILON <<*/ " : " << was_reached << endl;
   return was_reached;
 }
 

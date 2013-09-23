@@ -286,7 +286,6 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
   const gsl::vector& own_position = MetricMap::instance()->position;
 
   // remove all path nodes already considered as "reached"
-  double reached_distance_threshold = ExaBot::ROBOT_RADIUS*1.2;
   double far_distance_threshold = 0.9;
   for (list<gsl::vector_int>::iterator it = follow_path.begin(); it != follow_path.end();) {
     gsl::vector target_distance = (gsl::vector)(*it) * OccupancyGrid::CELL_SIZE - own_position;
@@ -294,14 +293,13 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
     double target_angle = (target_distance_norm == 0 ? 0 : atan2(target_distance(1), target_distance(0))); // cartesian to polar
     double theta = gsl_sf_angle_restrict_symm(target_angle);
     cout << "this target: " << *it << " own position: " << own_position / OccupancyGrid::CELL_SIZE << endl;
-    cout << "target distance: " << target_distance.norm2() << " threshold: " << reached_distance_threshold << endl;
 
     if (!OccupancyGrid::valid_coordinates((*it)(0), (*it)(1))) {
       cout << "found fictitious node, stopping" << endl;
       break;
     }
-    
-    if (MotionPlanner::instance()->reached(target_distance(0) + position_proxy.GetXPos(), target_distance(1) + position_proxy.GetYPos(), theta)) {
+
+    if (MotionPlanner::instance()->reached(target_distance + ExaBot::instance()->last_position, theta)) {
       cout << "removing " << *it << " from follow path" << endl;
       it = follow_path.erase(it);
     }
@@ -336,8 +334,8 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
         recompute_path();
       }
       else {
-        double x = position_proxy.GetXPos() + target_distance(0);
-        double y = position_proxy.GetYPos() + target_distance(1);
+        double x = ExaBot::instance()->last_position(0) + target_distance(0);
+        double y = ExaBot::instance()->last_position(1) + target_distance(1);
         double theta = gsl_sf_angle_restrict_symm(target_angle); // TODO: is this ok? GetYaw() is not here
         MotionPlanner::instance()->set_goal(x, y, theta);
         
@@ -355,9 +353,9 @@ void Explorer::compute_motion(Position2dProxy& position_proxy) {
     if (MotionPlanner::instance()->reached_goal()) {
       // go forward
       cout << "no path, going forward" << endl;
-      double x = position_proxy.GetXPos() + cos(position_proxy.GetYaw()) * 2;
-      double y = position_proxy.GetYPos() + sin(position_proxy.GetYaw()) * 2;
-      double theta = gsl_sf_angle_restrict_symm(position_proxy.GetYaw());
+      double x = ExaBot::instance()->last_position(0) + cos(ExaBot::instance()->last_rotation) * 2;
+      double y = ExaBot::instance()->last_position(1) + sin(ExaBot::instance()->last_rotation) * 2;
+      double theta = gsl_sf_angle_restrict_symm(ExaBot::instance()->last_rotation);
       MotionPlanner::instance()->set_goal(x, y, theta);
       
       /*cout << "setting pose to: " << x << " " << y << " " << theta << " current: " << position_proxy.GetXPos() << " " << position_proxy.GetYPos() << " " << position_proxy.GetYaw() << endl;

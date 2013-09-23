@@ -36,6 +36,9 @@ namespace HybNav {
       ONLY_ON_SIMULATION(PlayerCc::Graphics2dProxy graphics_proxy;)
       
       static double ROBOT_RADIUS;
+
+      gsl::vector initial_position, last_position;
+      double initial_rotation, last_rotation;
       
     private:     
       
@@ -49,10 +52,8 @@ namespace HybNav {
       TopoMap topo_map;
       MotionPlanner motion_planner;
 
-      gsl::vector initial_position, last_position;
-      double initial_rotation, last_rotation;
-
       void get_pose(gsl::vector& abs_pos, double& abs_rot);
+      void correct_pose(gsl::vector& absolute_position, double& absolute_rotation);
       void update_position(void);
       bool first_plot;
 
