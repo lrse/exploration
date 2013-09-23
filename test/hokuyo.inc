@@ -6,7 +6,8 @@ define hokuyolaser ranger
   # factory settings for LMS200	
   range [ 0.0  5.0 ]
   fov 270.0
-  samples 270
+  #samples 270
+  samples 622
   )
   # generic model properties
   color "blue"
