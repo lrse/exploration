@@ -20,7 +20,7 @@ double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
 /*uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)((ExaBot::ROBOT_RADIUS - MetricMap::SENSOR_MODEL_DELTA) * 2 * 0.8 / OccupancyGrid::CELL_SIZE);*/
-uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = 3;
+uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = 6;
 uint OccupancyGrid::MINIMUM_GATEWAY_CELLS = 2;
 // TODO: these two should be computed from ROBOT_RADIUS, but since map is noisy, these constants are tuned ad-hoc
 

@@ -107,7 +107,7 @@ double MetricMap::sensor_model(double r, double delta) {
     p = pow(delta / (r - epsilon), 2) * 0.5;
   else {
     if (delta < r + epsilon)
-      p = (1 - pow((delta - r) / epsilon, 2)) * 0.3 + 0.5;
+      p = (1 - pow((delta - r) / epsilon, 2)) * 0.1 + 0.5;
     else
       p = 0;
   }
