@@ -11,7 +11,7 @@ void catch_interrupt(int sig) {
   end = true;
 }
 
-int main(void) {
+int main(int argc, char** argv) {
   Debug::DeathHandler dh;
   signal(SIGINT, catch_interrupt);
   signal(SIGTERM, catch_interrupt);

@@ -1,6 +1,7 @@
 #ifndef __METRIC_MAP_H__
 #define __METRIC_MAP_H__
 
+#include <opencv2/opencv.hpp>
 #include "graph.h"
 #include "singleton.h"
 #include "super_matrix.h"
@@ -33,7 +34,7 @@ namespace HybNav {
 
       // TODO: coord2index
       void save(void);
-      void draw(bool draw_gateways = true);
+      void draw(cv::Mat& frame, bool draw_gateways = true);
 
       /* constants */
       static uint WINDOW_RADIUS_CELLS;

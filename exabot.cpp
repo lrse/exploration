@@ -6,6 +6,7 @@
 #include "util.h"
 #include "config.h"
 #include "orloc.h"
+#include "scoped_timer.h"
 
 using namespace HybNav;
 using namespace std;
@@ -44,12 +45,15 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client(PLAYER_SERVER), la
   graph_timer = std::time(NULL);
   start_timer = std::time(NULL);
   first_plot = false;
+
+  timings_file.open("csv/timings.txt");
+  map_statistics_file.open("csv/statistics.txt");
   
 #ifdef ENABLE_DISPLAY
   cv::startWindowThread();
-  cv::namedWindow("grid");
-  cv::namedWindow("cost grid");
-  cv::namedWindow("planning grid");
+  cv::namedWindow("grid", CV_WINDOW_NORMAL);
+  cv::namedWindow("cost grid", CV_WINDOW_NORMAL);
+  cv::namedWindow("planning grid", CV_WINDOW_NORMAL);
   cv::namedWindow("complete_map", CV_WINDOW_NORMAL);
   cv::namedWindow("topo map", CV_WINDOW_NORMAL);
   
@@ -86,13 +90,21 @@ void ExaBot::update(void) {
   }
   if (laser_proxy.IsFresh() && laser_proxy.IsValid()) {
     update_position();
-    MetricMap::instance()->process_distances(position_proxy, laser_proxy);
+    {
+      ScopedTimer t("process_distances", timings_file);
+      MetricMap::instance()->process_distances(position_proxy, laser_proxy);
+    }
+    
     laser_proxy.NotFresh();
   }
 
-  //MotionPlanner::instance()->process_distances(laser_proxy);
   if (std::time(NULL) - start_timer > 3) {
+    ScopedTimer t("explorer_iteration", timings_file);
     Explorer::instance()->update();
+    map_statistics_file <<
+      "grids " << MetricMap::instance()->super_matrix.count << " " <<
+      "nodes " << TopoMap::instance()->graph.nodes.size() << " " <<
+      "edges " << TopoMap::instance()->graph.edges.size() << endl;    
   }
 
   // Graphics
@@ -150,7 +162,9 @@ void ExaBot::update(void) {
     cv::imshow("grid", graph_big);
     cv::imshow("cost grid", cost_grid);
     cv::imshow("planning grid", planning_grid);
-    MetricMap::instance()->draw(draw_gateways);
+    cv::Mat complete_map;
+    MetricMap::instance()->draw(complete_map, draw_gateways);
+    cv::imshow("complete_map", complete_map);
     #endif
     *graph_writer << graph_big;
     cv::Mat cost_grid_color;
@@ -160,9 +174,6 @@ void ExaBot::update(void) {
 
   MotionPlanner::instance()->update();
   Explorer::instance()->compute_motion(position_proxy);
-  /*if (position_proxy.IsFresh() && position_proxy.IsValid()) {
-    
-  }*/
 }
 
 void ExaBot::stop(void) {
@@ -172,10 +183,19 @@ void ExaBot::stop(void) {
 }
 
 void ExaBot::deinitialize(void) {
-  cout << "Trajectory length: " << trajectory_length << endl;
+  cout << "Saving trajectory..." << endl;
   ofstream trajectory_csv("csv/trajectory.csv");
-  for (list<gsl::vector>::iterator it = trajectory.begin(); it != trajectory.end(); ++it) trajectory_csv << (*it)[0] << "," << (*it)[1] << endl;
+  for (list<gsl::vector>::iterator it = trajectory.begin(); it != trajectory.end(); ++it)
+    trajectory_csv << (*it)[0] << "," << (*it)[1] << endl;
   trajectory_csv.close();
+
+  cout << "Saving results..." << endl;
+  ofstream results("csv/results.txt");
+  results << "trajectory_length: " << trajectory_length << endl;
+  results << "elapsed_time: " << MotionPlanner::instance()->seconds_elapsed << endl;
+  results << "exploration_speed: " << trajectory_length / MotionPlanner::instance()->seconds_elapsed << endl;
+  results << "grid_cells: " << OccupancyGrid::CELLS << endl;
+  results << "grid_cell_size: " << OccupancyGrid::CELL_SIZE << endl;
   
   cout << "Saving Map..." << endl;
   MetricMap::instance()->save();
@@ -235,7 +255,7 @@ void ExaBot::update_position(void) {
   last_rotation = absolute_rotation;
 
   trajectory_length += delta_position.norm2();    
-  if ((trajectory.back() - absolute_position).norm2() > 0.3) {
+  if ((trajectory.back() - absolute_position).norm2() > 0.1) {
     trajectory.push_back(absolute_position);
   }
 }

@@ -102,7 +102,6 @@ namespace HybNav {
           bool completely_explored;
       };
 
-    private:
       Graph<Node> graph;
   };
 }

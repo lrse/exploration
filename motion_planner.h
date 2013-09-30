@@ -5,6 +5,7 @@
 #include <gslwrap/matrix_double.h>
 #include <gslwrap/vector_double.h>
 #include <gslwrap/vector_int.h>
+//#include <boost/timer.hpp>
 #include "singleton.h"
 
 namespace HybNav {
@@ -22,6 +23,9 @@ namespace HybNav {
 
       double goal_x, goal_y, goal_theta;
       bool goal_set;
+
+      float seconds_elapsed;
+      boost::posix_time::ptime last_time;
 
       float REACHED_POS_EPSILON, REACHED_ANGLE_EPSILON;      
       PlayerCc::Position2dProxy position_proxy;

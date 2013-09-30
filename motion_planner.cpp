@@ -19,6 +19,7 @@ MotionPlanner::MotionPlanner(PlayerCc::PlayerClient* client_proxy) : Singleton<M
   
   goal_set = false;
   goal_x = goal_y = goal_theta = 0;
+  seconds_elapsed = 0;
 }
 
 /**************************
@@ -34,6 +35,7 @@ void MotionPlanner::set_goal(double x, double y, double theta)
   goal_y = y;
   goal_theta = theta;
   goal_set = true;
+  last_time = boost::posix_time::microsec_clock::local_time();
 }
 
 void MotionPlanner::update(void) {
@@ -43,6 +45,7 @@ void MotionPlanner::update(void) {
 void MotionPlanner::stop(void) {
   position_proxy.GoTo(position_proxy.GetXPos(), position_proxy.GetYPos(), position_proxy.GetYaw());
   position_proxy.SetMotorEnable(false);
+  seconds_elapsed += (boost::posix_time::microsec_clock::local_time() - last_time).total_milliseconds() / 1000.0;
 }
 
 bool MotionPlanner::reached_goal(void) {

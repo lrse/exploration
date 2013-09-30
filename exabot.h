@@ -8,6 +8,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <libplayerc++/playerc++.h>
 #include <libplayerc/playerc.h>
+#include <fstream>
 #include "singleton.h"
 #include "metric_map.h"
 #include "explorer.h"
@@ -39,6 +40,7 @@ namespace HybNav {
 
       gsl::vector initial_position, last_position;
       double initial_rotation, last_rotation;
+      std::ofstream timings_file, map_statistics_file;
       
     private:     
       

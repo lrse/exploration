@@ -14,8 +14,8 @@ using namespace std;
 
 
 /* constants */
-double OccupancyGrid::CELL_SIZE = 0.03/*0.02*/;
-uint OccupancyGrid::CELLS = 87;
+double OccupancyGrid::CELL_SIZE = 0.03;
+uint OccupancyGrid::CELLS = /*87*/251;
 double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
@@ -234,8 +234,7 @@ void OccupancyGrid::draw(cv::Mat& graph, bool draw_gateways) {
   tmp.convertTo(graph_gray, CV_8UC1);
   cvtColor(graph_gray, graph, CV_GRAY2BGR);  
 
-  if (draw_gateways) {
-    if (gateway_coordinates.empty()) return;
+  if (draw_gateways && !gateway_coordinates.empty()) {
     for (int i = 0; i < 4; i++) {
       list< pair<uint,uint> >& edge_coordinates = gateway_coordinates[i];
 
@@ -257,6 +256,14 @@ void OccupancyGrid::draw(cv::Mat& graph, bool draw_gateways) {
         cout << "gw: " << it->first << " " << it->second << endl;
       }
     }    
+  }
+
+  bool draw_frontiers = true;
+  if (draw_frontiers) {
+    //cout << "drawing frontiers: " << frontiers.size() << endl;
+    for (FrontierList::iterator it = frontiers.begin(); it != frontiers.end(); ++it)
+      //cv::circle(graph, cv::Point((*it)(0), (*it)(1)), 2, cv::Scalar(255,255,0), -1);
+      graph.at<cv::Vec3b>(CELLS - 1 -(*it)(1), (*it)(0)) = cv::Vec3b(255,255,0);
   }
 }
 

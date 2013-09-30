@@ -148,13 +148,14 @@ struct DistanceCost : public binary_function<list<gsl::vector_int>,list<gsl::vec
   DistanceCost(const gsl::vector_int& _last_target) : last_target(_last_target) { }
 
   bool operator()(const list<gsl::vector_int>& a, const list<gsl::vector_int>& b) {
-    gsl::vector_int last_a = a.back();
+    /*gsl::vector_int last_a = a.back();
     last_a -= last_target;
 
     gsl::vector_int last_b = b.back();
     last_b -= last_target;
 
-    return (last_a.norm2() < last_b.norm2());
+    return (last_a.norm2() < last_b.norm2());*/
+    return (a.size() < b.size());
   }
 };
 

@@ -23,6 +23,7 @@ namespace HybNav {
       
       size_t size_x, size_y;
       ssize_t min_x, min_y, max_x, max_y;
+      size_t count;
   };
 }
 

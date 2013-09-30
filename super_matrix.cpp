@@ -11,6 +11,7 @@ SuperMatrix<T>::SuperMatrix(void) {
   size_x = size_y = 0;
   min_x = min_y = std::numeric_limits<ssize_t>::max();
   max_x = max_y = std::numeric_limits<ssize_t>::min();
+  count = 0;
 }
 
 template<class T>
@@ -48,11 +49,13 @@ T& SuperMatrix<T>::submatrix(ssize_t x, ssize_t y) {
     y_map.insert(make_pair(y, T(x,y)));
     matrix_map.insert(make_pair(x, y_map));
     it2 = matrix_map.find(x)->second.find(y);
+    count++;
   }
   else {
     it2 = it->second.find(y);
     if (it2 == it->second.end()) {
       it2 = it->second.insert(make_pair(y, T(x,y))).first;
+      count++;
     }
   }
   return it2->second;

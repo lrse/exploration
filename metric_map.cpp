@@ -159,15 +159,17 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
       xy(0) = j;
       gsl::vector_int absolute_cell = window_offset + (xy - WINDOW_RADIUS_CELLS);
       //cout << "abs cell: " << absolute_cell << " " << window_offset << " " << WINDOW_RADIUS_CELLS << " " << xy << endl;
+      window(i, j) = cv_window(i, j); // DEBUG
+      
+      double new_v = cv_window(i, j);
+      if (new_v == 0) continue; // this avoids needless grid creation
       
       double& v = super_matrix.cell(absolute_cell(0), absolute_cell(1));
-      double new_v = cv_window(i, j);
       if (v > 0 && new_v < 0) continue;
-      
       v += new_v;
       if (v >= OccupancyGrid::Locc) v = OccupancyGrid::Locc;
       else if (v <= OccupancyGrid::Lfree) v = OccupancyGrid::Lfree;
-      window(i, j) = cv_window(i, j); // DEBUG
+      
     }
   }
 }
@@ -202,9 +204,13 @@ void MetricMap::save(void) {
   ofstream dot_file("csv/metric_map.dot", ios_base::trunc | ios_base::out);
   super_matrix.to_dot(dot_file);
   dot_file.close();
+
+  cv::Mat complete_map;
+  draw(complete_map);
+  cv::imwrite("csv/complete_map.png", complete_map);
 }
 
-void MetricMap::draw(bool draw_gateways) {
+void MetricMap::draw(cv::Mat& frame, bool draw_gateways) {
   if (super_matrix.size_x == 0 || super_matrix.size_y == 0) return;
   cv::Mat complete_map(super_matrix.size_y * OccupancyGrid::CELLS, super_matrix.size_x * OccupancyGrid::CELLS, CV_8UC3);
   complete_map = cv::Scalar(0,0,255);
@@ -222,7 +228,7 @@ void MetricMap::draw(bool draw_gateways) {
       submap.copyTo(submap_ref);
     }
   }
-  cv::imshow("complete_map", complete_map);
+  frame = complete_map;
 }
 
 
