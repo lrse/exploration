@@ -9,7 +9,7 @@ namespace HybNav {
   class ExplorerException : public std::runtime_error {
     public:
       enum ExceptionCode { END, FAIL };
-      ExplorerException(ExceptionCode code, const std::string& reason);
+      ExplorerException(ExceptionCode code, const std::string& reason = std::string());
       virtual ~ExplorerException(void) throw() { }
       ExceptionCode code;
   };

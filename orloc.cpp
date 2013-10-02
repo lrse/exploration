@@ -38,7 +38,8 @@ struct PolarLine {
   double phi;
   double ro;
   double n;
-  PolarLine(double phi, double ro, double n) : phi(phi), ro(ro), n(n) {};
+  int start, end;
+  PolarLine(double _phi, double _ro, double _n, int _start, int _end) : phi(_phi), ro(_ro), n(_n), start(_start), end(_end) {};
 };
 
 
@@ -56,12 +57,17 @@ HybNav::Scan HybNav::getPoints(const HybNav::SPosition pos, const LaserProxy &la
   double angle = laser.GetMinAngle();
   double resolution = laser.GetScanRes();
   double ppy = 0.04365; //TODO: this should be read from player laser.GetPose().py
+  //ppy = 0;
 
   player_point_2d_t s;
   HybNav::Scan scan;
   for(int i=0;i<laser.GetCount();i++) {
     s.px = pos.x + cos(pos.yaw)*ppy + laser.GetRange(i) * cos(pos.yaw+angle);
     s.py = pos.y + sin(pos.yaw)*ppy + laser.GetRange(i) * sin(pos.yaw+angle);
+    #if 0
+    s.px = pos.x + cos(pos.yaw) * ppy + laser.GetRange(i) * cos(/*laser.GetBearing(i)*/angle + pos.yaw);
+    s.py = pos.y + sin(pos.yaw) * ppy + laser.GetRange(i) * sin(/*laser.GetBearing(i)*/angle + pos.yaw);
+    #endif
     scan.push_back(s);
     angle += resolution;
   }
@@ -92,7 +98,7 @@ PolarLine fitLine(const HybNav::Scan &scan, int start, int end) {
   }
   double phi = atan2(-2*sxy,(syy-sxx))/2;
   double ro = x*cos(phi)+y*sin(phi);
-  return PolarLine(phi,ro,n);
+  return PolarLine(phi,ro,n, start, end);
 }
 
 
@@ -140,6 +146,25 @@ PolarLineVector getLines(HybNav::Scan& scan) {
   return result;
 }
 
+void correctScan(const PolarLineVector& lines, HybNav::Scan& scan) {
+  /*for (int i = 0; i < scan.size(); i++) {
+    cout << "raw scan: " << scan[i] << endl;
+  }*/
+  foreach(PolarLine l, lines) {
+    double lx = cos(l.phi);
+    double ly = sin(l.phi);
+    for (int i = l.start; i <= l.end; i++) {
+      double orthogonal_dist = (lx * scan[i].px + ly * scan[i].py) - l.ro;
+      scan[i].px -= cos(l.phi) * orthogonal_dist;
+      scan[i].py -= sin(l.phi) * orthogonal_dist;
+    }
+  }
+  /*for (int i = 0; i < scan.size(); i++) {
+    cout << "corrected scan: " << scan[i] << endl;
+  }
+  cout << "scan end" << endl;*/
+}
+
 
 double mod(double angle) {
   double result = angle;
@@ -154,8 +179,8 @@ double mod(double angle) {
 }
 
 
-void HybNav::angleCorrection(HybNav::SPosition &pos, const LaserProxy &laser) {
-  HybNav::Scan scan = getPoints(pos,laser);
+void HybNav::angleCorrection(HybNav::SPosition &pos, const LaserProxy &laser, HybNav::Scan& scan) {
+  scan = getPoints(pos,laser);
   if (scan.size() == 0) return;
   PolarLineVector lines = getLines(scan);
   int n = 0;
@@ -173,5 +198,9 @@ void HybNav::angleCorrection(HybNav::SPosition &pos, const LaserProxy &laser) {
   phi = phi / n;
 
   pos.yaw -=phi; // correct the position
+
+  // correct scan and rebuild
+  correctScan(lines, scan);
+  scan = getPoints(pos,laser);
 }
 

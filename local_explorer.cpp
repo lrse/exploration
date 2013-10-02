@@ -255,7 +255,7 @@ void LocalExplorer::compute_gateway_path(TopoMap::GatewayNode* gateway, bool fol
     found = false;
   }
   else {
-    int extra_node_dist = 10;
+    int extra_node_dist = 2;
     gsl::vector_int extra_node(2);
     switch(gateway->edge) {
       case North: extra_node(0) = 0; extra_node(1) = extra_node_dist; break;

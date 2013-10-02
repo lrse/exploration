@@ -9,6 +9,7 @@
 #include <gslwrap/matrix_double.h>
 #include <gslwrap/vector_int.h>
 #include <libplayerc++/playerc++.h>
+#include "orloc.h"
 
 namespace HybNav {
   class OccupancyGrid;
@@ -23,8 +24,8 @@ namespace HybNav {
       /* methods */
       void update_position(const gsl::vector& delta_pos, double delta_rot);
       
-      void process_distances(PlayerCc::Position2dProxy& position_proxy, PlayerCc::LaserProxy& laser_proxy);
-      void update_window(PlayerCc::Position2dProxy& position_proxy, PlayerCc::LaserProxy& laser_proxy);
+      void process_distances(PlayerCc::Position2dProxy& position_proxy/*, PlayerCc::LaserProxy& laser_proxy*/, const HybNav::Scan& scan);
+      //void update_window(PlayerCc::Position2dProxy& position_proxy, PlayerCc::LaserProxy& laser_proxy);
       bool in_grid(const gsl::vector& coord);
       gsl::vector_int grid_position(void);
 

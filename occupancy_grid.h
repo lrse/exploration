@@ -37,6 +37,8 @@ namespace HybNav {
       
       cv::Mat debug_graph;
 
+      bool intersecting_gateways(int x0, int xf, int n_x0, int n_xf);
+
     private:
       std::list<TopoMap::GatewayNode*> gateway_nodes;
       OccupancyGrid(void);

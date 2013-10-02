@@ -83,6 +83,7 @@ void Explorer::update(void) {
     TopoMap::GatewayNode* current_gateway = MetricMap::instance()->current_grid->find_gateway(grid_position, entrance_direction);
     cout << "connecting current node to exit gateway" << endl;
     TopoMap::instance()->connect(TopoMap::instance()->current_node, exit_gateway);
+    cout << "Exit: " << exit_gateway << " Entrance: " << current_gateway << endl;
     cout << "connecting exit gateway to entrance gateway" << endl;
     TopoMap::instance()->connect(exit_gateway, current_gateway);
     exit_gateway->set_accessible();
@@ -91,8 +92,6 @@ void Explorer::update(void) {
     cout << "Follow path: " << GlobalExplorer::instance()->follow_path << " current node: " << TopoMap::instance()->current_node << endl;
     MetricMap::instance()->current_grid->update_connectivity(); // may set current_node to a new area node
     cout << "Follow path: " << GlobalExplorer::instance()->follow_path << " current node: " << TopoMap::instance()->current_node << endl;
-
-    cout << "Exit: " << exit_gateway << " Entrance: " << current_gateway << endl;
 
     // Advance/Clear global path
     if (state == ExploringGlobally) {
@@ -260,7 +259,10 @@ void Explorer::recompute_path(void) {
   // At this point: only exploring globally
   cout << "Recomputing Global paths..." << endl;
   GlobalExplorer::instance()->recompute_paths();
-  if (!GlobalExplorer::instance()->found_path()) throw ExplorerException(ExplorerException::END, "EXPLORATION IS OVER!");
+  if (!GlobalExplorer::instance()->found_path()) {
+    cout << "no global paths found" << endl;
+    throw ExplorerException(ExplorerException::END);
+  }
   cout << "done: " << GlobalExplorer::instance()->follow_path << endl;
 
   while(true) {
@@ -273,7 +275,7 @@ void Explorer::recompute_path(void) {
     else {
       cout << "Couldn't find path to edge, so recomputing global path" << endl;
       GlobalExplorer::instance()->recompute_paths();
-      if (!GlobalExplorer::instance()->found_path()) throw ExplorerException(ExplorerException::END, "EXPLORATION IS OVER!");
+      if (!GlobalExplorer::instance()->found_path()) throw ExplorerException(ExplorerException::END);
       else { /*cout << "Proposing global path: " << GlobalExplorer::instance()->follow_path << endl*/; }
     }
   }

@@ -41,6 +41,8 @@ namespace HybNav {
       gsl::vector initial_position, last_position;
       double initial_rotation, last_rotation;
       std::ofstream timings_file, map_statistics_file;
+
+      Scan last_scan;
       
     private:     
       

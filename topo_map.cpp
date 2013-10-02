@@ -35,12 +35,13 @@ void TopoMap::del_node(Node* node) {
 }
 
 void TopoMap::connect(TopoMap::Node* node1, TopoMap::Node* node2) {
-  if (graph.is_connected(node1, node2)) return;
   cout << "connecting " << node1 << " to " << node2 << endl;
+  if (graph.is_connected(node1, node2)) { cout << "already connected" << endl; return; }
+  
   if (node1->is_area() && node2->is_gateway()) {
     AreaNode* gw_area_node = dynamic_cast<GatewayNode*>(node2)->area_node();
     if (gw_area_node) {
-      cout << "Tried to connect area to gateway already connected to another area... merging area nodes" << endl;
+      cout << "Tried to connect area to gateway already connected to " << gw_area_node << " - merging area nodes" << endl;
       merge(dynamic_cast<AreaNode*>(node1), gw_area_node);
       return;
     }
@@ -192,7 +193,28 @@ void TopoMap::GatewayNode::to_graphml(std::ostream& out) {
   out << "</node>" << endl;
 }
 
-bool TopoMap::GatewayNode::unexplored_gateway(void) {  
+bool TopoMap::GatewayNode::unexplored_gateway(void) {
+  bool has_connected_gateway = false;
+  std::list<Node*> n = neighbors();
+  for (std::list<Node*>::iterator it = n.begin(); it != n.end(); ++it) {
+    if ((*it)->is_gateway()) {
+      has_connected_gateway = true;
+      TopoMap::AreaNode* area = ((TopoMap::GatewayNode*)(*it))->area_node();
+      if (!area) {
+        cout << "adj GW with no area node" << endl;
+        return true; // this GW is connected to other which does not have an area node => unexplored gateway
+      }
+      // NOTE: i dont care if node is unexplored, the node itself should be a goal then
+    }
+  }
+  if (!has_connected_gateway) {
+    cout << "has no adj gateway" << endl; // NOTE: not detecting possible unconnected GWs as before
+    return true; // did not found any GW connected to this one => unexplored gateway
+  }
+  else return false; // found GWs connected to this one, but all of them were connected to an area node => explored gateway 
+  
+  
+  #if 0
   // try to find the gateway node connected to this one
   TopoMap::GatewayNode* connected_gateway = NULL;  
   Graph<TopoMap::Node>::EdgeArray& edges = TopoMap::instance()->graph.edges;
@@ -215,6 +237,7 @@ bool TopoMap::GatewayNode::unexplored_gateway(void) {
   AreaNode* area_node = connected_gateway->area_node();
   if (!area_node || !area_node->completely_explored) { cout << this << " has no adj area node or this area node is unexplored" << endl; return true; }
   else { cout << this << " has adj explored area node (" << area_node << ")" << endl; return false; }
+  #endif
 }
 
 

@@ -15,7 +15,7 @@ using namespace std;
 
 /* constants */
 double OccupancyGrid::CELL_SIZE = 0.03;
-uint OccupancyGrid::CELLS = /*87*/251;
+uint OccupancyGrid::CELLS = 43;
 double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
@@ -109,7 +109,7 @@ void OccupancyGrid::update_gateways(bool and_connectivity) {
     list< pair<uint,uint> >::iterator match_it = edge_coordinates.end();
     // find a gw coordinate covered by the gw node
     for (list< pair<uint,uint> >::iterator it2 = edge_coordinates.begin(); it2 != edge_coordinates.end(); ++it2) {
-      if (it2->first <= (*it)->x0 || (*it)->xf <= it2->second) { match_it = it2; break; } // TODO: this can leave duplicated gateways, they should be merged (notice the ||)
+      if (intersecting_gateways((*it)->x0, (*it)->xf, it2->first, it2->second)) { match_it = it2; break; }
     }
     // a coordinate was found, so update the gw node's dimensions (in case it changed) and consider it
     // covered by deleting it from the coord list
@@ -128,7 +128,6 @@ void OccupancyGrid::update_gateways(bool and_connectivity) {
       }
       TopoMap::instance()->del_node(*it);
       it = gateway_nodes.erase(it);
-
     }
   }
 
@@ -146,10 +145,10 @@ void OccupancyGrid::update_gateways(bool and_connectivity) {
 }
 
 void OccupancyGrid::update_connectivity(void) {
-  cout << "Updating connectivity for " << position << endl;
-  TopoMap::Node* current_topo_node = TopoMap::instance()->current_node;
+  if (MetricMap::instance()->current_grid != this) throw std::runtime_error("attempted to update connectivity for arbitrary grid");
   
-  cout << "current topo node: " << current_topo_node << endl;
+  TopoMap::Node* current_topo_node = TopoMap::instance()->current_node;
+  cout << "Updating connectivity for " << current_topo_node << endl;
 
   // determine origin of pathfinding
   // this will always be the robot position, since when current node is a gateway, the robot is passing by the gw
@@ -171,36 +170,50 @@ void OccupancyGrid::update_connectivity(void) {
       TopoMap::instance()->current_node = area_of_current;
   }
 
-  cout << "current topo node now: " << current_topo_node << endl;
+  cout << "current topo node now: " << TopoMap::instance()->current_node << endl;
   cout << "starting position for pathfinding: " << start_position << endl;
 
   for (list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin(); it != gateway_nodes.end(); ++it) {
     gsl::vector_int it_position = (*it)->position();
+    
     // connect area nodes to gateways
-    cout << "finding connectivity to " << *it << " at position " << it_position << endl;
+    cout << "finding connectivity of current node to " << *it << " at position " << it_position << endl;
     if (LocalExplorer::instance()->connectivity_pathfinder.exists_path(start_position, it_position)) {
       TopoMap::instance()->connect(TopoMap::instance()->current_node, *it);
       cout << "connected" << endl;
     }
     else {
-      TopoMap::instance()->disconnect(TopoMap::instance()->current_node, *it);
+      TopoMap::instance()->disconnect(TopoMap::instance()->current_node, *it); // TODO: maybe it would be better to "split" by leaving
+      // an old node connected to whatever this node was connected, but not this one
       cout << "not connected" << endl;
     }
 
     // connect gateways to adjacent ones
+    cout << "finding connectivity of this gw (" << *it << ") to neighbors" << endl;
     OccupancyGrid& neighbor = get_neighbor((*it)->edge);
     for (list<TopoMap::GatewayNode*>::iterator n_it = neighbor.gateway_nodes.begin(); n_it != neighbor.gateway_nodes.end(); ++n_it) {
       if ((*n_it)->edge == MetricMap::opposite_direction((*it)->edge)) {
-        cout << "trying to connect " << *it << " to " << *n_it << endl;
-        int x0 = (*it)->x0;
-        int xf = (*it)->xf;
-        int n_x0 = (*n_it)->x0;
-        int n_xf = (*n_it)->xf;
-        if (abs<int>(n_x0 - x0) < 3 && abs<int>(n_xf - xf) < 3) TopoMap::instance()->connect(*it, *n_it);
-        else cout << "difference too big: " << abs<int>(n_x0 - x0) << " " << abs<int>(n_xf - xf) << endl;
+        cout << "trying to connect to " << *n_it << endl;
+        if (intersecting_gateways((*it)->x0, (*it)->xf, (*n_it)->x0, (*n_it)->xf))        
+        {
+          cout << "connected" << endl;
+          TopoMap::instance()->connect(*it, *n_it);
+        }
+        else cout << "not connected" << endl;
+        /*if (abs<int>(n_x0 - x0) < 3 && abs<int>(n_xf - xf) < 3) TopoMap::instance()->connect(*it, *n_it);
+        else cout << "difference too big: " << abs<int>(n_x0 - x0) << " " << abs<int>(n_xf - xf) << endl;*/
       }
     }
   }
+}
+
+// if there is non-null intersection between gateway ranges, we consider them connected
+bool OccupancyGrid::intersecting_gateways(int x0, int xf, int n_x0, int n_xf) {
+  int size = abs<int>(xf - x0);
+  int nsize = abs<int>(n_xf - n_x0);
+  cout << "x0/xf " << x0 << " " << xf << " n_x0/xf " << n_x0 << " " << n_xf << " sizes " << size << " " << nsize << endl;
+  return ((size >= nsize && ((x0 <= n_xf && n_xf <= xf) || (x0 <= n_x0 && n_x0 <= xf))) ||
+           (size <= nsize && ((n_x0 <= xf && xf <= n_xf) || (n_x0 <= x0 && x0 <= n_xf))) );
 }
 
 Direction OccupancyGrid::direction_to(OccupancyGrid* other) {

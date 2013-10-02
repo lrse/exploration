@@ -114,7 +114,7 @@ double MetricMap::sensor_model(double r, double delta) {
   return p;
 }
 
-void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& laser_proxy)
+void MetricMap::process_distances(Position2dProxy& position_proxy/*, LaserProxy& laser_proxy*/, const Scan& scan)
 {
   // apply sensor readings to window
   double max_range = 1;
@@ -124,12 +124,16 @@ void MetricMap::process_distances(Position2dProxy& position_proxy, LaserProxy& l
   cv_window = 0;
 
   // apply sensor model to sensor window
-  size_t laser_samples = laser_proxy.GetCount();
+  size_t laser_samples = scan.size();
+  //size_t laser_samples = laser_proxy.GetCount();
   for (size_t i = 0; i < laser_samples; i++) {
-    double angle = laser_proxy.GetBearing(i) + ExaBot::instance()->last_rotation;
+    /*double angle = laser_proxy.GetBearing(i) + ExaBot::instance()->last_rotation;
     double dist = laser_proxy.GetRange(i);
     double x = dist * cos(angle);
-    double y = dist * sin(angle);
+    double y = dist * sin(angle);*/
+    double x = scan[i].px - ExaBot::instance()->last_position(0);
+    double y = scan[i].py - ExaBot::instance()->last_position(1);
+    double dist = hypot(x, y);
     cv::Point measurement;
     measurement.x = (int)round(x / OccupancyGrid::CELL_SIZE);
     measurement.y = (int)round(y / OccupancyGrid::CELL_SIZE);

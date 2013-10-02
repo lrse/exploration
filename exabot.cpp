@@ -1,5 +1,6 @@
 #include <gsl/gsl_sf_trig.h>
 #include <iostream>
+#include <sys/stat.h>
 #include "metric_map.h"
 #include "exabot.h"
 #include "explorer.h"
@@ -46,6 +47,8 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client(PLAYER_SERVER), la
   start_timer = std::time(NULL);
   first_plot = false;
 
+  mkdir("csv", 0755);
+
   timings_file.open("csv/timings.txt");
   map_statistics_file.open("csv/statistics.txt");
   
@@ -57,8 +60,6 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client(PLAYER_SERVER), la
   cv::namedWindow("complete_map", CV_WINDOW_NORMAL);
   cv::namedWindow("topo map", CV_WINDOW_NORMAL);
   
-  cv::namedWindow("controls");
-  cv::createTrackbar("gateways", "controls", &draw_gateways, 1);
 #endif
   graph_writer = new cv::VideoWriter("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
   debug_writer = new cv::VideoWriter("debug.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
@@ -92,7 +93,7 @@ void ExaBot::update(void) {
     update_position();
     {
       ScopedTimer t("process_distances", timings_file);
-      MetricMap::instance()->process_distances(position_proxy, laser_proxy);
+      MetricMap::instance()->process_distances(position_proxy, /*laser_proxy*/last_scan);
     }
     
     laser_proxy.NotFresh();
@@ -160,16 +161,16 @@ void ExaBot::update(void) {
     #ifdef ENABLE_DISPLAY
     cv::imshow("topo map", cv::imread("csv/topo_map.png"));
     cv::imshow("grid", graph_big);
-    cv::imshow("cost grid", cost_grid);
+    //cv::imshow("cost grid", cost_grid);
     cv::imshow("planning grid", planning_grid);
     cv::Mat complete_map;
     MetricMap::instance()->draw(complete_map, draw_gateways);
     cv::imshow("complete_map", complete_map);
     #endif
     *graph_writer << graph_big;
-    cv::Mat cost_grid_color;
+    /*cv::Mat cost_grid_color;
     cv::cvtColor(cost_grid, cost_grid_color, CV_GRAY2BGR);
-    *debug_writer << cost_grid_color;
+    *debug_writer << cost_grid_color;*/
   }
 
   MotionPlanner::instance()->update();
@@ -217,7 +218,7 @@ void ExaBot::correct_pose(gsl::vector& absolute_position, double& absolute_rotat
   pos.x = absolute_position(0);
   pos.y = absolute_position(1);
   pos.yaw = absolute_rotation;
-  angleCorrection(pos, laser_proxy);
+  angleCorrection(pos, laser_proxy, last_scan);
  
   absolute_position(0) = pos.x;
   absolute_position(1) = pos.y;

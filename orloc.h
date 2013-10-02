@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace HybNav {
-  const double DIST_THRESHOLD  = 0.1;
+  const double DIST_THRESHOLD  = 0.07;
   const double DIST_THRESHOLD_2  = DIST_THRESHOLD*DIST_THRESHOLD;
   const unsigned int NUMBER_THRESHOLD = 20;
   const double PRECISION  = 0.05;
@@ -30,7 +30,7 @@ namespace HybNav {
   };
 
   // modify yaw of pos so that laser data are aligned with axes of the coordinate system
-  void angleCorrection(SPosition &pos, const PlayerCc::LaserProxy &laser);
+  void angleCorrection(SPosition &pos, const PlayerCc::LaserProxy &laser, Scan& scan);
 
 
   // transform distances measured with laser into points in Cartesian space
