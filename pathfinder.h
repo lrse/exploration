@@ -16,6 +16,7 @@ namespace HybNav {
       virtual void prepare(void) { }
 
       bool exists_path(const T& start, const T& goal);
+      bool exists_path(const T& start);
       
       std::list< std::list<T> > findpath(const T& start, const T& goal, bool first_solution = false);
       std::list< std::list<T> > findpath(const T& start, bool first_solution = false);

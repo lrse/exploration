@@ -28,6 +28,11 @@ bool Pathfinder<T>::exists_path(const T& start, const T& goal) {
 }
 
 template<class T>
+bool Pathfinder<T>::exists_path(const T& start) {
+  return !findpath(start, start, true, true).empty();
+}
+
+template<class T>
 list< list<T> > Pathfinder<T>::findpath(const T& start, const T& goal, bool use_goal_function, bool first_solution)
 {
   prepare();

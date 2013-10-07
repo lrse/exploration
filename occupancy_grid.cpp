@@ -15,7 +15,7 @@ using namespace std;
 
 /* constants */
 double OccupancyGrid::CELL_SIZE = 0.03;
-uint OccupancyGrid::CELLS = 43;
+uint OccupancyGrid::CELLS = 251;
 double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
@@ -174,11 +174,16 @@ void OccupancyGrid::update_connectivity(void) {
   cout << "starting position for pathfinding: " << start_position << endl;
 
   for (list<TopoMap::GatewayNode*>::iterator it = gateway_nodes.begin(); it != gateway_nodes.end(); ++it) {
-    gsl::vector_int it_position = (*it)->position();
+    //gsl::vector_int it_position = (*it)->position();
+    gsl::vector_int& x_range = LocalExplorer::instance()->connectivity_pathfinder.x_range;
+    gsl::vector_int& y_range = LocalExplorer::instance()->connectivity_pathfinder.y_range;
+    (*it)->get_ranges(x_range, y_range);
     
     // connect area nodes to gateways
-    cout << "finding connectivity of current node to " << *it << " at position " << it_position << endl;
-    if (LocalExplorer::instance()->connectivity_pathfinder.exists_path(start_position, it_position)) {
+    //cout << "finding connectivity of current node to " << *it << " at position " << it_position << endl;
+    //if (LocalExplorer::instance()->connectivity_pathfinder.exists_path(start_position, it_position)) {
+    cout << "finding connectivity of current node to " << *it << endl;
+    if (LocalExplorer::instance()->connectivity_pathfinder.exists_path(start_position)) {
       TopoMap::instance()->connect(TopoMap::instance()->current_node, *it);
       cout << "connected" << endl;
     }
@@ -252,10 +257,10 @@ void OccupancyGrid::draw(cv::Mat& graph, bool draw_gateways) {
       list< pair<uint,uint> >& edge_coordinates = gateway_coordinates[i];
 
       cv::Mat edge_view;
-      if (i == (int)North) { cout << "drawing north" << endl; edge_view = graph.row(0); }
-      else if (i == (int)South) { cout << "drawing south" << endl;  edge_view = graph.row(graph.rows - 1); }
-      else if (i == (int)West) { cout << "drawing west" << endl; edge_view = graph.col(0); }
-      else { cout << "drawing east" << endl; edge_view = graph.col(graph.cols - 1); }
+      if (i == (int)North) { /*cout << "drawing north" << endl;*/ edge_view = graph.row(0); }
+      else if (i == (int)South) { /*cout << "drawing south" << endl;*/  edge_view = graph.row(graph.rows - 1); }
+      else if (i == (int)West) { /*cout << "drawing west" << endl;*/ edge_view = graph.col(0); }
+      else { /*cout << "drawing east" << endl;*/ edge_view = graph.col(graph.cols - 1); }
       
       for (list< pair<uint, uint> >::iterator it = edge_coordinates.begin(); it != edge_coordinates.end(); ++it) {
         TopoMap::GatewayNode* node = find_gateway(*it, (Direction)i);
@@ -266,7 +271,7 @@ void OccupancyGrid::draw(cv::Mat& graph, bool draw_gateways) {
         
         if (i == (int)North || i == (int)South) edge_view.colRange(it->first, it->second + 1) = color;
         else edge_view.rowRange((OccupancyGrid::CELLS - it->second - 1), OccupancyGrid::CELLS - it->first - 1 + 1) = color;
-        cout << "gw: " << it->first << " " << it->second << endl;
+        //cout << "gw: " << it->first << " " << it->second << endl;
       }
     }    
   }

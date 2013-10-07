@@ -92,12 +92,16 @@ void ExaBot::update(void) {
   if (laser_proxy.IsFresh() && laser_proxy.IsValid()) {
     update_position();
     {
+      cout << "received laser reading" << endl;
       ScopedTimer t("process_distances", timings_file);
       MetricMap::instance()->process_distances(position_proxy, /*laser_proxy*/last_scan);
     }
     
     laser_proxy.NotFresh();
   }
+
+  MotionPlanner::instance()->update();
+  Explorer::instance()->compute_motion(position_proxy);
 
   if (std::time(NULL) - start_timer > 3) {
     ScopedTimer t("explorer_iteration", timings_file);
@@ -172,9 +176,6 @@ void ExaBot::update(void) {
     cv::cvtColor(cost_grid, cost_grid_color, CV_GRAY2BGR);
     *debug_writer << cost_grid_color;*/
   }
-
-  MotionPlanner::instance()->update();
-  Explorer::instance()->compute_motion(position_proxy);
 }
 
 void ExaBot::stop(void) {
@@ -201,6 +202,10 @@ void ExaBot::deinitialize(void) {
   cout << "Saving Map..." << endl;
   MetricMap::instance()->save();
   TopoMap::instance()->save();
+
+  cout << "Saving cost grids..." << endl;
+  cv::imwrite("frontier_planning_grid.png", LocalExplorer::instance()->frontier_pathfinder.grid);
+  cv::imwrite("connectivity_planning_grid.png", LocalExplorer::instance()->connectivity_pathfinder.grid);
   
   cout << "Closing videos..." << endl;
   if (debug_writer) { delete debug_writer; debug_writer = NULL; }
