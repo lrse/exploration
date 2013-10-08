@@ -14,9 +14,10 @@ using namespace std;
 
 
 /* constants */
+uint OccupancyGrid::CELLS;
+double OccupancyGrid::SIZE;
+
 double OccupancyGrid::CELL_SIZE = 0.03;
-uint OccupancyGrid::CELLS = 251;
-double OccupancyGrid::SIZE = OccupancyGrid::CELL_SIZE * OccupancyGrid::CELLS;
 double OccupancyGrid::Locc = 1.5;
 double OccupancyGrid::Lfree = -1.5;
 /*uint OccupancyGrid::GATEWAY_LOOKAHEAD_CELLS = (uint)((ExaBot::ROBOT_RADIUS - MetricMap::SENSOR_MODEL_DELTA) * 2 * 0.8 / OccupancyGrid::CELL_SIZE);*/

@@ -190,14 +190,13 @@ gsl::vector_int MetricMap::grid_position(void) {
 }
 
 void MetricMap::save(void) {
-  mkdir("csv", 0777);
-  list<string> map_files(glob("csv/grid.*.png"));
+  list<string> map_files(glob(HybNav::OUTPUT_DIRECTORY + "/grid.*.png"));
   for (list<string>::iterator it = map_files.begin(); it != map_files.end(); ++it) unlink(it->c_str());
 
   for (SuperMatrix<OccupancyGrid>::iterator_x itx = super_matrix.matrix_map.begin(); itx != super_matrix.matrix_map.end(); ++itx) {
     for (SuperMatrix<OccupancyGrid>::iterator_y ity = itx->second.begin(); ity != itx->second.end(); ++ity) {
       OccupancyGrid& g = ity->second;
-      string png_name = "csv/grid." + to_s(g.position(0)) + "." + to_s(g.position(1)) + ".png";
+      string png_name = HybNav::OUTPUT_DIRECTORY + "/grid." + to_s(g.position(0)) + "." + to_s(g.position(1)) + ".png";
       cv::Mat graph;
       cout << "guardando " << png_name << endl;
       g.draw(graph);
@@ -205,13 +204,13 @@ void MetricMap::save(void) {
     }
   }
 
-  ofstream dot_file("csv/metric_map.dot", ios_base::trunc | ios_base::out);
+  ofstream dot_file((HybNav::OUTPUT_DIRECTORY + "/metric_map.dot").c_str(), ios_base::trunc | ios_base::out);
   super_matrix.to_dot(dot_file);
   dot_file.close();
 
   cv::Mat complete_map;
   draw(complete_map);
-  cv::imwrite("csv/complete_map.png", complete_map);
+  cv::imwrite((HybNav::OUTPUT_DIRECTORY + "/complete_map.png").c_str(), complete_map);
 }
 
 void MetricMap::draw(cv::Mat& frame, bool draw_gateways) {

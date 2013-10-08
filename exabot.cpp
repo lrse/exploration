@@ -47,10 +47,10 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client(PLAYER_SERVER), la
   start_timer = std::time(NULL);
   first_plot = false;
 
-  mkdir("csv", 0755);
+  mkdir(HybNav::OUTPUT_DIRECTORY.c_str(), 0755);
 
-  timings_file.open("csv/timings.txt");
-  map_statistics_file.open("csv/statistics.txt");
+  timings_file.open((HybNav::OUTPUT_DIRECTORY + "/timings.txt").c_str());
+  map_statistics_file.open((HybNav::OUTPUT_DIRECTORY + "/statistics.txt").c_str());
   
 #ifdef ENABLE_DISPLAY
   cv::startWindowThread();
@@ -61,8 +61,8 @@ ExaBot::ExaBot(void) : Singleton<ExaBot>(this), player_client(PLAYER_SERVER), la
   cv::namedWindow("topo map", CV_WINDOW_NORMAL);
   
 #endif
-  graph_writer = new cv::VideoWriter("graph.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
-  debug_writer = new cv::VideoWriter("debug.avi", CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
+  graph_writer = new cv::VideoWriter((HybNav::OUTPUT_DIRECTORY + "/graph.avi").c_str(), CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
+  debug_writer = new cv::VideoWriter((HybNav::OUTPUT_DIRECTORY + "/debug.avi").c_str(), CV_FOURCC('M','J','P','G'), 1, cv::Size(OccupancyGrid::CELLS, OccupancyGrid::CELLS) * 4);
 
   sleep(1);
 }
@@ -163,7 +163,7 @@ void ExaBot::update(void) {
     TopoMap::instance()->plot();
     
     #ifdef ENABLE_DISPLAY
-    cv::imshow("topo map", cv::imread("csv/topo_map.png"));
+    cv::imshow("topo map", cv::imread((HybNav::OUTPUT_DIRECTORY + "/topo_map.png").c_str()));
     cv::imshow("grid", graph_big);
     //cv::imshow("cost grid", cost_grid);
     cv::imshow("planning grid", planning_grid);
@@ -186,13 +186,13 @@ void ExaBot::stop(void) {
 
 void ExaBot::deinitialize(void) {
   cout << "Saving trajectory..." << endl;
-  ofstream trajectory_csv("csv/trajectory.csv");
+  ofstream trajectory_csv((HybNav::OUTPUT_DIRECTORY + "/trajectory.txt").c_str());
   for (list<gsl::vector>::iterator it = trajectory.begin(); it != trajectory.end(); ++it)
-    trajectory_csv << (*it)[0] << "," << (*it)[1] << endl;
+    trajectory_csv << (*it)[0] << " " << (*it)[1] << endl;
   trajectory_csv.close();
 
   cout << "Saving results..." << endl;
-  ofstream results("csv/results.txt");
+  ofstream results((HybNav::OUTPUT_DIRECTORY + "/results.txt").c_str());
   results << "trajectory_length: " << trajectory_length << endl;
   results << "elapsed_time: " << MotionPlanner::instance()->seconds_elapsed << endl;
   results << "exploration_speed: " << trajectory_length / MotionPlanner::instance()->seconds_elapsed << endl;
@@ -204,8 +204,8 @@ void ExaBot::deinitialize(void) {
   TopoMap::instance()->save();
 
   cout << "Saving cost grids..." << endl;
-  cv::imwrite("frontier_planning_grid.png", LocalExplorer::instance()->frontier_pathfinder.grid);
-  cv::imwrite("connectivity_planning_grid.png", LocalExplorer::instance()->connectivity_pathfinder.grid);
+  cv::imwrite((HybNav::OUTPUT_DIRECTORY + "/frontier_planning_grid.png").c_str(), LocalExplorer::instance()->frontier_pathfinder.grid);
+  cv::imwrite((HybNav::OUTPUT_DIRECTORY + "/connectivity_planning_grid.png").c_str(), LocalExplorer::instance()->connectivity_pathfinder.grid);
   
   cout << "Closing videos..." << endl;
   if (debug_writer) { delete debug_writer; debug_writer = NULL; }
@@ -238,9 +238,9 @@ void ExaBot::get_pose(gsl::vector& absolute_position, double& absolute_rotation)
   absolute_rotation = gsl_sf_angle_restrict_pos(position_proxy.GetYaw());
   cout << "Position: " << absolute_position(0) << "," << absolute_position(1) << " Yaw: " << absolute_rotation << endl;  
 
-  #ifdef ENABLE_SYROTEK
+  //#ifdef ENABLE_SYROTEK
   if (laser_proxy.IsFresh() && laser_proxy.IsValid()) correct_pose(absolute_position, absolute_rotation);
-  #endif
+  //#endif
 }
 
 void ExaBot::update_position(void) {

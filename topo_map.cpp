@@ -1,6 +1,7 @@
 #include "metric_map.h"
 #include "global_explorer.h"
 #include "exabot.h"
+#include "util.h"
 using namespace HybNav;
 using namespace std;
 
@@ -76,21 +77,21 @@ void TopoMap::merge(TopoMap::AreaNode* area1, TopoMap::AreaNode* area2) {
 
 void TopoMap::save(void) {
   cout << "Saving topo map" << endl;
-  ofstream dot_file("csv/topo_map.dot", ios_base::trunc | ios_base::out);
+  ofstream dot_file((HybNav::OUTPUT_DIRECTORY + "/topo_map.dot").c_str(), ios_base::trunc | ios_base::out);
   graph.to_dot(dot_file);
   dot_file.close();
 
-  ofstream graphml_file("csv/topo_map.graphml", ios_base::trunc | ios_base::out);
+  ofstream graphml_file((OUTPUT_DIRECTORY + "/topo_map.graphml").c_str(), ios_base::trunc | ios_base::out);
   graph.to_graphml(graphml_file);
   graphml_file.close();
 }
 
 void TopoMap::plot(void) {
-  ofstream dot_file("csv/topo_map.dot", ios_base::trunc | ios_base::out);
+  ofstream dot_file((HybNav::OUTPUT_DIRECTORY + "/topo_map.dot").c_str(), ios_base::trunc | ios_base::out);
   graph.to_dot(dot_file);
   dot_file.close();
 
-  system("dot -Tpng csv/topo_map.dot -ocsv/topo_map.png");
+  system((string("dot -Tpng ") + HybNav::OUTPUT_DIRECTORY + "/topo_map.dot -o" + HybNav::OUTPUT_DIRECTORY + "/topo_map.png").c_str());
 }
 
 std::ostream& operator<<(std::ostream& out, const std::list<HybNav::TopoMap::Node*>& l) {

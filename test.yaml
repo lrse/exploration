@@ -1,0 +1,12 @@
+---
+var_params:
+  cells:
+  - 43
+  - 87
+  - 121
+  - 251
+fixed_params:
+  {}
+player_configs:
+  - test1
+  - test2

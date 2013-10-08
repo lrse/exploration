@@ -1,0 +1,63 @@
+include "S1R.inc"
+include "hokuyo.inc"
+include "map.inc"
+
+# set the resolution of the underlying raytrace model in meters
+#resolution 0.05
+
+# create a robots
+S1R(
+  name "r0"
+  pose [ 0.234 -4.954 0.000 -90.000 ]
+  color "yellow"
+
+  hokuyolaser(
+    color "gray"
+    pose [0.040 0.000 -0.110 0.000]
+    laser_return 0
+    obstacle_return 0
+  )
+
+  alwayson 1
+  localization "gps"
+  localization_origin [ 0 0 0 0 ]
+#  localization_origin [ -10.5 -12 0 0 ]
+  laser_return 0
+    obstacle_return 0
+)
+
+
+
+# configure the GUI window
+window
+(
+  size [ 600 694 ] # in pixels
+  scale 45.094
+     # pixels per meteri
+  center [ 3.025 -9.403 ]
+  rotate [ 0.000  0.000 ]
+
+  camera_focal_length  0
+  camera_dpx 0
+  camera_dpy 0
+  camera_sx 0
+  camera_translation [ 0 0 0 ]
+  camera_rotation [ 0 0 0 ]
+
+  show_data 1
+  show_laser 1
+  show_laser_strikes 1
+  show_ranger 0
+  show_ranger_ranges 0
+)
+
+# load an environment bitmap
+floorplan(
+  bitmap "maps/jh-640x719.png"
+  size [10.500 12.000 0.250]
+  center [ 0 0 0 ]
+  pose [ 0.000 0.000 0.000 0.000 ]
+  name "taskmap"
+)
+
+

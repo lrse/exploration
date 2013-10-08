@@ -16,7 +16,7 @@ execute_process(COMMAND ${PROJECT_SOURCE_DIR}/gslwrap/generate WORKING_DIRECTORY
 
 find_package(OpenCV REQUIRED)
 find_package(GSL REQUIRED)
-find_package(Boost COMPONENTS system REQUIRED)
+find_package(Boost COMPONENTS system program_options REQUIRED)
 INCLUDE(UsePlayerC++)
 
 #include(FindPkgConfig)
