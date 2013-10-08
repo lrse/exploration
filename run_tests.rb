@@ -171,9 +171,9 @@ def one_run(par,var_params,conf)
     end
     system(command + " > /dev/null")
     #FileUtils.copy("logs/tmre.log","logs/tmre-last.log")
-    if ( !File.exists?("#{var_params["output"]}/path.log") ) 
-      FileUtils.rmtree(var_params["output"])
-    end
+    #if ( !File.exists?("#{var_params["output"]}/path.log") ) 
+    #  FileUtils.rmtree(var_params["output"])
+    #end
     puts "PPPPPP #{$pid}"
     if ($pid != -1)
       Process.kill_children($pid)
