@@ -90,11 +90,11 @@ $nats_data = {}
     #case data.strip 
       #when "imr_init_data" 
         #send_data "ahoj\n"
-	#send_data $nats_data
+  #send_data $nats_data
       #when "imr_kill"
-	#system("killall -9 player")
-	#sleep(1)
-	#send_data ("PLAYER KILLED\n")      
+  #system("killall -9 player")
+  #sleep(1)
+  #send_data ("PLAYER KILLED\n")      
       #else
       #send_data "Unknown message\n"
     #end 
@@ -169,7 +169,7 @@ def one_run(par,var_params,conf)
     if $server 
       $server.send_data($nats_data)
     end
-    system(command + " > /dev/null")
+    system(command + " 2&>1 > output.log")
     #FileUtils.copy("logs/tmre.log","logs/tmre-last.log")
     #if ( !File.exists?("#{var_params["output"]}/path.log") ) 
     #  FileUtils.rmtree(var_params["output"])
@@ -190,7 +190,8 @@ def one_run(par,var_params,conf)
 rescue Timeout::Error
   p "timer: killing the application"
   system("killall -9 #{EXECUTABLE_NAME}")
-  FileUtils.rmtree(var_params["robot-out-dir"])
+  Process.kill_children($pid)
+  FileUtils.rmtree(var_params["output"])
 end
 
 def to_params(par)
